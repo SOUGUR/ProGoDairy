@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="supplier-card">
+    <h2>Create Supplier Profile</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+  <style>
+    body {
+      background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .supplier-card {
+      max-width: 400px;
+      margin: 48px auto;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(60, 60, 130, 0.07);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      border-left: 5px solid #4f8cff;
+      transition: box-shadow 0.2s;
+    }
+    .supplier-card:hover {
+      box-shadow: 0 8px 32px rgba(79, 140, 255, 0.13);
+    }
+    h2 {
+      margin-bottom: 24px;
+      font-size: 1.5rem;
+      color: #22223b;
+      text-align: center;
+      font-weight: 700;
+    }
+    form p {
+      margin-bottom: 18px;
+      padding-right: 32px;
+    }
+    label {
+      font-weight: 500;
+      color: #4a4e69;
+      margin-bottom: 6px;
+      display: block;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #f8f9fa;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+      margin-top: 4px;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #4f8cff;
+      outline: none;
+      background: #fff;
+    }
+    button[type="submit"] {
+      width: 100%;
+      background: #4f8cff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    button[type="submit"]:hover {
+      background: #2563eb;
+    }
+  </style>
+{% endblock %}
