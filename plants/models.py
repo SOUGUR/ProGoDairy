@@ -1,37 +1,52 @@
 from django.db import models
+from suppliers.models import MilkLot
 from django.contrib.auth.models import User
-import uuid
 
-class DairyPlant(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255)
-    location = models.TextField()
-    contact_email = models.EmailField(unique=True)
-    contact_phone = models.CharField(max_length=15, blank=True)
-    milk_rate = models.FloatField(default=0.50)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['name']
+class Tester(models.Model):
+    """
+    Plant employee authorized to perform milk-quality tests.
+    Includes extended tester-specific details.
+    """
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    employee_id = models.CharField(max_length=20, unique=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    designation = models.CharField(max_length=100, default="Milk Quality Tester")
 
     def __str__(self):
-        return self.name
+        full_name = self.user.get_full_name()
+        return f"Tester: {full_name or self.user.username} (ID: {self.employee_id})"
 
-class PlantEmployee(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile')
-    plant = models.ForeignKey(DairyPlant, on_delete=models.CASCADE, related_name='employees')
-    role = models.CharField(max_length=100, choices=[
-        ('TESTER', 'Milk Tester'),
-        ('MANAGER', 'Plant Manager'),
-        ('INVENTORY', 'Inventory Manager'),
-    ])
+
+
+class Batch(models.Model):
+    """
+    Aggregated container of milk lots, after lab approval; stored in cold-room.
+    """
+    lots = models.ManyToManyField(MilkLot, through='BatchMembership')
+    total_volume_l = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['user__username']
+    use_by_date = models.DateField()
 
     def __str__(self):
-        return f"{self.user.username} ({self.role}) at {self.plant.name}"
+        return f"Batch {self.id} – {self.total_volume_l} L"
+
+    def calculate_total_volume(self):
+        self.total_volume_l = sum([bm.volume_l for bm in self.batchmembership_set.all()])
+        self.save()
+
+
+class BatchMembership(models.Model):
+    """
+    Through table to record how much volume of each lot went into a batch.
+    Useful when only part of a MilkLot is poured into a batch.
+    """
+    batch = models.ForeignKey(Batch, on_delete=models.CASCADE)
+    milk_lot = models.ForeignKey(MilkLot, on_delete=models.CASCADE)
+    volume_l = models.FloatField()
+
+    class Meta:
+        unique_together = ('batch', 'milk_lot')
+
+    def __str__(self):
+        return f"{self.volume_l} L from {self.milk_lot} in Batch {self.batch.id}"
