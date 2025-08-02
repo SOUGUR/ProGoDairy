@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Milk Lot Entries</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f9fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 30px;
+    }
+    
+    h2 {
+      color: #2c5282;
+      margin-bottom: 25px;
+      font-weight: 600;
+      border-bottom: 2px solid #ebf2f7;
+      padding-bottom: 10px;
+    }
+    
+    .milk-lot-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .milk-lot-table thead {
+      background-color: #ebf8ff;
+      color: #2b6cb0;
+    }
+    
+    .milk-lot-table th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      letter-spacing: 0.5px;
+    }
+    
+    .milk-lot-table td {
+      padding: 15px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .milk-lot-table tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    
+    .milk-lot-table tr:hover {
+      background-color: #ebf8ff;
+    }
+    
+    .status-pending {
+      color: #d69e2e;
+      font-weight: 500;
+    }
+    
+    .status-approved {
+      color: #38a169;
+      font-weight: 500;
+    }
+    
+    .status-rejected {
+      color: #e53e3e;
+      font-weight: 500;
+    }
+    
+    .price-cell {
+      font-weight: 600;
+      color: #2b6cb0;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn {
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      text-decoration: none;
+    }
+    
+    .btn-view {
+      background-color: #4299e1;
+      color: white;
+    }
+    
+    .btn-view:hover {
+      background-color: #3182ce;
+    }
+    
+    .btn-edit {
+      background-color: #68d391;
+      color: white;
+    }
+    
+    .btn-edit:hover {
+      background-color: #48bb78;
+    }
+    
+    .btn-delete {
+      background-color: #fc8181;
+      color: white;
+    }
+    
+    .btn-delete:hover {
+      background-color: #f56565;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #718096;
+      background-color: #f8fafc;
+      border-radius: 4px;
+    }
+    
+    .create-new-btn {
+      display: inline-block;
+      background-color: #4299e1;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      text-decoration: none;
+      transition: background-color 0.3s;
+    }
+    
+    .create-new-btn:hover {
+      background-color: #3182ce;
+    }
+    ul.messages {
+  list-style: none;
+  padding: 0;
+  margin: 1em 0;
+  max-width: 600px;
+}
+
+ul.messages li {
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* Success message */
+ul.messages li.success {
+  background-color: #4caf50;  /* Green */
+}
+
+/* Error message */
+ul.messages li.error {
+  background-color: #f44336;  /* Red */
+}
+
+/* Warning message */
+ul.messages li.warning {
+  background-color: #ff9800;  /* Orange */
+}
+
+/* Info message */
+ul.messages li.info {
+  background-color: #2196f3;  /* Blue */
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <h2>Milk Lot Entries</h2>
+    
+    <a href="{% url 'create_milk_lot' %}" class="create-new-btn">+ Create New Milk Lot</a>
+    
+    <table class="milk-lot-table">
+      <thead>
+        <tr>
+          <th>Date Created</th>
+          <th>Volume (L)</th>
+          <th>Fat %</th>
+          <th>Protein %</th>
+          <th>Status</th>
+          <th>Total Price</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lot in milk_lots %}
+        <tr>
+          <td>{{ lot.dateCreated }}</td>
+          <td>{{ lot.volumeL }}</td>
+          <td>{{ lot.fatPercent }}%</td>
+          <td>{{ lot.proteinPercent }}%</td>
+          <td class="status-{{ lot.status|lower }}">{{ lot.status }}</td>
+          <td class="price-cell">₹{{ lot.totalPrice }}</td>
+          <td>
+            <div class="action-buttons">
+              <a href="/milk-lots/{{ lot.id }}" class="btn btn-view">View</a>
+              <a href="{% url 'edit_milk_lot' lot.id %}" class="btn btn-edit">Edit</a>
+              <a href="/milk-lots/{{ lot.id }}/delete" class="btn btn-delete">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="empty-state">No milk lot entries found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

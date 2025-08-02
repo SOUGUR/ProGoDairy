@@ -2,53 +2,58 @@ from django.db import models
 from decimal import Decimal
 from django.contrib.auth.models import User
 
+
 class Supplier(models.Model):
     """
     Profile of a milk-producing farm that supplies milk to the plant.
     """
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     address = models.TextField()
-    phone_number = models.CharField(max_length=15, help_text="Supplier's mobile number (10 digits)")
+    phone_number = models.CharField(
+        max_length=15, help_text="Supplier's mobile number (10 digits)"
+    )
     email = models.EmailField(blank=True, null=True)
-    
-    # Dairy Information
+
     daily_capacity = models.FloatField(
         help_text="Litres the supplier commits to deliver every day"
     )
     total_dairy_cows = models.PositiveIntegerField()
-    annual_output = models.FloatField(
-        help_text="Total litres expected in a year"
-    )
+    annual_output = models.FloatField(help_text="Total litres expected in a year")
     distance_from_plant = models.FloatField(
         help_text="Kilometres from supplier farm to the plant"
     )
-    
+
     # Identity and Bank Details
-    aadhar_number = models.CharField(max_length=12, help_text="Aadhar number of the supplier")
+    aadhar_number = models.CharField(
+        max_length=12, help_text="Aadhar number of the supplier"
+    )
     bank_account_number = models.CharField(max_length=30)
     bank_name = models.CharField(max_length=100)
     ifsc_code = models.CharField(max_length=11)
 
     def __str__(self):
-        return f"{self.name} ({self.phone_number})"
-
-
+        return f"{self.user.username} ({self.phone_number})"
 
 
 class MilkLot(models.Model):
     """
     One 50 L (or other volume) can of milk supplied by a supplier.
     """
+
     STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
     )
 
-    supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE, related_name='lots')
+    supplier = models.ForeignKey(
+        Supplier, on_delete=models.CASCADE, related_name="lots"
+    )
+    tester = models.ForeignKey('plants.Tester',on_delete=models.CASCADE,related_name="tested_lots",null=True,blank=True)
     volume_l = models.FloatField(default=50.0)
     date_created = models.DateField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
 
     # Quality parameters
     fat_percent = models.FloatField()
@@ -60,12 +65,22 @@ class MilkLot(models.Model):
     bacterial_count = models.PositiveIntegerField()
 
     # Pricing
-    price_per_litre = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2,blank=True, null=True)
-    bill = models.ForeignKey('PaymentBill', on_delete=models.SET_NULL, null=True, blank=True, related_name='milk_lots')
+    price_per_litre = models.DecimalField(
+        max_digits=6, decimal_places=2, blank=True, null=True
+    )
+    total_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
+    bill = models.ForeignKey(
+        "PaymentBill",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="milk_lots",
+    )
 
     def __str__(self):
-        return f"{self.supplier.name} – {self.volume_l} L – {self.date_created}"
+        return f"{self.supplier.user.username} – {self.volume_l} L – {self.date_created}"
 
     def evaluate_and_price(self):
         """
@@ -77,11 +92,11 @@ class MilkLot(models.Model):
             "snf": 8.5,
             "protein": 3.0,
             "urea_max": 70,  # mg/dL
-            "bacteria_max": 50000  # per mL
+            "bacteria_max": 50000,  # per mL
         }
 
         # Base price logic (per litre)
-        base_price = Decimal("26.00") 
+        base_price = Decimal("26.00")
         bonus = Decimal("0.00")
 
         # Quality Bonus system
@@ -107,7 +122,10 @@ class PaymentBill(models.Model):
     """
     One bill per supplier per day aggregating approved lots.
     """
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='bills')
+
+    supplier = models.ForeignKey(
+        Supplier, on_delete=models.CASCADE, related_name="bills"
+    )
     date = models.DateField()
     total_volume_l = models.FloatField()
     total_value = models.DecimalField(max_digits=10, decimal_places=2)
@@ -116,12 +134,13 @@ class PaymentBill(models.Model):
     is_paid = models.BooleanField(default=False)
     payment_date = models.DateField(null=True, blank=True)
 
-
     def calculate_totals(self):
-        approved_lots = self.milk_lots.filter(status='approved')
+        approved_lots = self.milk_lots.filter(status="approved")
         self.total_volume_l = sum(lot.volume_l for lot in approved_lots)
-        self.total_value = sum(lot.total_price for lot in approved_lots if lot.total_price)
+        self.total_value = sum(
+            lot.total_price for lot in approved_lots if lot.total_price
+        )
         self.save()
-        
+
     def __str__(self):
         return f"Bill {self.id} – {self.supplier.name} – {self.date}"
