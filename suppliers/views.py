@@ -151,9 +151,14 @@ def milk_lot_result_list_view(request):
                 volumeL
                 fatPercent
                 proteinPercent
+                bacterialCount
                 status
                 totalPrice
                 dateCreated
+                supplier{
+                    id
+                    email
+                }
             }
         }
     """
@@ -175,11 +180,8 @@ def milk_lot_result_list_view(request):
             return HttpResponse(f"GraphQL errors: {json_data['errors']}")
         
         milk_lots = json_data['data']['milkLotList']
-        print("========"*34)
-        print(milk_lots)
-        print("========"*34)
+     
         return render(request, 'milk_lot_list.html', {'milk_lots': milk_lots})
-
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"Request error: {e}")
 
@@ -268,7 +270,7 @@ def create_milk_lot_view(request):
             return HttpResponse(f"Request error: {e}")
     
 
-def edit_milk_lot_view(request, lot_id):
+def edit_milk_lot(request, lot_id):
     sessionid = request.COOKIES.get('sessionid')
 
     if request.method == "POST":
@@ -276,9 +278,7 @@ def edit_milk_lot_view(request, lot_id):
         query = """
         mutation UpdateMilkLot($id: ID!, $input: MilkLotInput!) {
             updateMilkLot(id: $id, input: $input) {
-                milkLot {
                     id
-                    supplierId
                     volumeL
                     fatPercent
                     proteinPercent
@@ -287,7 +287,6 @@ def edit_milk_lot_view(request, lot_id):
                     snf
                     ureaNitrogen
                     bacterialCount
-                }
             }
         }
         """
@@ -322,9 +321,10 @@ def edit_milk_lot_view(request, lot_id):
         json_data = response.json()
         if 'errors' in json_data:
             return HttpResponse(f"GraphQL errors: {json_data['errors']}")
-
-        messages.success(request, "Milk Lot updated successfully.")
+        milk_lot_id = json_data['data']['updateMilkLot']['id']
+        messages.success(request, f"Milk Lot ID {milk_lot_id} updated successfully.")
         return redirect('milk_lot_list')
+    
 
     GET_MILK_LOT = """
         query GetMilkLotById($id: Int!) {
@@ -339,10 +339,13 @@ def edit_milk_lot_view(request, lot_id):
                 snf
                 ureaNitrogen
                 bacterialCount
+                supplier {
+                    id
+                    email
+                    }
             }
         }
         """
-
     try:
         lot_response = requests.post(
             'http://localhost:8000/graphql/',
@@ -353,7 +356,6 @@ def edit_milk_lot_view(request, lot_id):
                 }
             
         )
-
 
         if lot_response.status_code != 200:
             return HttpResponse("Failed to fetch data.")

@@ -204,11 +204,14 @@ ul.messages li.info {
       <thead>
         <tr>
           <th>Date Created</th>
+          <th>Milk Lot ID</th>
           <th>Volume (L)</th>
           <th>Fat %</th>
           <th>Protein %</th>
+          <th>Bacterial Count (CFU)</th>
           <th>Status</th>
           <th>Total Price</th>
+          <th>Supplier ID name</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -216,11 +219,14 @@ ul.messages li.info {
         {% for lot in milk_lots %}
         <tr>
           <td>{{ lot.dateCreated }}</td>
+          <td>{{ lot.id }}</td>
           <td>{{ lot.volumeL }}</td>
           <td>{{ lot.fatPercent }}%</td>
           <td>{{ lot.proteinPercent }}%</td>
+          <td>{{ lot.bacterialCount }}%</td>
           <td class="status-{{ lot.status|lower }}">{{ lot.status }}</td>
           <td class="price-cell">₹{{ lot.totalPrice }}</td>
+          <td>{{ lot.supplier.id }} - {{ lot.supplier.email }}</td>
           <td>
             <div class="action-buttons">
               <a href="/milk-lots/{{ lot.id }}" class="btn btn-view">View</a>

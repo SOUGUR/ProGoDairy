@@ -5,6 +5,7 @@ from plants.models import Tester
 from typing import List
 from strawberry.types import Info
 from strawberry.permission import BasePermission
+from django.shortcuts import get_object_or_404
 from typing import Optional
 from decimal import Decimal
 from graphql import GraphQLError
@@ -20,18 +21,18 @@ class IsAuthenticated(BasePermission):
 
 @strawberry_django_type(Supplier)
 class SupplierType:
-    id: strawberry.auto
-    address: strawberry.auto
-    phone_number: strawberry.auto
-    email: strawberry.auto
-    daily_capacity: strawberry.auto
-    total_dairy_cows: strawberry.auto
-    annual_output: strawberry.auto
-    distance_from_plant: strawberry.auto
-    aadhar_number: strawberry.auto
-    bank_account_number: strawberry.auto
-    bank_name: strawberry.auto
-    ifsc_code: strawberry.auto
+    id: int
+    address: Optional[str]
+    phone_number: Optional[str]
+    email: Optional[str]
+    daily_capacity: Optional[int]
+    total_dairy_cows: Optional[int]
+    annual_output: Optional[float]
+    distance_from_plant: Optional[float]
+    aadhar_number: Optional[str]
+    bank_account_number: Optional[str]
+    bank_name: Optional[str]
+    ifsc_code: Optional[str]
 
 
 @strawberry.input
@@ -62,6 +63,7 @@ class MilkLotType:
     status: str
     bacterial_count: int
     date_created: Optional[date]
+    supplier: SupplierType
 
 @strawberry.type
 class Query:
@@ -185,6 +187,22 @@ class Mutation:
             status=milk_lot.status,
             date_created=milk_lot.date_created,  
         )
+    
+    @strawberry.mutation
+    def update_milk_lot(self, info: Info, id: strawberry.ID, input: MilkLotInput) -> MilkLotType:
+        lot = get_object_or_404(MilkLot, id=id)
+        lot.volume_l = input.volume_l
+        lot.fat_percent = input.fat_percent
+        lot.protein_percent = input.protein_percent
+        lot.lactose_percent = input.lactose_percent
+        lot.total_solids = input.total_solids
+        lot.snf = input.snf
+        lot.urea_nitrogen = input.urea_nitrogen
+        lot.bacterial_count = input.bacterial_count
+
+        lot.evaluate_and_price()
+        lot.save()
+        return lot 
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

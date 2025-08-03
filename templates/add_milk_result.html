@@ -108,25 +108,34 @@
 <body>
   <div class="container">
     <h1>Record Milk Lot Results</h1>
-    <form method="POST" action="">
+    <form id="milkLotForm" method="POST" action="{% if milk_lot %}{% url 'edit_milk_lot' milk_lot.id %}{% else %}{% url 'create_milk_lot' %}{% endif %}">
       {% csrf_token %}
       <div class="section-title">Select Supplier</div>
   
     <div class="form-group">
-        <label class="required-field">Supplier</label>
-        <select name="supplier_id" required>
-        <option value="" disabled selected>Select a supplier</option>
-        {% for supplier in suppliers %}
-            <option value="{{ supplier.id }}">{{ supplier.id }} - {{ supplier.email }}</option>
-        {% endfor %}
-        </select>
+      <label class="required-field">Supplier</label>
+      {% if milk_lot %}
+          <div>
+            <strong>ID: {{ milk_lot.supplier.id }} - {{ milk_lot.supplier.email }}</strong>
+          </div>
+    
+          <input type="hidden" name="supplier_id" value="{{ milk_lot.supplier.id }}">
+      {% else %}
+          <select name="supplier_id" required>
+            <option value="" disabled selected>Select a supplier</option>
+            {% for supplier in suppliers %}
+              <option value="{{ supplier.id }}">{{ supplier.id }} - {{ supplier.email }}</option>
+            {% endfor %}
+          </select>
+      {% endif %}
     </div>
+
 
       <div class="section-title">Basic Information</div>
       
       <div class="form-group">
         <label class="required-field">Volume (Liters)</label>
-        <input type="number" step="0.01" name="volume_l" required>
+        <input type="number" step="0.01" name="volume_l" value="{% if milk_lot %}{{ milk_lot.volumeL }}{% endif %}" required>
       </div>
       
       <div class="section-title">Composition Analysis</div>
@@ -134,46 +143,45 @@
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">Fat Percentage</label>
-          <input type="number" step="0.01" name="fat_percent" required>
+          <input type="number" step="0.01" name="fat_percent" value="{% if milk_lot %}{{ milk_lot.fatPercent }}{% endif %}" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Protein Percentage</label>
-          <input type="number" step="0.01" name="protein_percent" required>
+          <input type="number" step="0.01" name="protein_percent" value="{% if milk_lot %}{{ milk_lot.proteinPercent }}{% endif %}" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">Lactose Percentage</label>
-          <input type="number" step="0.01" name="lactose_percent" required>
+          <input type="number" step="0.01" name="lactose_percent" value="{% if milk_lot %}{{ milk_lot.lactosePercent }}{% endif %}" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Total Solids</label>
-          <input type="number" step="0.01" name="total_solids" required>
+          <input type="number" step="0.01" name="total_solids" value="{% if milk_lot %}{{ milk_lot.totalSolids }}{% endif %}" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">SNF (Solids Not Fat)</label>
-          <input type="number" step="0.01" name="snf" required>
+          <input type="number" step="0.01" name="snf" value="{% if milk_lot %}{{ milk_lot.snf }}{% endif %}" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Urea Nitrogen</label>
-          <input type="number" step="0.01" name="urea_nitrogen" required>
+          <input type="number" step="0.01" name="urea_nitrogen" value="{% if milk_lot %}{{ milk_lot.ureaNitrogen }}{% endif %}" required>
         </div>
       </div>
       
       <div class="form-group">
         <label class="required-field">Bacterial Count (CFU/mL)</label>
-        <input type="number" name="bacterial_count" required>
+        <input type="number" name="bacterial_count" value="{% if milk_lot %}{{ milk_lot.bacterialCount }}{% endif %}" required>
       </div>
       
-      <button type="submit">Submit Milk Test</button>
-    </form>
+    <button type="submit">{% if milk_lot %}Update Milk Lot Test{% else %}Submit Milk Test{% endif %}</button>
   </div>
 </body>
 </html>
