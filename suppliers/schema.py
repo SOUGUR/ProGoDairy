@@ -1,6 +1,6 @@
 import strawberry
 from strawberry_django import type as strawberry_django_type, field
-from suppliers.models import Supplier, MilkLot
+from suppliers.models import Supplier, MilkLot, PaymentBill
 from plants.models import Tester
 from typing import List
 from strawberry.types import Info
@@ -11,12 +11,12 @@ from decimal import Decimal
 from graphql import GraphQLError
 from datetime import date
 
+
 class IsAuthenticated(BasePermission):
     message = "User is not authenticated"
 
     def has_permission(self, source, info: Info, **kwargs):
         return info.context.request.user.is_authenticated
-    
 
 
 @strawberry_django_type(Supplier)
@@ -47,6 +47,7 @@ class MilkLotInput:
     urea_nitrogen: float
     bacterial_count: int
 
+
 @strawberry.type
 class MilkLotType:
     id: int
@@ -65,6 +66,40 @@ class MilkLotType:
     date_created: Optional[date]
     supplier: SupplierType
 
+
+@strawberry.input
+class CreatePaymentBillInput:
+    supplier_id: int
+    date: str
+
+
+@strawberry.type
+class PaymentBillType:
+    id: int
+    total_volume_l: float
+    total_value: float
+    is_paid: bool
+
+
+@strawberry.type
+class CreatePaymentBillPayload:
+    success: bool
+    bill: Optional[PaymentBillType] = None
+    error: Optional[str] = None
+
+
+@strawberry.django.type(PaymentBill)
+class PaymentBillTypeList:
+    id: int
+    payment_date: Optional[date]
+    date: Optional[date]
+    total_volume_l: Optional[Decimal]
+    total_value: Optional[Decimal]
+    is_paid: bool
+    pdf_url: Optional[str]
+    supplier: SupplierType
+
+
 @strawberry.type
 class Query:
     @field
@@ -78,7 +113,7 @@ class Query:
             return Supplier.objects.get(user=user)
         except Supplier.DoesNotExist:
             return None
-        
+
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_by_id(self, info: Info, id: int) -> Optional[MilkLotType]:
         user = info.context.request.user
@@ -90,17 +125,20 @@ class Query:
             raise GraphQLError("Supplier profile not found.")
         except MilkLot.DoesNotExist:
             raise GraphQLError(f"Milk Lot with ID {id} not found or not authorized.")
-        
+
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def milk_lot_list(self,) -> List[MilkLotType]:
+    def milk_lot_list(
+        self,
+    ) -> List[MilkLotType]:
         try:
-            milk_lots = MilkLot.objects.all().order_by('-date_created')
+            milk_lots = MilkLot.objects.all().order_by("-date_created")
             return milk_lots
         except Supplier.DoesNotExist:
             raise GraphQLError("Supplier profile not found.")
 
-
-
+    @field
+    def all_payment_bills(self) -> List[PaymentBillTypeList]:
+        return PaymentBill.objects.select_related("supplier__user").all()
 
 
 @strawberry.type
@@ -126,21 +164,21 @@ class Mutation:
         supplier, created = Supplier.objects.update_or_create(
             user=user,
             defaults={
-                'phone_number': phone_number,
-                'email': email,
-                'daily_capacity': daily_capacity,
-                'total_dairy_cows': total_dairy_cows,
-                'annual_output': annual_output or 0.0,
-                'distance_from_plant': distance_from_plant or 0.0,
-                'aadhar_number': aadhar_number,
-                'address': address,
-                'bank_account_number': bank_account_number,
-                'bank_name': bank_name,
-                'ifsc_code': ifsc_code,
-            }
+                "phone_number": phone_number,
+                "email": email,
+                "daily_capacity": daily_capacity,
+                "total_dairy_cows": total_dairy_cows,
+                "annual_output": annual_output or 0.0,
+                "distance_from_plant": distance_from_plant or 0.0,
+                "aadhar_number": aadhar_number,
+                "address": address,
+                "bank_account_number": bank_account_number,
+                "bank_name": bank_name,
+                "ifsc_code": ifsc_code,
+            },
         )
         return supplier
-    
+
     @strawberry.mutation
     def create_milk_lot(self, info: Info, input: MilkLotInput) -> MilkLotType:
         user = info.context.request.user
@@ -148,24 +186,24 @@ class Mutation:
             Tester.objects.get(user=user)
         except Tester.DoesNotExist:
             raise Exception("Tester not found for the authenticated user")
-        
+
         try:
             supplier = Supplier.objects.get(id=input.supplier_id)
         except Supplier.DoesNotExist:
             raise Exception("Supplier not found with the given ID")
 
-        milk_lot,_ = MilkLot.objects.update_or_create(
+        milk_lot, _ = MilkLot.objects.update_or_create(
             supplier=supplier,
             defaults={
-                'volume_l': input.volume_l,
-                'fat_percent': input.fat_percent,
-                'protein_percent': input.protein_percent,
-                'lactose_percent': input.lactose_percent,
-                'total_solids': input.total_solids,
-                'snf': input.snf,
-                'urea_nitrogen': input.urea_nitrogen,
-                'bacterial_count': input.bacterial_count,
-            }
+                "volume_l": input.volume_l,
+                "fat_percent": input.fat_percent,
+                "protein_percent": input.protein_percent,
+                "lactose_percent": input.lactose_percent,
+                "total_solids": input.total_solids,
+                "snf": input.snf,
+                "urea_nitrogen": input.urea_nitrogen,
+                "bacterial_count": input.bacterial_count,
+            },
         )
 
         milk_lot.evaluate_and_price()
@@ -185,11 +223,13 @@ class Mutation:
             total_price=milk_lot.total_price,
             price_per_litre=milk_lot.price_per_litre,
             status=milk_lot.status,
-            date_created=milk_lot.date_created,  
+            date_created=milk_lot.date_created,
         )
-    
+
     @strawberry.mutation
-    def update_milk_lot(self, info: Info, id: strawberry.ID, input: MilkLotInput) -> MilkLotType:
+    def update_milk_lot(
+        self, info: Info, id: strawberry.ID, input: MilkLotInput
+    ) -> MilkLotType:
         lot = get_object_or_404(MilkLot, id=id)
         lot.volume_l = input.volume_l
         lot.fat_percent = input.fat_percent
@@ -202,7 +242,38 @@ class Mutation:
 
         lot.evaluate_and_price()
         lot.save()
-        return lot 
+        return lot
+
+    @strawberry.mutation
+    def create_payment_bill(
+        self, input: CreatePaymentBillInput
+    ) -> CreatePaymentBillPayload:
+        try:
+            supplier = Supplier.objects.get(id=input.supplier_id)
+            bill_date = datetime.strptime(input.date, "%Y-%m-%d").date()
+
+            bill = PaymentBill.objects.create(
+                supplier=supplier,
+                date=bill_date,
+                total_volume_l=0,
+                total_value=0,
+            )
+
+            bill.calculate_totals()
+
+            return CreatePaymentBillPayload(
+                success=True,
+                bill=PaymentBillType(
+                    id=bill.id,
+                    total_volume_l=bill.total_volume_l,
+                    total_value=float(bill.total_value),
+                    is_paid=bill.is_paid,
+                ),
+            )
+        except Supplier.DoesNotExist:
+            return CreatePaymentBillPayload(success=False, error="Supplier not found")
+        except Exception as e:
+            return CreatePaymentBillPayload(success=False, error=str(e))
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

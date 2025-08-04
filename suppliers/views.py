@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.contrib import messages
 
 
+
 def supplier_list(request):
     query = """
         query {
@@ -369,6 +370,121 @@ def edit_milk_lot(request, lot_id):
         return render(request, "add_milk_result.html", {
             'milk_lot': milk_lot,
         })
+
+    except requests.exceptions.RequestException as e:
+        return HttpResponse(f"Request error: {e}")
+    
+
+def create_payment_bill(request):
+    sessionid = request.COOKIES.get('sessionid')
+
+    if request.method == "POST":
+        data = request.POST
+        query = """
+        mutation CreatePaymentBill($input: CreatePaymentBillInput!) {
+            createPaymentBill(input: $input) {
+                success
+                bill {
+                    id
+                    totalVolumeL
+                    totalValue
+                    isPaid
+                }
+                error
+            }
+        }
+        """
+
+        variables = {
+            'input': {
+                "supplierId": int(data.get("supplier_id")),
+                "date": data.get("date"),  
+            }
+        }
+
+        response = requests.post(
+            'http://localhost:8000/graphql/',
+            json={"query": query, "variables": variables},
+            headers={
+                'Content-Type': 'application/json',
+                'Cookie': f'sessionid={sessionid}',
+            }
+        )
+
+        if response.status_code != 200:
+            return HttpResponse(f"GraphQL request failed with status {response.status_code}<br><br>{response.text}")
+
+        json_data = response.json()
+        if 'errors' in json_data:
+            return HttpResponse(f"GraphQL errors: {json_data['errors']}")
+        
+        bill = json_data['data']['createPaymentBill']['paymentBill']
+        messages.success(request, f"Payment Bill ID {bill['id']} created for {bill['supplier']['user']['username']}")
+        return redirect('list_payment_bills')  
+
+    return render(request, "payment_bill_list.html")
+
+def payment_bill_list_view(request):
+    query = """
+        query {
+            allPaymentBills {
+                id
+                date
+                totalVolumeL
+                totalValue
+                isPaid
+                paymentDate
+                pdfUrl
+                supplier {
+                    id
+                    email
+                }
+            }
+        }
+    """
+    GET_ALL_SUPPLIERS = """
+        query {
+            suppliers {
+                id
+                email
+            }
+        }
+    """
+
+    try:
+        response = requests.post(
+            'http://localhost:8000/graphql/',
+            json={'query': GET_ALL_SUPPLIERS},
+            headers={'Content-Type': 'application/json'}
+        )
+        if response.status_code != 200:
+            return HttpResponse(f"GraphQL request failed with status {response.status_code}<br><br>{response.text}")
+
+        json_data = response.json()
+
+        if 'errors' in json_data:
+            return HttpResponse(f"GraphQL errors: {json_data['errors']}")
+
+        suppliers = json_data['data']['suppliers']
+
+        response = requests.post(
+            'http://localhost:8000/graphql/',
+            json={'query': query},
+            headers={'Content-Type': 'application/json'},
+            cookies=request.COOKIES
+        )
+
+        if response.status_code != 200:
+            return HttpResponse(f"GraphQL request failed with status {response.status_code}<br><br>{response.text}")
+
+        json_data = response.json()
+
+        if 'errors' in json_data:
+            return HttpResponse(f"GraphQL errors: {json_data['errors']}")
+
+        payment_bills = json_data['data']['allPaymentBills']
+        
+        return render(request, 'payment_bill_list.html', {'payment_bills': payment_bills,'suppliers':suppliers})
 
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"Request error: {e}")
