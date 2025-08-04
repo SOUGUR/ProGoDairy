@@ -135,7 +135,7 @@ class PaymentBill(models.Model):
     payment_date = models.DateField(null=True, blank=True)
 
     def calculate_totals(self):
-        approved_lots = self.milk_lots.filter(status="approved")
+        approved_lots = MilkLot.filter(supplier=self.supplier,status="approved",date_created = self.date )
         self.total_volume_l = sum(lot.volume_l for lot in approved_lots)
         self.total_value = sum(
             lot.total_price for lot in approved_lots if lot.total_price
