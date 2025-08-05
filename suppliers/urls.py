@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import create_supplier, supplier_list, create_milk_lot_view,milk_lot_result_list_view,\
-    edit_milk_lot,create_payment_bill, payment_bill_list_view
+    edit_milk_lot,create_payment_bill, payment_bill_list_view, get_payment_bill_by_id
 
 urlpatterns = [
     path('suppliers/', supplier_list, name='supplier_list'),
@@ -10,5 +10,5 @@ urlpatterns = [
     path('milk-lot/edit/<int:lot_id>/', edit_milk_lot, name='edit_milk_lot'),
     path('create-Payment-Bill/', create_payment_bill, name='create_payment_bill'),
     path('Payment-Bill-List/',payment_bill_list_view, name='list_payment_bills'),
-
+   path('payment-bill/<int:bill_id>/', get_payment_bill_by_id, name='payment-bill-by-id')
 ]

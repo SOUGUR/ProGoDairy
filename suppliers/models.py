@@ -135,7 +135,7 @@ class PaymentBill(models.Model):
     payment_date = models.DateField(null=True, blank=True)
 
     def calculate_totals(self):
-        approved_lots = MilkLot.filter(supplier=self.supplier,status="approved",date_created = self.date )
+        approved_lots = MilkLot.objects.filter(supplier=self.supplier,status="approved",date_created = self.date )
         self.total_volume_l = sum(lot.volume_l for lot in approved_lots)
         self.total_value = sum(
             lot.total_price for lot in approved_lots if lot.total_price
@@ -143,4 +143,4 @@ class PaymentBill(models.Model):
         self.save()
 
     def __str__(self):
-        return f"Bill {self.id} – {self.supplier.name} – {self.date}"
+        return f"Bill {self.id} – {self.supplier.user.username} – {self.date}"

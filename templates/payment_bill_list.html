@@ -203,9 +203,71 @@
       background-color: #f8fafc;
       border-radius: 4px;
     }
+    
+    .messages {
+      list-style: none;
+      padding: 0;
+      margin: 1em 0;
+      }
+      .message {
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: white;
+      }
+      .message.success {
+        background-color: #4CAF50; 
+      }
+      .message.error {
+        background-color: #f44336; 
+      }
+      .message.warning {
+        background-color: #ff9800; 
+      }
+      .message.info {
+        background-color: #2196F3; 
+      }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.6); /* semi-transparent background */
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 50%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .close {
+      float: right;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="message {{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
   <div class="container">
     <h1>Payment Bills</h1>
     
@@ -261,12 +323,13 @@
           <td>{% if bill.paymentDate %}{{ bill.paymentDate }}{% else %}—{% endif %}</td>
           <td>
             <div class="action-buttons">
-              <a href="/payment-bills/{{ bill.id }}" class="btn-action btn-view">View</a>
+              <a href="#" class="btn-action btn-view" onclick="viewPaymentBill('{{ bill.id }}')">View</a>
+
               {% if bill.pdfUrl %}
                 <a href="{{ bill.pdfUrl }}" class="btn-action btn-pdf">PDF</a>
               {% endif %}
               {% if not bill.isPaid %}
-                <a href="/payment-bills/{{ bill.id }}/mark-paid" class="btn-action btn-mark-paid">Mark Paid</a>
+                <a href="#" class="btn-action btn-mark-paid" onclick="markBillPaid('{{ bill.id }}', '{{ bill.supplier.id }}', '{{ bill.date }}')">Mark Paid</a>
               {% endif %}
             </div>
           </td>
@@ -278,70 +341,106 @@
         {% endfor %}
       </tbody>
     </table>
+    <div id="paymentBillModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span onclick="document.getElementById('paymentBillModal').style.display='none'" class="close">&times;</span>
+      <h2>Payment Bill Details</h2>
+      <p><strong>ID:</strong> <span id="modal-id"></span></p>
+      <p><strong>Date:</strong> <span id="modal-date"></span></p>
+      <p><strong>Total Volume:</strong> <span id="modal-volume"></span></p>
+      <p><strong>Total Value:</strong> <span id="modal-value"></span></p>
+      <p><strong>Paid:</strong> <span id="modal-paid"></span></p>
+      <p><strong>Payment Date:</strong> <span id="modal-payment-date"></span></p>
+      <p><strong>Supplier Email:</strong> <span id="modal-supplier-email"></span></p>
+    </div>
+</div>
+</div>
   </div>
   <script>
     function handlePaymentBillGeneration(event) {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault(); 
     
     const form = event.target;
     const formData = new FormData(form);
     const supplierId = formData.get('supplier_id');
     const startDate = formData.get('start_date');
     
-    // Basic validation
+  
     if (!supplierId || !startDate) {
         alert('Please select both supplier and collection date');
         return;
     }
 
-    // Prepare the request data
+
     const requestData = {
         supplier_id: supplierId,
         date: startDate
     };
 
-    // Show loading state
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn.textContent;
     submitBtn.textContent = 'Generating...';
     submitBtn.disabled = true;
 
-    // Make the AJAX request
+
     fetch('/create-Payment-Bill/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'), // Ensure CSRF token is included
+            'X-CSRFToken': getCookie('csrftoken'), 
         },
         body: JSON.stringify(requestData),
-        credentials: 'include' // Include cookies for session
+        credentials: 'include'
     })
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        return response.json();
+        return response.text();;
     })
-    .then(data => {
-        if (data.success) {
-            // Reload the page to show the new bill
-            window.location.reload();
-        } else {
-            alert('Error creating payment bill: ' + (data.error || 'Unknown error'));
-        }
-    })
+    .then(html => {
+    console.log('HTML response:', html);
+  })
     .catch(error => {
         console.error('Error:', error);
         alert('Failed to create payment bill. Please try again.');
     })
     .finally(() => {
-        // Restore button state
         submitBtn.textContent = originalBtnText;
         submitBtn.disabled = false;
     });
 }
+function markBillPaid(billId, supplierId, billDate) {
+    const data = {
+        supplier_id: supplierId,
+        date: billDate,
+        is_paid: true,
+        payment_date: new Date().toISOString().slice(0, 10)  
+    };
 
-// Helper function to get CSRF token
+    fetch('/create-Payment-Bill/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data),
+        credentials: 'include'
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;  // Django redirects to success page
+        } else {
+            return response.text().then(html => {
+                document.body.innerHTML = html;  // Fallback: replace page content
+            });
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Failed to mark bill as paid.");
+    });
+}
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -356,9 +455,39 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
-// Attach the event listener to the form
 document.querySelector('.filter-form').addEventListener('submit', handlePaymentBillGeneration);
-  </script>
+function viewPaymentBill(billId) {
+    fetch(`/payment-bill/${billId}/`, {
+        method: 'GET',
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const bill = data.bill;
+        if (!bill) {
+            alert("No bill found.");
+            return;
+        }
+
+        // Now fill modal/dialog content
+        document.getElementById('modal-id').textContent = bill.id;
+        document.getElementById('modal-date').textContent = bill.date;
+        document.getElementById('modal-volume').textContent = bill.totalVolumeL + ' L';
+        document.getElementById('modal-value').textContent = '₹' + bill.totalValue;
+        document.getElementById('modal-paid').textContent = bill.isPaid ? 'Paid' : 'Pending';
+        document.getElementById('modal-payment-date').textContent = bill.paymentDate || '—';
+        document.getElementById('modal-supplier-email').textContent = bill.supplier.email;
+
+        // Show modal
+        document.getElementById('paymentBillModal').style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error fetching bill details:', error);
+    });
+}
+function closeModal() {
+    document.getElementById('billModal').style.display = 'none';
+}
+</script>
 </body>
 </html>

@@ -71,7 +71,8 @@ class MilkLotType:
 class CreatePaymentBillInput:
     supplier_id: int
     date: str
-
+    is_paid: bool
+    payment_date: Optional[str]
 
 @strawberry.type
 class PaymentBillType:
@@ -139,6 +140,13 @@ class Query:
     @field
     def all_payment_bills(self) -> List[PaymentBillTypeList]:
         return PaymentBill.objects.select_related("supplier__user").all()
+    
+    @field
+    def payment_bill_by_id(self, id: int) -> Optional[PaymentBillTypeList]:
+        try:
+            return PaymentBill.objects.select_related("supplier__user").get(id=id)
+        except PaymentBill.DoesNotExist:
+            return None
 
 
 @strawberry.type
@@ -250,17 +258,21 @@ class Mutation:
     ) -> CreatePaymentBillPayload:
         try:
             supplier = Supplier.objects.get(id=input.supplier_id)
-            bill_date = datetime.strptime(input.date, "%Y-%m-%d").date()
+            payment_date = input.payment_date
+            bill_date = input.date
 
-            bill = PaymentBill.objects.create(
+            bill, _ = PaymentBill.objects.update_or_create(
                 supplier=supplier,
                 date=bill_date,
-                total_volume_l=0,
-                total_value=0,
+                defaults={
+                    'total_volume_l': 0,
+                    'total_value': 0,
+                    'is_paid': input.is_paid,
+                    'payment_date': payment_date,
+                }
             )
 
             bill.calculate_totals()
-
             return CreatePaymentBillPayload(
                 success=True,
                 bill=PaymentBillType(

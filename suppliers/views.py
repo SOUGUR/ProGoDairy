@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 import requests
 from django.http import HttpResponse
 from django.contrib import messages
+from django.http import JsonResponse
+import json
 
 
 
@@ -379,7 +381,11 @@ def create_payment_bill(request):
     sessionid = request.COOKIES.get('sessionid')
 
     if request.method == "POST":
-        data = request.POST
+        data = json.loads(request.body)
+        supplier_id = int(data.get("supplier_id"))
+        test_date = data.get("date")
+        payment_date = data.get("payment_date", None)
+        is_paid = data.get("is_paid", False)
         query = """
         mutation CreatePaymentBill($input: CreatePaymentBillInput!) {
             createPaymentBill(input: $input) {
@@ -397,8 +403,10 @@ def create_payment_bill(request):
 
         variables = {
             'input': {
-                "supplierId": int(data.get("supplier_id")),
-                "date": data.get("date"),  
+                "supplierId": supplier_id,
+                "date": test_date,  
+                "isPaid":is_paid,
+                "paymentDate": payment_date
             }
         }
 
@@ -417,9 +425,8 @@ def create_payment_bill(request):
         json_data = response.json()
         if 'errors' in json_data:
             return HttpResponse(f"GraphQL errors: {json_data['errors']}")
-        
-        bill = json_data['data']['createPaymentBill']['paymentBill']
-        messages.success(request, f"Payment Bill ID {bill['id']} created for {bill['supplier']['user']['username']}")
+        bill = json_data['data']['createPaymentBill']['bill']
+        messages.success(request, f"Payment Bill ID {bill['id']} created")
         return redirect('list_payment_bills')  
 
     return render(request, "payment_bill_list.html")
@@ -486,5 +493,60 @@ def payment_bill_list_view(request):
         
         return render(request, 'payment_bill_list.html', {'payment_bills': payment_bills,'suppliers':suppliers})
 
+    except requests.exceptions.RequestException as e:
+        return HttpResponse(f"Request error: {e}")
+    
+
+def get_payment_bill_by_id(request, bill_id):
+    sessionid = request.COOKIES.get('sessionid')
+
+    query = """
+    query GetPaymentBillById($id: Int!) {
+        paymentBillById(id: $id) {
+            id
+            date
+            totalVolumeL
+            totalValue
+            isPaid
+            paymentDate
+            pdfUrl
+            supplier {
+                id
+                email
+            }
+        }
+    }
+    """
+
+    variables = {
+        "id": int(bill_id)
+    }
+
+    try:
+        response = requests.post(
+            'http://localhost:8000/graphql/',
+            json={'query': query, 'variables': variables},
+            headers={
+                'Content-Type': 'application/json',
+                'Cookie': f'sessionid={sessionid}',
+            }
+        )
+
+        if response.status_code != 200:
+            return HttpResponse(f"GraphQL request failed with status {response.status_code}<br><br>{response.text}")
+
+        json_data = response.json()
+
+        if 'errors' in json_data:
+            return HttpResponse(f"GraphQL errors: {json_data['errors']}")
+
+        bill_data = json_data['data']['paymentBillById']
+
+        if not bill_data:
+            messages.error(request, f"No payment bill found with ID {bill_id}")
+            return render(request, "payment_bill_detail.html", {'bill': None})
+
+        return JsonResponse({'bill': bill_data})
+    
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"Request error: {e}")
