@@ -1,5 +1,6 @@
 from django.db import models
 from suppliers.models import MilkLot
+from distribution.models import Route
 from django.contrib.auth.models import User
 
 class Tester(models.Model):
@@ -12,6 +13,7 @@ class Tester(models.Model):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     designation = models.CharField(max_length=100, default="Milk Quality Tester")
+    routes = models.ManyToManyField(Route, related_name='testers', blank=True)
 
     def __str__(self):
         full_name = self.user.get_full_name()

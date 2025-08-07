@@ -1,6 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from django.contrib.auth.models import User
+from distribution.models import Route
 
 
 class Supplier(models.Model):
@@ -31,6 +32,7 @@ class Supplier(models.Model):
     bank_account_number = models.CharField(max_length=30)
     bank_name = models.CharField(max_length=100)
     ifsc_code = models.CharField(max_length=11)
+    route = models.ForeignKey(Route, related_name='suppliers', blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.user.username} ({self.phone_number})"

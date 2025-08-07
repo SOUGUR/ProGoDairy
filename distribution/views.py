@@ -1,3 +1,4 @@
 from django.shortcuts import render
 
-# Create your views here.
+def vehicle_list(request):
+    return render(request, 'distribution/vehicle_list.html')

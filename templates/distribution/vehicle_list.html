@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vehicle Management</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f9fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 30px;
+    }
+    
+    h1 {
+      color: #2c5282;
+      margin-bottom: 25px;
+      font-weight: 600;
+      border-bottom: 2px solid #ebf2f7;
+      padding-bottom: 10px;
+    }
+    
+    .form-section {
+      background-color: #ebf8ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    
+    .form-title {
+      color: #2b6cb0;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+    
+    .vehicle-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 0;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #4a5568;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    
+    input:focus, select:focus {
+      border-color: #63b3ed;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
+    }
+    
+    .btn {
+      background-color: #4299e1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      align-self: flex-end;
+      grid-column: 1 / -1;
+      max-width: 200px;
+    }
+    
+    .btn:hover {
+      background-color: #3182ce;
+    }
+    
+    .vehicle-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .vehicle-table thead {
+      background-color: #ebf8ff;
+      color: #2b6cb0;
+    }
+    
+    .vehicle-table th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      letter-spacing: 0.5px;
+    }
+    
+    .vehicle-table td {
+      padding: 15px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .vehicle-table tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    
+    .vehicle-table tr:hover {
+      background-color: #ebf8ff;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-available {
+      background-color: #38a169;
+    }
+    
+    .status-unavailable {
+      background-color: #e53e3e;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-action {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      text-decoration: none;
+    }
+    
+    .btn-edit {
+      background-color: #68d391;
+      color: white;
+    }
+    
+    .btn-edit:hover {
+      background-color: #48bb78;
+    }
+    
+    .btn-delete {
+      background-color: #fc8181;
+      color: white;
+    }
+    
+    .btn-delete:hover {
+      background-color: #f56565;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #718096;
+      background-color: #f8fafc;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Vehicle Management</h1>
+    
+    <div class="form-section">
+      <h3 class="form-title">Add New Vehicle</h3>
+      <form method="POST"  class="vehicle-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+          <label for="distributor">Distributor</label>
+          <select id="distributor" name="distributor" required>
+            <option value="">Select Distributor</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="name">Vehicle Name</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="vehicle_id">Vehicle ID</label>
+          <input type="text" id="vehicle_id" name="vehicle_id" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="capacity">Capacity (Liters)</label>
+          <input type="number" step="0.01" id="capacity" name="capacity_liters">
+        </div>
+        
+        <div class="form-group">
+          <label for="route">Route</label>
+          <select id="route" name="route">
+            <option value="">Select Route</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn">Add Vehicle</button>
+      </form>
+    </div>
+    
+    <table class="vehicle-table">
+      <thead>
+        <tr>
+          <th>Vehicle ID</th>
+          <th>Name</th>
+          <th>Distributor</th>
+          <th>Capacity (L)</th>
+          <th>Route</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vehicle in vehicles %}
+        <tr>
+          <td>{{ vehicle.vehicle_id }}</td>
+          <td>{{ vehicle.name }}</td>
+          <td>{{ vehicle.distributor.user.username }}</td>
+          <td>{{ vehicle.capacity_liters|default:"-" }}</td>
+          <td>{{ vehicle.distributor.route.name|default:"-" }}</td>
+          <td>
+            <span class="status-indicator status-{% if vehicle.is_available %}available{% else %}unavailable{% endif %}"></span>
+            {% if vehicle.is_available %}Available{% else %}In Use{% endif %}
+          </td>
+          <td>
+            <div class="action-buttons">
+              <a href="{% url 'edit_vehicle' vehicle.id %}" class="btn-action btn-edit">Edit</a>
+              <a href="{% url 'delete_vehicle' vehicle.id %}" class="btn-action btn-delete">Delete</a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="empty-state">No vehicles found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("http://localhost:8000/graphql/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCookie("csrftoken"),
+    },
+    body: JSON.stringify({
+      query: `
+        query {
+          allDistributors {
+            id
+            user {
+              username
+            }
+          }
+        }
+      `
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    
+    const distributors = data.data.allDistributors;
+    const selectElement = document.getElementById("distributor");
+
+    distributors.forEach(distributor => {
+      const option = document.createElement("option");
+      option.value = distributor.id;
+      option.textContent = distributor.user.username;
+      selectElement.appendChild(option);
+    });
+  })
+  .catch(error => console.error("Error fetching distributors:", error));
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("http://localhost:8000/graphql/", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      query: `
+        query {
+          allRoutes {
+            id
+            name
+          }
+        }
+      `
+    })
+  })
+  .then(res => res.json())
+  .then(res => {
+    const routes = res.data.allRoutes;
+    const select = document.getElementById('route');
+
+    routes.forEach(route => {
+      const option = document.createElement('option');
+      option.value = route.id;
+      option.textContent = route.name;
+      select.appendChild(option);
+    });
+  })
+  .catch(err => {
+    console.error('Failed to load routes:', err);
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.querySelector('.vehicle-form');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault(); 
+
+    const distributorId = document.getElementById('distributor').value;
+    const name = document.getElementById('name').value;
+    const vehicleId = document.getElementById('vehicle_id').value;
+    const capacity = parseFloat(document.getElementById('capacity').value) || null;
+    const routeId = document.getElementById('route').value;
+
+    const mutation = `
+      mutation CreateVehicle($input: VehicleInput!) {
+        createVehicle(input: $input) {
+          id
+          name
+          vehicleId
+          capacityLiters
+        }
+      }
+    `;
+
+    const variables = {
+      input: {
+        distributorId: parseInt(distributorId),
+        name: name,
+        vehicleId: vehicleId,
+        capacityLiters: capacity,
+        routeId: parseInt(routeId)
+      }
+    };
+
+    fetch("http://localhost:8000/graphql/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        query: mutation,
+        variables: variables
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.errors) {
+        console.error("GraphQL errors:", data.errors);
+        alert("Error creating vehicle.");
+      } else {
+        alert("Vehicle created successfully!");
+        form.reset(); 
+      }
+    })
+    .catch(err => {
+      console.error("Network error:", err);
+      alert("Failed to create vehicle.");
+    });
+  });
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("http://localhost:8000/graphql/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    body: JSON.stringify({
+      query: `
+        query {
+          allVehicles {
+            id
+            name
+            vehicleId
+            capacityLiters
+            distributor {
+              user {
+                username
+              }
+            }
+            route {
+              name
+            }
+          }
+        }
+      `
+    })
+  })
+  .then(res => res.json())
+  .then(res => {
+    const vehicles = res.data.allVehicles;
+    const tbody = document.querySelector(".vehicle-table tbody");
+    tbody.innerHTML = "";
+
+    if (vehicles.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">No vehicles found.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    vehicles.forEach(vehicle => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${vehicle.vehicleId}</td>
+        <td>${vehicle.name}</td>
+        <td>${vehicle.distributor?.user?.username || '-'}</td>
+        <td>${vehicle.capacityLiters || '-'}</td>
+        <td>${vehicle.route?.name || '-'}</td>
+        <td>
+          <span class="status-indicator status-${vehicle.isAvailable ? "available" : "unavailable"}"></span>
+          ${vehicle.isAvailable ? "Available" : "In Use"}
+        </td>
+        <td>
+          <div class="action-buttons">
+            <a href="/vehicles/edit/${vehicle.id}/" class="btn-action btn-edit">Edit</a>
+            <a href="/vehicles/delete/${vehicle.id}/" class="btn-action btn-delete">Delete</a>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  })
+  .catch(err => {
+    console.error("Error fetching vehicles:", err);
+  });
+});
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+
+</body>
+</html>
