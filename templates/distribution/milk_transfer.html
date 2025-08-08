@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Milk Lot Distribution</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f9fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 30px;
+    }
+    
+    h1 {
+      color: #2c5282;
+      margin-bottom: 25px;
+      font-weight: 600;
+      border-bottom: 2px solid #ebf2f7;
+      padding-bottom: 10px;
+    }
+    
+    .selection-card {
+      background-color: #ebf8ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    
+    .selection-title {
+      color: #2b6cb0;
+      margin-bottom: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .selection-title svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .selection-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      
+    }
+    
+    .form-group {
+      margin-bottom: 0;
+    }
+    
+    .transfer_date {
+        width: 200px;
+        padding: 8px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        height: 27px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #4a5568;
+    }
+    
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-sizing: border-box;
+      background-color: white;
+    }
+    
+    select:focus {
+      border-color: #63b3ed;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
+    }
+    
+    .selection-summary {
+      background-color: #f0fff4;
+      border: 1px solid #c6f6d5;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      display: none;
+    }
+    
+    .selection-summary.active {
+      display: block;
+    }
+    
+    .selection-summary p {
+      margin: 0;
+      color: #22543d;
+      font-weight: 500;
+    }
+    
+    .milk-lot-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .milk-lot-table thead {
+      background-color: #ebf8ff;
+      color: #2b6cb0;
+      position: sticky;
+      top: 0;
+    }
+    
+    .milk-lot-table th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      letter-spacing: 0.5px;
+    }
+    
+    .milk-lot-table td {
+      padding: 15px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .milk-lot-table tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    
+    .milk-lot-table tr:hover {
+      background-color: #ebf8ff;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+    
+    .status-approved {
+      background-color: #c6f6d5;
+      color: #22543d;
+    }
+    
+    .payment-paid {
+      color: #38a169;
+      font-weight: 500;
+    }
+    
+    .payment-pending {
+      color: #d69e2e;
+      font-weight: 500;
+    }
+    
+    .checkbox-cell {
+      text-align: center;
+    }
+    
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #4299e1;
+      cursor: pointer;
+    }
+    
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding: 15px 0;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .selected-count {
+      font-weight: 500;
+      color: #2b6cb0;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+    }
+    
+    .btn-primary {
+      background-color: #4299e1;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: #3182ce;
+    }
+    
+    .btn-success {
+      background-color: #38a169;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background-color: #2f855a;
+    }
+    
+    .btn:disabled {
+      background-color: #e2e8f0;
+      color: #a0aec0;
+      cursor: not-allowed;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #718096;
+      background-color: #f8fafc;
+      border-radius: 4px;
+    }
+    
+    .quality-indicator {
+      font-weight: 500;
+    }
+    
+    .quality-good {
+      color: #38a169;
+    }
+    
+    .quality-fair {
+      color: #d69e2e;
+    }
+    
+    .quality-poor {
+      color: #e53e3e;
+    }
+    
+    .select-all-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .select-all-checkbox {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .select-all-label {
+      font-weight: 500;
+      color: #4a5568;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Milk Lot Distribution</h1>
+    
+    <div class="selection-card">
+      <div class="selection-title">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <span>Assignment Details</span>
+      </div>
+      
+      <form class="selection-form" id="assignment-form">
+        <div class="form-group">
+          <label for="route">Route</label>
+          <select id="route" name="route" required>
+            <option value="">Select Route</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="vehicle">Vehicle</label>
+          <select id="vehicle" name="vehicle" required disabled>
+            <option value="">Select Vehicle</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="transfer-date">Transfer Date</label>
+          <input type="date" id="transfer-date" name="transfer_date" class="transfer_date" required>
+        </div>
+      </form>
+      
+      <div class="selection-summary" id="selection-summary">
+        <p>You are assigning milk lots to <strong id="selected-vehicle">Vehicle Name</strong> on <strong id="selected-date">2023-06-15</strong></p>
+      </div>
+    </div>
+    
+    <div class="select-all-container">
+      <input type="checkbox" id="select-all" class="select-all-checkbox">
+      <label for="select-all" class="select-all-label">Select all milk lots</label>
+    </div>
+    
+    <table class="milk-lot-table">
+      <thead>
+        <tr>
+          <th>MilkLot ID</th>
+          <th>Status</th>
+          <th>Volume (L)</th>
+          <th>Date Created</th>
+          <th>Payment Status</th>
+          <th>Fat %</th>
+          <th>Protein %</th>
+          <th>CFU/mL</th>
+          <th>Price/L</th>
+          <th>Select</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+    
+    <div class="action-bar">
+      <div class="selected-count">
+        <span id="selected-count">0</span> lots selected
+      </div>
+      <button type="button" class="btn btn-success" id="assign-btn" disabled>
+        Assign Selected to Vehicle
+      </button>
+    </div>
+  </div>
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        loadRoutes();
+        document.getElementById("route").addEventListener("change", function () {
+            const routeId = this.value;
+            if (routeId) {
+            loadVehicles(routeId);
+            } else {
+            resetVehicleDropdown();
+            }
+        });
+    });
+
+    async function loadRoutes() {
+    const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+        query: `
+            query {
+            allRoutes {
+                id
+                name
+            }
+            }
+        `
+        })
+    });
+
+    const data = await response.json();
+    const routes = data.data.allRoutes;
+    const routeSelect = document.getElementById("route");
+
+    routes.forEach(route => {
+        const option = document.createElement("option");
+        option.value = route.id;
+        option.textContent = route.name;
+        routeSelect.appendChild(option);
+    });
+    }
+
+    async function loadVehicles(routeId) {
+        const response = await fetch("/graphql/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+            query: `
+                query {
+                vehiclesByRoute(routeId: ${routeId}) {
+                    id
+                    name
+                    vehicleId
+                }
+                }
+            `
+            })
+        });
+
+        const data = await response.json();
+        const vehicles = data.data.vehiclesByRoute;
+        const vehicleSelect = document.getElementById("vehicle");
+
+        resetVehicleDropdown();
+
+        vehicles.forEach(vehicle => {
+            const option = document.createElement("option");
+            option.value = vehicle.id;
+            option.textContent = `${vehicle.name} (${vehicle.vehicleId})`;
+            vehicleSelect.appendChild(option);
+        });
+
+        vehicleSelect.disabled = false;
+        }
+
+    function resetVehicleDropdown() {
+        const vehicleSelect = document.getElementById("vehicle");
+        vehicleSelect.innerHTML = '<option value="">Select Vehicle</option>';
+        vehicleSelect.disabled = true;
+        }
+
+    document.addEventListener("DOMContentLoaded", () => {
+  loadMilkLots();
+});
+
+async function loadMilkLots() {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `
+        query {
+          milkLotList {
+            id
+            status
+            volumeL
+            dateCreated
+            status
+            fatPercent
+            proteinPercent
+            bacterialCount
+            pricePerLitre
+            bill{
+                isPaid
+            }
+          }
+        }
+      `
+    })
+  });
+
+  const data = await response.json();
+  const milkLots = data.data.milkLotList;
+
+  const tbody = document.querySelector(".milk-lot-table tbody");
+  tbody.innerHTML = ""; 
+
+  milkLots.forEach(lot => {
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td>ML-${lot.id}</td>
+      <td><span class="status-badge status-${lot.status}">${lot.status}</span></td>
+      <td>${lot.volumeL}</td>
+      <td>${lot.dateCreated}</td>
+      <td class="payment-${lot.bill.isPaid}">${lot.status}</td>
+      <td class="quality-indicator ${getQualityClass(lot.fatPercent)}">${lot.fatPercent}%</td>
+      <td class="quality-indicator ${getQualityClass(lot.proteinPercent)}">${lot.proteinPercent}%</td>
+      <td class="quality-indicator ${getQualityClassFromCfu(lot.bacterialCount)}">${lot.bacterialCount.toLocaleString()}</td>
+      <td>₹${lot.pricePerLitre}</td>
+      <td class="checkbox-cell">
+        <input type="checkbox" name="selected_lots" value="${lot.id}">
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
+}
+
+function getQualityClass(value) {
+  if (value >= 3.5) return "quality-good";
+  if (value >= 3.0) return "quality-fair";
+  return "quality-poor";
+}
+
+function getQualityClassFromCfu(cfu) {
+  if (cfu <= 100000) return "quality-good";
+  if (cfu <= 200000) return "quality-fair";
+  return "quality-poor";
+}
+
+</script>
+</html>

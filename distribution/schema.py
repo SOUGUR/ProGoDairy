@@ -2,7 +2,7 @@ import strawberry
 from typing import Optional, List
 from strawberry_django import type as strawberry_django_type
 from django.contrib.auth.models import User
-
+from datetime import date
 from .models import Vehicle, Distributor, Route
 from strawberry.types import Info
 from django.core.exceptions import ObjectDoesNotExist
@@ -47,6 +47,16 @@ class VehicleInput:
     capacity_liters: Optional[float] = None
     route_id: int
 
+@strawberry.type
+class MilkTransferType:
+    id: int
+    vehicle: Optional[VehicleType] 
+    transfer_date: date
+    route: Optional[RouteType]  
+    status: str
+    total_volume: Optional[float]
+    remarks: Optional[str]
+
 
 @strawberry.type
 class Query:
@@ -57,6 +67,10 @@ class Query:
     @strawberry.field
     def all_routes(self) -> List[RouteType]:
         return Route.objects.all()
+    
+    @strawberry.field
+    def vehicles_by_route(self, route_id: int) -> List[VehicleType]:
+        return Vehicle.objects.filter(route_id=route_id)
 
     @strawberry.field
     def all_distributors(self) -> List[DistributorType]:

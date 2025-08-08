@@ -40,11 +40,6 @@ class Vehicle(models.Model):
         return f"{self.name} ({self.vehicle_id})"
     
 class MilkTransfer(models.Model):
-    distributor = models.ForeignKey(
-        Distributor,
-        on_delete=models.CASCADE,
-        related_name='transfers'
-    )
     vehicle = models.ForeignKey(
         Vehicle,
         on_delete=models.SET_NULL,
@@ -52,20 +47,13 @@ class MilkTransfer(models.Model):
         blank=True,
         related_name='transfers'
     )
-    milk_transfer = models.ForeignKey(
-        'suppliers.MilkLot',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='milk_lots'
-    )
     transfer_date = models.DateField(auto_now_add=True)
     route = models.ForeignKey(
         Route,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='transfers'
+        related_name='route_milk_transfers'
     )
     status_choices = [
         ('scheduled', 'Scheduled'),
@@ -85,4 +73,5 @@ class MilkTransfer(models.Model):
 
     def calculate_total_volume(self):
         self.total_volume = sum(lot.volume_l for lot in self.milk_lots.all())
+        self.save(update_fields=['total_volume'])
         return self.total_volume

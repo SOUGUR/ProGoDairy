@@ -488,6 +488,43 @@ function viewPaymentBill(billId) {
 function closeModal() {
     document.getElementById('billModal').style.display = 'none';
 }
+
+async function loadSuppliers() {
+  const query = `
+    query {
+      suppliers {
+        id
+        email
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch('http://localhost:8000/graphql/', {  
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    const result = await response.json();
+    const suppliers = result.data.suppliers;
+    const select = document.getElementById("supplier");
+
+    suppliers.forEach(supplier => {
+      const option = document.createElement("option");
+      option.value = supplier.id;
+      option.textContent = `${supplier.id} (${supplier.email})`;
+      select.appendChild(option);
+    });
+
+  } catch (error) {
+    console.error("Error loading suppliers:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadSuppliers);
 </script>
 </body>
 </html>

@@ -80,6 +80,13 @@ class MilkLot(models.Model):
         blank=True,
         related_name="milk_lots",
     )
+    transfer = models.ForeignKey(
+        'distribution.MilkTransfer',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='milk_lots' 
+    )
 
     def __str__(self):
         return f"{self.supplier.user.username} – {self.volume_l} L – {self.date_created}"

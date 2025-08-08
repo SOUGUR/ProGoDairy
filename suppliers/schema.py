@@ -1,5 +1,6 @@
 import strawberry
 from strawberry_django import type as strawberry_django_type, field
+from distribution.schema import MilkTransferType
 from suppliers.models import Supplier, MilkLot, PaymentBill
 from plants.models import Tester
 from typing import List
@@ -47,6 +48,12 @@ class MilkLotInput:
     urea_nitrogen: float
     bacterial_count: int
 
+@strawberry.type
+class PaymentBillType:
+    id: int
+    total_volume_l: float
+    total_value: float
+    is_paid: bool 
 
 @strawberry.type
 class MilkLotType:
@@ -65,6 +72,8 @@ class MilkLotType:
     bacterial_count: int
     date_created: Optional[date]
     supplier: SupplierType
+    bill: Optional[PaymentBillType]
+    transfer: Optional[MilkTransferType]
 
 
 @strawberry.input
@@ -73,14 +82,6 @@ class CreatePaymentBillInput:
     date: str
     is_paid: bool
     payment_date: Optional[str]
-
-@strawberry.type
-class PaymentBillType:
-    id: int
-    total_volume_l: float
-    total_value: float
-    is_paid: bool
-
 
 @strawberry.type
 class CreatePaymentBillPayload:
@@ -117,13 +118,9 @@ class Query:
 
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_by_id(self, info: Info, id: int) -> Optional[MilkLotType]:
-        user = info.context.request.user
         try:
-            tester = Tester.objects.get(user=user)
-            milk_lot = MilkLot.objects.get(id=id, tester=tester)
+            milk_lot = MilkLot.objects.get(id=id)
             return milk_lot
-        except Tester.DoesNotExist:
-            raise GraphQLError("Supplier profile not found.")
         except MilkLot.DoesNotExist:
             raise GraphQLError(f"Milk Lot with ID {id} not found or not authorized.")
 
@@ -132,7 +129,7 @@ class Query:
         self,
     ) -> List[MilkLotType]:
         try:
-            milk_lots = MilkLot.objects.all().order_by("-date_created")
+            milk_lots = MilkLot.objects.select_related("supplier", "bill").order_by("-date_created")
             return milk_lots
         except Supplier.DoesNotExist:
             raise GraphQLError("Supplier profile not found.")

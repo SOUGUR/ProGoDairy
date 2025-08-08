@@ -100,7 +100,7 @@ def create_supplier(request):
             if 'errors' in json_data:
                 return HttpResponse(f"GraphQL errors: {json_data['errors']}")
             
-            messages.success(request, f"Supplier profile for user {request.user.username} updated successfully")
+            messages.success(request, f"Supplier profile for user {email} created successfully")
             return redirect('supplier_list')  
 
         except requests.exceptions.RequestException as e:
