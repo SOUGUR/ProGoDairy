@@ -32,7 +32,13 @@ class Supplier(models.Model):
     bank_account_number = models.CharField(max_length=30)
     bank_name = models.CharField(max_length=100)
     ifsc_code = models.CharField(max_length=11)
-    route = models.ForeignKey(Route, related_name='suppliers', blank=True, null=True, on_delete=models.SET_NULL)
+    route = models.ForeignKey(
+        Route,
+        related_name="suppliers",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
 
     def __str__(self):
         return f"{self.user.username} ({self.phone_number})"
@@ -52,7 +58,13 @@ class MilkLot(models.Model):
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, related_name="lots"
     )
-    tester = models.ForeignKey('plants.Tester',on_delete=models.CASCADE,related_name="tested_lots",null=True,blank=True)
+    tester = models.ForeignKey(
+        "plants.Tester",
+        on_delete=models.CASCADE,
+        related_name="tested_lots",
+        null=True,
+        blank=True,
+    )
     volume_l = models.FloatField(default=50.0)
     date_created = models.DateField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
@@ -81,15 +93,25 @@ class MilkLot(models.Model):
         related_name="milk_lots",
     )
     transfer = models.ForeignKey(
-        'distribution.MilkTransfer',
+        "distribution.MilkTransfer",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='milk_lots' 
+        related_name="milk_lots",
+    )
+
+    bulk_cooler = models.ForeignKey(
+        "collection_center.BulkCooler",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="milk_lots",
     )
 
     def __str__(self):
-        return f"{self.supplier.user.username} – {self.volume_l} L – {self.date_created}"
+        return (
+            f"{self.supplier.user.username} – {self.volume_l} L – {self.date_created}"
+        )
 
     def evaluate_and_price(self):
         """
@@ -128,10 +150,6 @@ class MilkLot(models.Model):
 
 
 class PaymentBill(models.Model):
-    """
-    One bill per supplier per day aggregating approved lots.
-    """
-
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, related_name="bills"
     )
@@ -144,11 +162,14 @@ class PaymentBill(models.Model):
     payment_date = models.DateField(null=True, blank=True)
 
     def calculate_totals(self):
-        approved_lots = MilkLot.objects.filter(supplier=self.supplier,status="approved",date_created = self.date )
+        approved_lots = MilkLot.objects.filter(
+            supplier=self.supplier, status="approved", date_created=self.date
+        )
         self.total_volume_l = sum(lot.volume_l for lot in approved_lots)
         self.total_value = sum(
             lot.total_price for lot in approved_lots if lot.total_price
         )
+        approved_lots.update(bill=self)
         self.save()
 
     def __str__(self):

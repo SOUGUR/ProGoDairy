@@ -377,58 +377,7 @@ def edit_milk_lot(request, lot_id):
         return HttpResponse(f"Request error: {e}")
     
 
-def create_payment_bill(request):
-    sessionid = request.COOKIES.get('sessionid')
-
-    if request.method == "POST":
-        data = json.loads(request.body)
-        supplier_id = int(data.get("supplier_id"))
-        test_date = data.get("date")
-        payment_date = data.get("payment_date", None)
-        is_paid = data.get("is_paid", False)
-        query = """
-        mutation CreatePaymentBill($input: CreatePaymentBillInput!) {
-            createPaymentBill(input: $input) {
-                success
-                bill {
-                    id
-                    totalVolumeL
-                    totalValue
-                    isPaid
-                }
-                error
-            }
-        }
-        """
-
-        variables = {
-            'input': {
-                "supplierId": supplier_id,
-                "date": test_date,  
-                "isPaid":is_paid,
-                "paymentDate": payment_date
-            }
-        }
-
-        response = requests.post(
-            'http://localhost:8000/graphql/',
-            json={"query": query, "variables": variables},
-            headers={
-                'Content-Type': 'application/json',
-                'Cookie': f'sessionid={sessionid}',
-            }
-        )
-
-        if response.status_code != 200:
-            return HttpResponse(f"GraphQL request failed with status {response.status_code}<br><br>{response.text}")
-
-        json_data = response.json()
-        if 'errors' in json_data:
-            return HttpResponse(f"GraphQL errors: {json_data['errors']}")
-        bill = json_data['data']['createPaymentBill']['bill']
-        messages.success(request, f"Payment Bill ID {bill['id']} created")
-        return redirect('list_payment_bills')  
-
+def create_payment_bill(request): 
     return render(request, "payment_bill_list.html")
 
 def payment_bill_list_view(request):

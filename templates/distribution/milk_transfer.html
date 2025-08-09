@@ -270,6 +270,10 @@
       color: #4a5568;
     }
 
+    .paid { color: green; font-weight: bold; }
+    .unpaid { color: red; font-weight: bold; }
+
+
   </style>
 </head>
 <body>
@@ -464,11 +468,11 @@ async function loadMilkLots() {
     const row = document.createElement("tr");
 
     row.innerHTML = `
-      <td>ML-${lot.id}</td>
+      <td>${lot.id}</td>
       <td><span class="status-badge status-${lot.status}">${lot.status}</span></td>
       <td>${lot.volumeL}</td>
       <td>${lot.dateCreated}</td>
-      <td class="payment-${lot.bill.isPaid}">${lot.status}</td>
+      <td class="lot-cell ${lot.bill.isPaid ? 'paid' : 'unpaid'}">${lot.bill.isPaid ? "Paid" : "Unpaid"}</td>
       <td class="quality-indicator ${getQualityClass(lot.fatPercent)}">${lot.fatPercent}%</td>
       <td class="quality-indicator ${getQualityClass(lot.proteinPercent)}">${lot.proteinPercent}%</td>
       <td class="quality-indicator ${getQualityClassFromCfu(lot.bacterialCount)}">${lot.bacterialCount.toLocaleString()}</td>

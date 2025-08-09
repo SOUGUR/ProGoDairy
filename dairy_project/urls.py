@@ -9,6 +9,7 @@ urlpatterns = [
     path('graphql/', GraphQLView.as_view(schema=schema)), 
     path('', include('suppliers.urls')), 
     path('distribution/', include('distribution.urls')), 
+    path('bmcu/', include('collection_center.urls')), 
 ]
 
 

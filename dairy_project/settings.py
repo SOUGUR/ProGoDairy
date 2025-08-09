@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "plants",
     "milk",
     "distribution",
+    "collection_center",
     "strawberry.django",
 ]
 

@@ -257,6 +257,35 @@
       cursor: pointer;
     }
 
+    .lot-row {
+  border-bottom: 1px solid #ddd;
+}
+
+.lot-cell {
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.lot-row:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.status.pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.status.approved {
+  color: green;
+  font-weight: bold;
+}
+
+.status.rejected {
+  color: red;
+  font-weight: bold;
+}
+
+
   </style>
 </head>
 <body>
@@ -273,14 +302,11 @@
     
     <div class="filter-section">
       <h3 class="filter-title">Generate New Bill</h3>
-      <form class="filter-form" method="GET" action="/generate-payment-bill/">
+      <form class="filter-form">
         <div class="form-group">
           <label for="supplier">Supplier</label>
           <select id="supplier" name="supplier_id" required>
             <option value="">Select Supplier</option>
-            {% for supplier in suppliers %}
-            <option value="{{ supplier.id }}">{{ supplier.user.username }} {{ supplier.email }}</option>
-            {% endfor %}
           </select>
         </div>
         
@@ -293,6 +319,7 @@
         <button type="submit" class="btn">Generate Bill</button>
       </form>
     </div>
+    <div id="message-box"></div>
     
     <table class="payment-table">
       <thead>
@@ -308,186 +335,140 @@
         </tr>
       </thead>
       <tbody>
-        {% for bill in payment_bills %}
-        <tr>
-          <td>{{ bill.id }}</td>
-          <td>{{ bill.date }}</td>
-          <td>{{ bill.supplier.id }}<br><small>{{ bill.supplier.email }}</small></td>
-          <td>{{ bill.totalVolumeL }} L</td>
-          <td class="price-cell">₹{{ bill.totalValue }}</td>
-          <td>
-            <span class="paid-status paid-{{ bill.isPaid|lower }}">
-              {% if bill.isPaid %}Paid{% else %}Pending{% endif %}
-            </span>
-          </td>
-          <td>{% if bill.paymentDate %}{{ bill.paymentDate }}{% else %}—{% endif %}</td>
-          <td>
-            <div class="action-buttons">
-              <a href="#" class="btn-action btn-view" onclick="viewPaymentBill('{{ bill.id }}')">View</a>
-
-              {% if bill.pdfUrl %}
-                <a href="{{ bill.pdfUrl }}" class="btn-action btn-pdf">PDF</a>
-              {% endif %}
-              {% if not bill.isPaid %}
-                <a href="#" class="btn-action btn-mark-paid" onclick="markBillPaid('{{ bill.id }}', '{{ bill.supplier.id }}', '{{ bill.date }}')">Mark Paid</a>
-              {% endif %}
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="8" class="empty-state">No payment bills found.</td>
-        </tr>
-        {% endfor %}
       </tbody>
     </table>
-    <div id="paymentBillModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span onclick="document.getElementById('paymentBillModal').style.display='none'" class="close">&times;</span>
-      <h2>Payment Bill Details</h2>
-      <p><strong>ID:</strong> <span id="modal-id"></span></p>
-      <p><strong>Date:</strong> <span id="modal-date"></span></p>
-      <p><strong>Total Volume:</strong> <span id="modal-volume"></span></p>
-      <p><strong>Total Value:</strong> <span id="modal-value"></span></p>
-      <p><strong>Paid:</strong> <span id="modal-paid"></span></p>
-      <p><strong>Payment Date:</strong> <span id="modal-payment-date"></span></p>
-      <p><strong>Supplier Email:</strong> <span id="modal-supplier-email"></span></p>
-    </div>
-</div>
-</div>
+    <div id="billModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h2>Bill Details</h2>
+    <div id="billInfo"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Lot ID</th>
+          <th>Volume (L)</th>
+          <th>Price per L</th>
+          <th>Total Price</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="lotTableBody"></tbody>
+    </table>
   </div>
-  <script>
-    function handlePaymentBillGeneration(event) {
-    event.preventDefault(); 
-    
-    const form = event.target;
-    const formData = new FormData(form);
-    const supplierId = formData.get('supplier_id');
-    const startDate = formData.get('start_date');
-    
-  
-    if (!supplierId || !startDate) {
-        alert('Please select both supplier and collection date');
+</div>
+</div>
+</div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+  const form = document.querySelector(".filter-form");
+  async function createOrUpdateBill(supplierId, date, isPaid, paymentDate = null) {
+    const query = `
+      mutation CreatePaymentBill($input: CreatePaymentBillInput!) {
+        createPaymentBill(input: $input) {
+          success
+          bill {
+            id
+            totalVolumeL
+            totalValue
+            isPaid
+          }
+          error
+        }
+      }
+    `;
+
+    const variables = {
+      input: {
+        supplierId: parseInt(supplierId, 10),
+        date: date,
+        isPaid: isPaid,
+        paymentDate: paymentDate
+      }
+    };
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ query, variables })
+      });
+
+      const result = await response.json();
+
+      if (result.errors) {
+        console.error(result.errors);
+        alert("Error: " + result.errors[0].message);
+        return false;
+      }
+
+      const billData = result.data.createPaymentBill;
+      if (billData.success) {
+        alert(`Payment Bill ID ${billData.bill.id} ${isPaid ? "marked as Paid" : "created"} successfully!`);
+        return true;
+      } else {
+        alert("Failed: " + billData.error);
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while processing the payment bill.");
+      return false;
+    }
+  }
+
+  if (form) {
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const supplierId = document.getElementById("supplier").value;
+      const testDate = document.getElementById("start_date").value;
+
+      if (!supplierId || !testDate) {
+        alert("Please select a supplier and collection date.");
         return;
+      }
+
+      const success = await createOrUpdateBill(supplierId, testDate, false, null);
+      if (success) {
+        window.location.href = "/create-Payment-Bill/";
+      }
+    });
+  }
+
+  window.markBillPaid = async function (billId, supplierId, date) {
+    if (!confirm(`Mark bill #${billId} as Paid?`)) return;
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const success = await createOrUpdateBill(supplierId, date, true, today);
+    if (success) {
+      loadPaymentBills(); 
     }
+  };
+});
 
 
-    const requestData = {
-        supplier_id: supplierId,
-        date: startDate
-    };
-
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.textContent;
-    submitBtn.textContent = 'Generating...';
-    submitBtn.disabled = true;
-
-
-    fetch('/create-Payment-Bill/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken'), 
-        },
-        body: JSON.stringify(requestData),
-        credentials: 'include'
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.text();;
-    })
-    .then(html => {
-    console.log('HTML response:', html);
-  })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to create payment bill. Please try again.');
-    })
-    .finally(() => {
-        submitBtn.textContent = originalBtnText;
-        submitBtn.disabled = false;
-    });
+function showMessage(msg, type) {
+  const box = document.getElementById("message-box");
+  box.innerHTML = msg;
+  box.className = type; 
 }
-function markBillPaid(billId, supplierId, billDate) {
-    const data = {
-        supplier_id: supplierId,
-        date: billDate,
-        is_paid: true,
-        payment_date: new Date().toISOString().slice(0, 10)  
-    };
+    
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
 
-    fetch('/create-Payment-Bill/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(data),
-        credentials: 'include'
-    })
-    .then(response => {
-        if (response.redirected) {
-            window.location.href = response.url;  // Django redirects to success page
-        } else {
-            return response.text().then(html => {
-                document.body.innerHTML = html;  // Fallback: replace page content
-            });
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("Failed to mark bill as paid.");
-    });
-}
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-document.querySelector('.filter-form').addEventListener('submit', handlePaymentBillGeneration);
-function viewPaymentBill(billId) {
-    fetch(`/payment-bill/${billId}/`, {
-        method: 'GET',
-        credentials: 'include'
-    })
-    .then(response => response.json())
-    .then(data => {
-        const bill = data.bill;
-        if (!bill) {
-            alert("No bill found.");
-            return;
-        }
-
-        // Now fill modal/dialog content
-        document.getElementById('modal-id').textContent = bill.id;
-        document.getElementById('modal-date').textContent = bill.date;
-        document.getElementById('modal-volume').textContent = bill.totalVolumeL + ' L';
-        document.getElementById('modal-value').textContent = '₹' + bill.totalValue;
-        document.getElementById('modal-paid').textContent = bill.isPaid ? 'Paid' : 'Pending';
-        document.getElementById('modal-payment-date').textContent = bill.paymentDate || '—';
-        document.getElementById('modal-supplier-email').textContent = bill.supplier.email;
-
-        // Show modal
-        document.getElementById('paymentBillModal').style.display = 'block';
-    })
-    .catch(error => {
-        console.error('Error fetching bill details:', error);
-    });
-}
-function closeModal() {
-    document.getElementById('billModal').style.display = 'none';
-}
 
 async function loadSuppliers() {
   const query = `
@@ -525,6 +506,173 @@ async function loadSuppliers() {
 }
 
 document.addEventListener("DOMContentLoaded", loadSuppliers);
+
+
+
+async function loadPaymentBills() {
+  const query = `
+    query {
+      allPaymentBills {
+        id
+        date
+        paymentDate
+        totalVolumeL
+        totalValue
+        isPaid
+        pdfUrl
+        supplier {
+          id
+          email
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    });
+
+    const result = await response.json();
+    if (result.errors) {
+      console.error(result.errors);
+      alert("Error fetching payment bills");
+      return;
+    }
+
+    const bills = result.data.allPaymentBills;
+    const tbody = document.querySelector(".payment-table tbody");
+    tbody.innerHTML = "";
+
+    if (bills.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No payment bills found.</td></tr>`;
+      return;
+    }
+
+    bills.forEach(bill => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${bill.id}</td>
+        <td>${bill.date || "—"}</td>
+        <td>${bill.supplier.email} - <small>${bill.supplier.id}</small></td>
+        <td>${bill.totalVolumeL ? bill.totalVolumeL + " L" : "—"}</td>
+        <td class="price-cell">₹${bill.totalValue || "0"}</td>
+        <td>
+          <span class="paid-status paid-${bill.isPaid}">
+            ${bill.isPaid ? "Paid" : "Pending"}
+          </span>
+        </td>
+        <td>${bill.paymentDate || "—"}</td>
+        <td>
+          <div class="action-buttons">
+            <a href="#" class="btn-action btn-view" onclick="viewPaymentBill('${bill.id}')">View</a>
+            ${bill.pdfUrl ? `<a href="${bill.pdfUrl}" class="btn-action btn-pdf">PDF</a>` : ""}
+            ${!bill.isPaid ? `<a href="#" class="btn-action btn-mark-paid" onclick="markBillPaid('${bill.id}', '${bill.supplier.id}', '${bill.date}')">Mark Paid</a>` : ""}
+          </div>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred while loading payment bills.");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  loadPaymentBills();
+});
+
+
+async function viewPaymentBill(billId) {
+  const query = `
+    query MilkLotsByBill($billId: Int!) {
+      milkLotsByBill(billId: $billId) {
+        id
+        volumeL
+        totalPrice
+        pricePerLitre
+        dateCreated
+        status
+        bill {
+          id
+          totalVolumeL
+          totalValue
+          isPaid
+          paymentDate
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ query, variables: { billId: parseInt(billId, 10) } })
+    });
+
+    const result = await response.json();
+    if (result.errors) {
+      alert(result.errors[0].message);
+      return;
+    }
+
+    const lots = result.data.milkLotsByBill;
+    if (!lots.length) {
+      alert("No milk lots found for this bill.");
+      return;
+    }
+
+  
+    const bill = lots[0].bill;
+    const milk_lot = lots[0]
+    document.getElementById("billInfo").innerHTML = `
+      <table class="bill-details">
+      <tr><td><strong>Bill ID:</strong></td><td>${bill.id}</td></tr>
+      <tr><td><strong>Total Volume:</strong></td><td>${bill.totalVolumeL} L</td></tr>
+      <tr><td><strong>Total Value:</strong></td><td>₹${bill.totalValue}</td></tr>
+      <tr><td><strong>Status:</strong></td><td>${bill.isPaid ? "Paid" : "Pending"}</td></tr>
+      <tr><td><strong>Date Created:</strong></td><td>${milk_lot.dateCreated || "—"}</td></tr>
+      <tr><td><strong>Payment Date:</strong></td><td>${bill.paymentDate || "—"}</td></tr>
+      </table>
+    `;
+    
+    const tableBody = document.getElementById("lotTableBody");
+    tableBody.innerHTML = "";
+    lots.forEach(lot => {
+      const row = `
+        <tr class="lot-row">
+        <td class="lot-cell">${lot.id}</td>
+        <td class="lot-cell">${lot.volumeL} L</td>
+        <td class="lot-cell">₹${lot.pricePerLitre || "—"}</td>
+        <td class="lot-cell">₹${lot.totalPrice || "—"}</td>
+        <td class="lot-cell status ${lot.status.toLowerCase()}">${lot.status}</td>
+        <td class="lot-cell">${lot.dateCreated || "—"}</td>
+        </tr>
+      `;
+      tableBody.insertAdjacentHTML("beforeend", row);
+    });
+
+    // Show Modal
+    document.getElementById("billModal").style.display = "block";
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load bill details.");
+  }
+}
+
+// Modal close logic
+document.addEventListener("DOMContentLoaded", function() {
+  const modal = document.getElementById("billModal");
+  modal.querySelector(".modal-close").addEventListener("click", () => modal.style.display = "none");
+  window.addEventListener("click", (e) => { if (e.target === modal) modal.style.display = "none"; });
+});
+
 </script>
 </body>
 </html>

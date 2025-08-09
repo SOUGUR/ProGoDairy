@@ -54,6 +54,7 @@ class PaymentBillType:
     total_volume_l: float
     total_value: float
     is_paid: bool 
+    payment_date: Optional[date] = None
 
 @strawberry.type
 class MilkLotType:
@@ -74,6 +75,10 @@ class MilkLotType:
     supplier: SupplierType
     bill: Optional[PaymentBillType]
     transfer: Optional[MilkTransferType]
+
+    @strawberry.field
+    def bill(self, info) -> Optional["PaymentBillType"]:
+        return self.bill 
 
 
 @strawberry.input
@@ -117,12 +122,8 @@ class Query:
             return None
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def milk_lot_by_id(self, info: Info, id: int) -> Optional[MilkLotType]:
-        try:
-            milk_lot = MilkLot.objects.get(id=id)
-            return milk_lot
-        except MilkLot.DoesNotExist:
-            raise GraphQLError(f"Milk Lot with ID {id} not found or not authorized.")
+    def milk_lots_by_bill(self, info: Info, bill_id: int) -> List[MilkLotType]:
+        return MilkLot.objects.filter(bill_id=bill_id).select_related("supplier", "bill")
 
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_list(
@@ -133,6 +134,15 @@ class Query:
             return milk_lots
         except Supplier.DoesNotExist:
             raise GraphQLError("Supplier profile not found.")
+        
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def milk_lot_by_id(self, info: Info, id: int) -> Optional[MilkLotType]:
+        try:
+            milk_lot = MilkLot.objects.get(id=id)
+            return milk_lot
+        except MilkLot.DoesNotExist:
+            raise GraphQLError(f"Milk Lot with ID {id} not found or not authorized.")
+
 
     @field
     def all_payment_bills(self) -> List[PaymentBillTypeList]:
