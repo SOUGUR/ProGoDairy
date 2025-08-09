@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Suppliers</title>
+{% extends "base.html" %}
+
+{% block title %}Supplier List{% endblock %}
+
+{% block content %}
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -180,9 +181,6 @@ async function loadSuppliers() {
     });
 }
 
-// Run on page load
 document.addEventListener("DOMContentLoaded", loadSuppliers);
 </script>
-
-</body>
-</html>
+{% endblock %}

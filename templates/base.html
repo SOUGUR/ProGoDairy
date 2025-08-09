@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Go Pro Dairy MS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      color: #333;
+      transition: margin-left 0.3s ease-in-out;
+      display: flex;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 190px;
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      transition: width 0.3s ease-in-out;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    .sidebar.collapsed {
+      width: 50px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background-color: #34495e;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    .sidebar-header h3 {
+      margin: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .toggle-btn, .full-sidebar-btn {
+      background: none;
+      border: none;
+      color: #ecf0f1;
+      cursor: pointer;
+      margin-left: auto;
+      font-size: 1rem;
+    }
+
+    .toggle-btn:hover, .full-sidebar-btn:hover {
+      color: #3498db;
+    }
+
+    .sidebar.collapsed .sidebar-header h3 {
+      display: none;
+    }
+
+    .sidebar.collapsed .menu-text {
+      display: none;
+    }
+
+    .sidebar .menu-text {
+      transition: opacity 0.2s;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+    }
+
+    .menu-item {
+      padding: 0;
+    }
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1rem;
+      color: #ecf0f1;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .menu-link:hover {
+      background-color: #34495e;
+    }
+
+    .menu-link.active {
+      background-color: #3498db;
+      font-weight: bold;
+    }
+
+    .menu-icon {
+      width: 24px;
+      text-align: center;
+      margin-right: 1rem;
+    }
+
+
+    .main-content {
+      flex: 1;
+      margin-left: 160px;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease-in-out;
+    }
+
+    body.collapsed .main-content {
+      margin-left: 60px;
+    }
+
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-container h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #2c3e50;
+    }
+
+    .page-container p {
+      font-size: 1.1rem;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h3>GoProDairy</h3>
+      <button class="toggle-btn" id="toggle-btn">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="full-sidebar-btn" id="full-sidebar-btn">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+    </div>
+    <ul class="sidebar-menu">
+      <li class="menu-item">
+        <a href="{% url 'supplier_list' %}" class="menu-link active">
+          <span class="menu-icon"><i class="fas fa-truck"></i></span>
+          <span class="menu-text">Suppliers</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'create_supplier' %}" class="menu-link active">
+          <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
+          <span class="menu-text">Add Supplier</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'create_milk_lot' %}" class="menu-link">
+          <span class="menu-icon"><i class="fas fa-plus-circle"></i></span>
+          <span class="menu-text">Add Milk Lot</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'milk_lot_list' %}" class="menu-link">
+          <span class="menu-icon"><i class="fas fa-wine-bottle"></i></span>
+          <span class="menu-text">Milk Lots</span>
+        </a>
+      </li>
+      
+      <li class="menu-item">
+        <a href="{% url 'create_payment_bill' %}" class="menu-link">
+          <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+          <span class="menu-text">Payment Bills</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
+          <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
+          <span class="menu-text">Vehicles</span>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
+            <span class="menu-text">Milk Pooling</span>
+        </a>
+        </li>
+
+      <li class="menu-item">
+        <a href="milk_distribution.html" class="menu-link">
+          <span class="menu-icon"><i class="fas fa-route"></i></span>
+          <span class="menu-text">Distribution</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+
+  <div class="main-content" id="main-content">
+    <div class="page-container">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </div>
+
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const fullSidebarBtn = document.getElementById('full-sidebar-btn');
+    const body = document.body;
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      body.classList.toggle('collapsed');
+
+      const icon = toggleBtn.querySelector('i');
+      if (sidebar.classList.contains('collapsed')) {
+        icon.classList.remove('fa-chevron-left');
+        icon.classList.add('fa-chevron-right');
+      } else {
+        icon.classList.remove('fa-chevron-right');
+        icon.classList.add('fa-chevron-left');
+      }
+    });
+
+
+    fullSidebarBtn.addEventListener('click', () => {
+      if (sidebar.classList.contains('collapsed')) {
+       
+        sidebar.classList.remove('collapsed');
+        body.classList.remove('collapsed');
+        fullSidebarBtn.title = "Minimize Sidebar";
+        fullSidebarBtn.querySelector('i').classList.replace('fa-expand-arrows-alt', 'fa-compress-arrows-alt');
+      } else {
+       
+        sidebar.classList.add('collapsed');
+        body.classList.add('collapsed');
+        fullSidebarBtn.title = "Expand Sidebar";
+        fullSidebarBtn.querySelector('i').classList.replace('fa-compress-arrows-alt', 'fa-expand-arrows-alt');
+      }
+    });
+
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPage = window.location.pathname.split('/').pop() || 'supplier_list.html';
+      const menuLinks = document.querySelectorAll('.menu-link');
+
+      menuLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

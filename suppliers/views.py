@@ -1,9 +1,4 @@
-from django.shortcuts import render, redirect
-import requests
-from django.http import HttpResponse
-from django.contrib import messages
-from django.http import JsonResponse
-
+from django.shortcuts import render
 
 def supplier_list(request):
     return render(request, "suppliers/supplier_list.html")

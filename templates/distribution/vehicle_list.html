@@ -1,6 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base.html" %}
+
+{% block title %}Vehicle List and Vehicle addition{% endblock %}
+
+{% block content %}
   <title>Vehicle Management</title>
   <style>
     body {
@@ -74,24 +76,39 @@
       box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
     }
     
-    .btn {
-      background-color: #4299e1;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      align-self: flex-end;
-      grid-column: 1 / -1;
-      max-width: 200px;
-    }
-    
-    .btn:hover {
-      background-color: #3182ce;
-    }
+    .floating-btn {
+    position: fixed;
+    right: 50px;
+    z-index: 999;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.3s, transform 0.2s;
+    text-decoration: none;     
+    display: inline-block;     
+  }
+
+  
+  #create-milk-lot-btn {
+    bottom: 460px;             
+  }
+
+
+  .floating-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+
+
+  .floating-btn:active {
+    transform: translateY(0);
+  }
     
     .vehicle-table {
       width: 100%;
@@ -223,7 +240,7 @@
           </select>
         </div>
         
-        <button type="submit" class="btn">Add Vehicle</button>
+        <button type="submit" id="create-milk-lot-btn" class="floating-btn">Add Vehicle</button>
       </form>
     </div>
     
@@ -268,7 +285,7 @@
   </div>
   <script>
 document.addEventListener("DOMContentLoaded", function () {
-  fetch("http://localhost:8000/graphql/", {
+  fetch("/graphql/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -305,7 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-  fetch("http://localhost:8000/graphql/", {
+  fetch("/graphql/", {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -371,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     };
 
-    fetch("http://localhost:8000/graphql/", {
+    fetch("/graphql/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -401,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-  fetch("http://localhost:8000/graphql/", {
+  fetch("/graphql/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -485,6 +502,4 @@ function getCookie(name) {
   return cookieValue;
 }
 </script>
-
-</body>
-</html>
+{% endblock %}

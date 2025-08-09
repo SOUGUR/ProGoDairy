@@ -1,6 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base.html" %}
+
+{% block title %}Supplier List{% endblock %}
+
+{% block content %}
   <title>Create Milk Lot</title>
   <style>
     body {
@@ -435,5 +437,4 @@ async function fetchMilkLotAndFillForm(lotId) {
     document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
 }
 </script>
-</body>
-</html>
+{% endblock %}

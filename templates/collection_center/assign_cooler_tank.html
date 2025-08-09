@@ -1,6 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base.html" %}
+
+{% block title %}Assign Cooler Tanks as Per Routes{% endblock %}
+
+{% block content %}
   <title>Assign Cooler Tanks</title>
   <style>
     body {
@@ -530,5 +532,4 @@ document.getElementById("assign-btn").addEventListener("click", async () => {
     }
 });
 </script>
-</body>
-</html>
+{% endblock %}
