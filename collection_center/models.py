@@ -28,9 +28,18 @@ class BulkCooler(models.Model):
         return f"{self.route.name} – {self.name} ({self.capacity_liters} L)"
 
     def add_lots(self, *milk_lots):
+        already_in_this_cooler = [lot for lot in milk_lots\
+                                if lot.bulk_cooler_id == self.id]
+        if already_in_this_cooler:
+            raise ValueError(
+                f"Cannot add {len(already_in_this_cooler)} milk lots: "
+                "they are already assigned to this bulk cooler."
+            )
+
         candidates = [
             lot for lot in milk_lots
-            if lot.status == 'approved' and lot.bulk_cooler_id is None
+            if lot.status == 'approved'
+            and lot.bulk_cooler_id is None  
         ]
 
         proposed_volume = sum(lot.volume_l for lot in candidates)

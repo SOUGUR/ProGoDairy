@@ -85,24 +85,24 @@ ul.messages li {
   color: #fff;
 }
 
-/* Success message */
+
 ul.messages li.success {
-  background-color: #4caf50;  /* Green */
+  background-color: #4caf50;  
 }
 
-/* Error message */
+
 ul.messages li.error {
-  background-color: #f44336;  /* Red */
+  background-color: #f44336; 
 }
 
-/* Warning message */
+
 ul.messages li.warning {
-  background-color: #ff9800;  /* Orange */
+  background-color: #ff9800;  
 }
 
-/* Info message */
+
 ul.messages li.info {
-  background-color: #2196f3;  /* Blue */
+  background-color: #2196f3;  
 }
 
   </style>
@@ -123,26 +123,66 @@ ul.messages li.info {
       <thead>
         <tr>
           <th>ID</th>
-          <th>Phone</th>
+          <th>Name of Supplier</th>
           <th>Email</th>
+          <th>Phone</th>
           <th>Daily Capacity</th>
           <th>Total Cows</th>
           <th>Annual Output</th>
         </tr>
       </thead>
       <tbody>
-        {% for supplier in suppliers %}
-          <tr>
-            <td>{{ supplier.id }}</td>
-            <td>{{ supplier.phoneNumber }}</td>
-            <td >{{ supplier.email }}</td>
-            <td >{{ supplier.dailyCapacity }} </td>
-            <td >{{ supplier.totalDairyCows }} </td>
-            <td >{{ supplier.annualOutput }} L</td>
-        </tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
+<script>
+async function loadSuppliers() {
+    const query = `
+      query {
+        suppliers {
+          id
+          user{
+            username
+          }
+          phoneNumber
+          email
+          dailyCapacity
+          totalDairyCows
+          annualOutput
+        }
+      }
+    `;
+
+    const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query })
+    });
+
+    const result = await response.json();
+    const suppliers = result.data.suppliers;
+
+    const tableBody = document.querySelector(".supplier-table tbody");
+    tableBody.innerHTML = ""; 
+
+    suppliers.forEach(supplier => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${supplier.id}</td>
+          <td>${supplier.user.username || ""}</td>
+          <td>${supplier.email || ""}</td>
+          <td>${supplier.phoneNumber || ""}</td>
+          <td>${supplier.dailyCapacity || ""}</td>
+          <td>${supplier.totalDairyCows || ""}</td>
+          <td>${supplier.annualOutput ? supplier.annualOutput + " L" : ""}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+// Run on page load
+document.addEventListener("DOMContentLoaded", loadSuppliers);
+</script>
+
 </body>
 </html>

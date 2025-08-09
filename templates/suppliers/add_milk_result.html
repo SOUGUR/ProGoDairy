@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Milk Lot</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f9fc;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 30px;
+    }
+    
+    h1 {
+      color: #2c5282;
+      margin-bottom: 25px;
+      font-weight: 600;
+      border-bottom: 2px solid #ebf2f7;
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #4a5568;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: #63b3ed;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    button {
+      background-color: #4299e1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background-color: #3182ce;
+    }
+    
+    .required-field::after {
+      content: " *";
+      color: #e53e3e;
+    }
+    
+    .section-title {
+      color: #2b6cb0;
+      margin: 25px 0 15px 0;
+      font-weight: 600;
+      font-size: 1.1em;
+    }
+    
+    .supplier-info {
+      background-color: #ebf8ff;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    #milk-test-btn {
+      position: fixed;
+      bottom: 20px;      
+      right: 20px;       
+      z-index: 999;
+
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      background-color: #007bff; 
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    #milk-test-btn:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    #milk-test-btn:active {
+      transform: translateY(0);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Record Milk Lot Results</h1>
+    <form id="milkLotForm" method="POST" action="{% if milk_lot %}{% url 'edit_milk_lot' milk_lot.id %}{% else %}{% url 'create_milk_lot' %}{% endif %}">
+      {% csrf_token %}
+      <div class="section-title">Select Supplier</div>
+  
+    <div class="form-group">
+      <label class="required-field">Supplier</label>
+          <select name="supplier_id" required>
+            <option value="" disabled selected>Select a supplier</option>   
+          </select>
+    </div>
+
+    <div class="form-group">
+      <label class="required-field">Tester</label>
+      <select name="tester_id" required>
+        <option value="" disabled selected>Select a tester</option>
+      </select>
+    </div>
+
+
+      <div class="section-title">Basic Information</div>
+      
+      <div class="form-group">
+        <label class="required-field">Volume (Liters)</label>
+        <input type="number" step="0.01" name="volume_l" value="{% if milk_lot %}{{ milk_lot.volumeL }}{% endif %}" required>
+      </div>
+      
+      <div class="section-title">Composition Analysis</div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required-field">Fat Percentage</label>
+          <input type="number" step="0.01" name="fat_percent" value="{% if milk_lot %}{{ milk_lot.fatPercent }}{% endif %}" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="required-field">Protein Percentage</label>
+          <input type="number" step="0.01" name="protein_percent" value="{% if milk_lot %}{{ milk_lot.proteinPercent }}{% endif %}" required>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required-field">Lactose Percentage</label>
+          <input type="number" step="0.01" name="lactose_percent" value="{% if milk_lot %}{{ milk_lot.lactosePercent }}{% endif %}" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="required-field">Total Solids</label>
+          <input type="number" step="0.01" name="total_solids" value="{% if milk_lot %}{{ milk_lot.totalSolids }}{% endif %}" required>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required-field">SNF (Solids Not Fat)</label>
+          <input type="number" step="0.01" name="snf" value="{% if milk_lot %}{{ milk_lot.snf }}{% endif %}" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="required-field">Urea Nitrogen</label>
+          <input type="number" step="0.01" name="urea_nitrogen" value="{% if milk_lot %}{{ milk_lot.ureaNitrogen }}{% endif %}" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="required-field">Bacterial Count (CFU/mL)</label>
+        <input type="number" name="bacterial_count" value="{% if milk_lot %}{{ milk_lot.bacterialCount }}{% endif %}" required>
+      </div>
+      
+    <button type="submit" id="milk-test-btn">Submit Milk Test</button>
+  </div>
+<script>
+  
+// create Milk Lot mutation
+document.addEventListener("DOMContentLoaded", () => {
+  const milkTestBtn = document.getElementById("milk-test-btn");
+
+  milkTestBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const input = {
+      supplierId: parseInt(document.querySelector("select[name='supplier_id']").value),
+      testerId: parseInt(document.querySelector("select[name='tester_id']").value),
+      volumeL: parseFloat(document.querySelector("input[name='volume_l']").value),
+      fatPercent: parseFloat(document.querySelector("input[name='fat_percent']").value),
+      proteinPercent: parseFloat(document.querySelector("input[name='protein_percent']").value),
+      lactosePercent: parseFloat(document.querySelector("input[name='lactose_percent']").value),
+      totalSolids: parseFloat(document.querySelector("input[name='total_solids']").value),
+      snf: parseFloat(document.querySelector("input[name='snf']").value),
+      ureaNitrogen: parseFloat(document.querySelector("input[name='urea_nitrogen']").value),
+      bacterialCount: parseInt(document.querySelector("input[name='bacterial_count']").value)
+    };
+
+    const graphqlQuery = `
+      mutation CreateMilkLot($input: MilkLotInput!) {
+        createMilkLot(input: $input) {
+          id
+          volumeL
+          fatPercent
+          proteinPercent
+          lactosePercent
+          totalSolids
+          snf
+          ureaNitrogen
+          bacterialCount
+          totalPrice
+          pricePerLitre
+          status
+          dateCreated
+        }
+      }
+    `;
+
+    try {
+      const res = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: graphqlQuery,
+          variables: { input }
+        })
+      });
+
+      const result = await res.json();
+      if (result.errors) {
+        console.error("GraphQL Error:", result.errors);
+        alert("Error: " + result.errors[0].message);
+        return;
+      }
+
+      const milkLot = result.data.createMilkLot;
+      alert(`Milk lot created successfully! ID: ${milkLot.id}`);
+      window.location.href = "/milk-lot/list/";
+    } catch (error) {
+      console.error("Request Error:", error);
+      alert("Network error creating milk lot.");
+    }
+  });
+});
+
+async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTesterId = null) {
+    const supplierQuery = `
+    query {
+        suppliers {
+            id
+            user { username }
+        }
+    }`;
+    const testerQuery = `
+    query {
+        testers {
+            id
+            user { username }
+        }
+    }`;
+
+    const supplierRes = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: supplierQuery })
+    });
+    const suppliers = (await supplierRes.json()).data.suppliers;
+
+    const testerRes = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: testerQuery })
+    });
+    const testers = (await testerRes.json()).data.testers;
+
+    const supplierSelect = document.querySelector("select[name='supplier_id']");
+    const testerSelect = document.querySelector("select[name='tester_id']");
+
+    supplierSelect.innerHTML = '<option value="" disabled>Select a supplier</option>';
+    testerSelect.innerHTML = '<option value="" disabled>Select a tester</option>';
+
+    suppliers.forEach(supplier => {
+        const option = document.createElement("option");
+        option.value = supplier.id;
+        option.textContent = `${supplier.id} - (${supplier.user.username})`;
+        if (selectedSupplierId && selectedSupplierId === supplier.id) {
+            option.selected = true;
+        }
+        supplierSelect.appendChild(option);
+    });
+
+    testers.forEach(tester => {
+        const option = document.createElement("option");
+        option.value = tester.id;
+        option.textContent = `${tester.id} - (${tester.user.username})`;
+        if (selectedTesterId && selectedTesterId === tester.id) {
+            option.selected = true;
+        }
+        testerSelect.appendChild(option);
+    });
+}
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    const lotId = "{{ lot_id|default:'' }}";
+    if (lotId) {
+        fetchMilkLotAndFillForm(lotId); 
+    } else {
+        loadSuppliersAndTesters(); 
+    }
+});
+
+async function fetchMilkLotAndFillForm(lotId) {
+    const query = `
+        query GetMilkLotById($id: Int!) {
+            milkLotById(id: $id) {
+                id
+                supplier { id user { username } }
+                tester { id user { username } }
+                volumeL
+                fatPercent
+                proteinPercent
+                lactosePercent
+                totalSolids
+                snf
+                ureaNitrogen
+                bacterialCount
+            }
+        }
+    `;
+
+    const res = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, variables: { id: parseInt(lotId) } })
+    });
+
+    const result = await res.json();
+    const lot = result.data.milkLotById;
+
+    // Load dropdowns with preselection
+    await loadSuppliersAndTesters(lot.supplier.id, lot.tester.id);
+
+    // Fill other inputs
+    document.querySelector("input[name='volume_l']").value = lot.volumeL;
+    document.querySelector("input[name='fat_percent']").value = lot.fatPercent;
+    document.querySelector("input[name='protein_percent']").value = lot.proteinPercent;
+    document.querySelector("input[name='lactose_percent']").value = lot.lactosePercent;
+    document.querySelector("input[name='total_solids']").value = lot.totalSolids;
+    document.querySelector("input[name='snf']").value = lot.snf;
+    document.querySelector("input[name='urea_nitrogen']").value = lot.ureaNitrogen;
+    document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
+}
+
+async function fetchMilkLotAndFillForm(lotId) {
+    const query = `
+        query GetMilkLotById($id: Int!) {
+            milkLotById(id: $id) {
+                id
+                supplier {
+                    id
+                    email
+                    user { username }
+                }
+                tester {
+                    id
+                    user { username }
+                }
+                volumeL
+                fatPercent
+                proteinPercent
+                lactosePercent
+                totalSolids
+                snf
+                ureaNitrogen
+                bacterialCount
+            }
+        }
+    `;
+
+    const res = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, variables: { id: parseInt(lotId) } })
+    });
+
+    const result = await res.json();
+    const lot = result.data.milkLotById;
+    if (!lot) return;
+
+    // Fill dropdowns first
+    await loadSuppliersAndTesters(lot.supplier.id, lot.tester.id);
+
+    // Fill other fields
+    document.querySelector("input[name='volume_l']").value = lot.volumeL;
+    document.querySelector("input[name='fat_percent']").value = lot.fatPercent;
+    document.querySelector("input[name='protein_percent']").value = lot.proteinPercent;
+    document.querySelector("input[name='lactose_percent']").value = lot.lactosePercent;
+    document.querySelector("input[name='total_solids']").value = lot.totalSolids;
+    document.querySelector("input[name='snf']").value = lot.snf;
+    document.querySelector("input[name='urea_nitrogen']").value = lot.ureaNitrogen;
+    document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
+}
+</script>
+</body>
+</html>

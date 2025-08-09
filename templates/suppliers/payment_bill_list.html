@@ -286,16 +286,10 @@
 }
 
 
-  </style>
+</style>
 </head>
 <body>
-  {% if messages %}
-  <ul class="messages">
-    {% for message in messages %}
-      <li class="message {{ message.tags }}">{{ message }}</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
+ 
 
   <div class="container">
     <h1>Payment Bills</h1>
@@ -439,7 +433,7 @@
 
   window.markBillPaid = async function (billId, supplierId, date) {
     if (!confirm(`Mark bill #${billId} as Paid?`)) return;
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0]; 
     const success = await createOrUpdateBill(supplierId, date, true, today);
     if (success) {
       loadPaymentBills(); 
@@ -475,13 +469,15 @@ async function loadSuppliers() {
     query {
       suppliers {
         id
-        email
+        user{
+          username
+        }
       }
     }
   `;
 
   try {
-    const response = await fetch('http://localhost:8000/graphql/', {  
+    const response = await fetch('/graphql/', {  
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -496,7 +492,7 @@ async function loadSuppliers() {
     suppliers.forEach(supplier => {
       const option = document.createElement("option");
       option.value = supplier.id;
-      option.textContent = `${supplier.id} (${supplier.email})`;
+      option.textContent = `${supplier.user.username}`;
       select.appendChild(option);
     });
 
@@ -522,7 +518,9 @@ async function loadPaymentBills() {
         pdfUrl
         supplier {
           id
-          email
+          user{
+            username
+          }
         }
       }
     }
@@ -556,7 +554,7 @@ async function loadPaymentBills() {
       row.innerHTML = `
         <td>${bill.id}</td>
         <td>${bill.date || "—"}</td>
-        <td>${bill.supplier.email} - <small>${bill.supplier.id}</small></td>
+        <td>${bill.supplier.user.username} - <small>${bill.supplier.id}</small></td>
         <td>${bill.totalVolumeL ? bill.totalVolumeL + " L" : "—"}</td>
         <td class="price-cell">₹${bill.totalValue || "0"}</td>
         <td>

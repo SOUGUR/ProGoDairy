@@ -132,73 +132,53 @@
       border-radius: 4px;
     }
     
-    .create-new-btn {
-      display: inline-block;
-      background-color: #4299e1;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: 500;
-      margin-bottom: 20px;
-      text-decoration: none;
-      transition: background-color 0.3s;
-    }
-    
-    .create-new-btn:hover {
-      background-color: #3182ce;
-    }
-    ul.messages {
-  list-style: none;
-  padding: 0;
-  margin: 1em 0;
-  max-width: 600px;
-}
+  .floating-btn {
+    position: fixed;
+    right: 50px;
+    z-index: 999;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.3s, transform 0.2s;
+    text-decoration: none;     
+    display: inline-block;     
+  }
 
-ul.messages li {
-  padding: 10px 15px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #fff;
-}
+  
+  #create-milk-lot-btn {
+    bottom: 450px;             
+  }
 
-/* Success message */
-ul.messages li.success {
-  background-color: #4caf50;  /* Green */
-}
 
-/* Error message */
-ul.messages li.error {
-  background-color: #f44336;  /* Red */
-}
+  .floating-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
 
-/* Warning message */
-ul.messages li.warning {
-  background-color: #ff9800;  /* Orange */
-}
 
-/* Info message */
-ul.messages li.info {
-  background-color: #2196f3;  /* Blue */
-}
+  .floating-btn:active {
+    transform: translateY(0);
+  }
+
+
 
   </style>
 </head>
 <body>
   <div class="container">
-    {% if messages %}
-      <ul class="messages">
-        {% for message in messages %}
-          <li class="{{ message.tags }}">{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-
+   
     <h2>Milk Lot Entries</h2>
     
-    <a href="{% url 'create_milk_lot' %}" class="create-new-btn">+ Create New Milk Lot</a>
+    <a href="{% url 'create_milk_lot' %}" id="create-milk-lot-btn" class="floating-btn">
+      + Create New Milk Lot
+    </a>
+
     
     <table class="milk-lot-table">
       <thead>
@@ -216,32 +196,81 @@ ul.messages li.info {
         </tr>
       </thead>
       <tbody>
-        {% for lot in milk_lots %}
-        <tr>
-          <td>{{ lot.dateCreated }}</td>
-          <td>{{ lot.id }}</td>
-          <td>{{ lot.volumeL }}</td>
-          <td>{{ lot.fatPercent }}%</td>
-          <td>{{ lot.proteinPercent }}%</td>
-          <td>{{ lot.bacterialCount }}%</td>
-          <td class="status-{{ lot.status|lower }}">{{ lot.status }}</td>
-          <td class="price-cell">₹{{ lot.totalPrice }}</td>
-          <td>{{ lot.supplier.id }} - {{ lot.supplier.email }}</td>
-          <td>
-            <div class="action-buttons">
-              <a href="/milk-lots/{{ lot.id }}" class="btn btn-view">View</a>
-              <a href="{% url 'edit_milk_lot' lot.id %}" class="btn btn-edit">Edit</a>
-              <a href="/milk-lots/{{ lot.id }}/delete" class="btn btn-delete">Delete</a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="7" class="empty-state">No milk lot entries found.</td>
-        </tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const tableBody = document.querySelector(".milk-lot-table tbody");
+
+  const query = `
+    query {
+      milkLotList {
+        id
+        volumeL
+        fatPercent
+        proteinPercent
+        bacterialCount
+        status
+        totalPrice
+        dateCreated
+        supplier {
+          id
+          email
+        }
+      }
+    }
+  `;
+
+  try {
+    const res = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    });
+
+    const json = await res.json();
+
+    if (json.errors) {
+      console.error("GraphQL errors:", json.errors);
+      tableBody.innerHTML = `<tr><td colspan="10">Error loading data</td></tr>`;
+      return;
+    }
+
+    const milkLots = json.data.milkLotList;
+
+    if (milkLots.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="10" class="empty-state">No milk lot entries found.</td></tr>`;
+      return;
+    }
+
+    milkLots.forEach(lot => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${lot.dateCreated}</td>
+        <td>${lot.id}</td>
+        <td>${lot.volumeL}</td>
+        <td>${lot.fatPercent}%</td>
+        <td>${lot.proteinPercent}%</td>
+        <td>${lot.bacterialCount}</td>
+        <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
+        <td class="price-cell">₹${lot.totalPrice}</td>
+        <td>${lot.supplier.id} - ${lot.supplier.email}</td>
+        <td>
+          <div class="action-buttons">
+            <a href="/milk-lots/${lot.id}" class="btn btn-view">View</a>
+            <a href="/milk-lots/${lot.id}/edit" class="btn btn-edit">Edit</a>
+            <a href="/milk-lots/${lot.id}/delete" class="btn btn-delete">Delete</a>
+          </div>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+  } catch (err) {
+    console.error("Error fetching milk lots:", err);
+    tableBody.innerHTML = `<tr><td colspan="10">Error loading data</td></tr>`;
+  }
+});
+</script>
 </body>
 </html>
