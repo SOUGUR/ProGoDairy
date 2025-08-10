@@ -5,10 +5,7 @@ from distribution.models import Route
 
 
 class Supplier(models.Model):
-    """
-    Profile of a milk-producing farm that supplies milk to the plant.
-    """
-
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     address = models.TextField()
     phone_number = models.CharField(
