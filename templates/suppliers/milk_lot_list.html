@@ -8,19 +8,22 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f5f9fc;
-      margin: 0;
-      padding: 20px;
+      margin-left: 40px;
+      padding: 0px;
       color: #333;
     }
     
     .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      padding: 30px;
-    }
+  width: 100%;               /* Take full available width */
+  height: 100%;              /* Stretch full height */
+  margin: 0;                 /* No outer margin */
+  border-radius: 0;          /* Remove rounded corners if you want edge to edge */
+  max-width: none;           /* Remove the 1200px limit */
+  box-shadow: none;          /* Remove shadow if not needed in full screen mode */
+  padding: 30px;
+  box-sizing: border-box;    /* Keeps padding inside total width/height */
+  overflow: auto;            /* Allow scrolling if content is taller than viewport */
+}
     
     h2 {
       color: #2c5282;

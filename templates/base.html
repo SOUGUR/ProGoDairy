@@ -45,6 +45,7 @@
       background-color: #34495e;
       font-size: 1.25rem;
       font-weight: bold;
+      
     }
 
     .sidebar-header h3 {
@@ -218,6 +219,14 @@
             <span class="menu-text">Reports</span>
         </a>
       </li>
+
+      <li class="menu-item">
+        <a href="{% url 'accounts:user_access' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-user-cog"></i></span>
+            <span class="menu-text">Admin</span>
+        </a>
+      </li>
+
     </ul>
   </div>
 

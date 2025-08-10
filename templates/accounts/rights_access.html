@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}Rights and Access{% endblock %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Access Rights Management</title>
+    <style>
+        :root {
+            --primary-color: #2c5282;
+            --secondary-color: #ebf8ff;
+            --text-color: #333;
+            --border-color: #e2e8f0;
+            --hover-color: #4299e1;
+            --success-color: #38a169;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f9fc;
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            position: relative;
+            min-height: 80vh;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .search-bar {
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--hover-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .rights-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .rights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .right-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f8fafc;
+        }
+
+        .right-item:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .right-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            accent-color: var(--primary-color);
+        }
+
+        .right-item label {
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .floating-action-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .floating-action-btn:hover {
+            background-color: #2f855a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-info {
+            background-color: var(--secondary-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .user-info h3 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+        }
+
+        .user-details {
+            display: flex;
+            gap: 20px;
+        }
+
+        .user-detail-item {
+            flex: 1;
+        }
+
+        .user-detail-item label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #4a5568;
+        }
+
+        .user-detail-item span {
+            display: block;
+            padding: 8px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>User Access Rights Management</h1>
+        
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search for user...">
+        </div>
+        
+        <div class="user-info">
+            <h3>Selected User</h3>
+            <div class="user-details">
+                <div class="user-detail-item">
+                    <label>Username</label>
+                    <span id="username-display"></span>
+                </div>
+                <div class="user-detail-item">
+                    <label>Email</label>
+                    <span id="email-display"></span>
+                </div>
+                <div class="user-detail-item">
+                    <label>Current Role</label>
+                    <span id="role-display"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="rights-section">
+            <div class="section-title">Basic User Rights</div>
+            <div class="rights-grid">
+                <div class="right-item">
+                    <input type="checkbox" id="is-active" name="is-active">
+                    <label for="is-active">Is Active</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="is-staff" name="is-staff">
+                    <label for="is-staff">Is Staff</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="is-superadmin" name="is-superadmin">
+                    <label for="is-superadmin">Is Superadmin</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="rights-section">
+            <div class="section-title">User Access Rights</div>
+            <div class="rights-grid">
+                <div class="right-item">
+                    <input type="checkbox" id="supplier" name="supplier">
+                    <label for="supplier">Supplier</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="add-supplier" name="add-supplier">
+                    <label for="add-supplier">Add Supplier</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="milk-lot" name="milk-lot">
+                    <label for="milk-lot">Milk Lot</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="add-milk-lot" name="add-milk-lot">
+                    <label for="add-milk-lot">Add Milk Lot</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="payment-bills" name="payment-bills">
+                    <label for="payment-bills">Payment Bills</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="vehicles" name="vehicles">
+                    <label for="vehicles">Vehicles</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="pooling" name="pooling">
+                    <label for="pooling">Pooling</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="distribution" name="distribution">
+                    <label for="distribution">Distribution</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="sample-tests" name="sample-tests">
+                    <label for="sample-tests">Sample and Tests</label>
+                </div>
+                <div class="right-item">
+                    <input type="checkbox" id="reports" name="reports">
+                    <label for="reports">Reports</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="floating-action-btn" title="Grant Access">
+        <i class="fas fa-save" style="font-size: 24px;"></i>
+    </button>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %}
