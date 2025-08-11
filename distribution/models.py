@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 class Route(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -55,6 +56,29 @@ class MilkTransfer(models.Model):
         blank=True,
         related_name='route_milk_transfers'
     )
+
+    bulk_cooler = models.ForeignKey(
+        'collection_center.BulkCooler',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='milk_transfers'
+    )
+    on_farm_tank = models.ForeignKey(
+        'suppliers.OnFarmTank',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='milk_transfers'
+    )
+    can_collection = models.ForeignKey(
+        'suppliers.CanCollection',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='milk_transfers'
+    )
+
     status_choices = [
         ('scheduled', 'Scheduled'),
         ('in_transit', 'In Transit'),
@@ -68,10 +92,24 @@ class MilkTransfer(models.Model):
     total_volume = models.FloatField(blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
 
+    def clean(self):
+       
+        sources = [self.bulk_cooler, self.on_farm_tank, self.can_collection]
+        if sum(1 for s in sources if s is not None) > 1:
+            raise ValidationError("Milk transfer can have only one source location.")
+
     def __str__(self):
-        return f"Transfer #{self.id} – {self.vehicle} – {self.transfer_date}"
+        source = self.bulk_cooler or self.on_farm_tank or self.can_collection
+        return f"Transfer #{self.id} from {source} – {self.transfer_date}"
 
     def calculate_total_volume(self):
-        self.total_volume = sum(lot.volume_l for lot in self.milk_lots.all())
+        if self.bulk_cooler:
+            self.total_volume = self.bulk_cooler.current_volume_liters
+        elif self.on_farm_tank:
+            self.total_volume = self.on_farm_tank.current_volume_liters
+        elif self.can_collection:
+            self.total_volume = self.can_collection.total_volume_liters
+        else:
+            self.total_volume = 0
         self.save(update_fields=['total_volume'])
         return self.total_volume

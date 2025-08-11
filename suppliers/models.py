@@ -91,13 +91,6 @@ class MilkLot(models.Model):
         blank=True,
         related_name="milk_lots",
     )
-    transfer = models.ForeignKey(
-        "distribution.MilkTransfer",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="milk_lots",
-    )
 
     on_farm_tank = models.ForeignKey(
         "suppliers.OnFarmTank",
