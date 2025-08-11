@@ -3,6 +3,32 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from suppliers.models import MilkLot
 
+class BulkCoolerLog(models.Model):
+    bulk_cooler = models.ForeignKey(
+        'collection_center.BulkCooler',
+        on_delete=models.CASCADE,
+        related_name="logs"
+    )
+    log_date = models.DateTimeField()
+    
+    volume_liters = models.FloatField()
+    temperature_celsius = models.FloatField()
+    
+    filled_at = models.DateTimeField(null=True, blank=True)
+    emptied_at = models.DateTimeField(null=True, blank=True)
+    last_cleaned_at = models.DateTimeField(null=True, blank=True)
+    last_sanitized_at = models.DateTimeField(null=True, blank=True)
+    last_stirred_at = models.DateTimeField(null=True, blank=True)
+    last_serviced_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('bulk_cooler', 'log_date')
+
+    def __str__(self):
+        return f"{self.bulk_cooler.name} log – {self.log_date}"
+
 
 class BulkCooler(models.Model):
     route = models.ForeignKey(
@@ -21,11 +47,17 @@ class BulkCooler(models.Model):
         validators=[MinValueValidator(0.0), MaxValueValidator(8.0)],
         help_text="Current temperature in °C",
     )
+
+    filled_at = models.DateTimeField(null=True, blank=True)
+    emptied_at = models.DateTimeField(null=True, blank=True)
+    last_cleaned_at = models.DateTimeField(null=True, blank=True)
+    last_sanitized_at = models.DateTimeField(null=True, blank=True)
+
+    service_interval_days = models.PositiveSmallIntegerField(default=90) 
+    last_serviced_at = models.DateTimeField(null=True, blank=True)
+
     last_stirred_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.route.name} – {self.name} ({self.capacity_liters} L)"
 
     def add_lots(self, *milk_lots):
         already_in_this_cooler = [lot for lot in milk_lots\
@@ -53,6 +85,26 @@ class BulkCooler(models.Model):
         self.current_volume_liters += proposed_volume
         self.save(update_fields=['current_volume_liters'])
         return len(candidates) 
+    
+    def create_daily_log(self):
+        BulkCoolerLog.objects.create(
+            bulk_cooler=self,
+            log_date=self.created_at,
+            volume_liters=self.current_volume_liters,
+            temperature_celsius=self.temperature_celsius,
+            filled_at=self.filled_at,
+            emptied_at=self.emptied_at,
+            last_cleaned_at=self.last_cleaned_at,
+            last_sanitized_at=self.last_sanitized_at,
+            last_stirred_at=self.last_stirred_at,
+            last_serviced_at=self.last_serviced_at
+        )
+        
+    def is_in_use(self):
+        return self.bulkcooler_set.exists()
+
+    def __str__(self):
+        return f"{self.route.name} – {self.name} ({self.capacity_liters} L)"
 
 
 class CompositeSample(models.Model):
