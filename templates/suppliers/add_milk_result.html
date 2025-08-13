@@ -218,13 +218,14 @@
     <button type="submit" id="milk-test-btn">Submit Milk Test</button>
   </div>
 <script>
-  
-// create Milk Lot mutation
+//------------------------------------------CREATE Milk Lot if lot_Id not present, else UPDATE Milk Lot-------------------------------------//
 document.addEventListener("DOMContentLoaded", () => {
   const milkTestBtn = document.getElementById("milk-test-btn");
+  const lotId = "{{ lot_id|default:'' }}";
 
   milkTestBtn.addEventListener("click", async (e) => {
     e.preventDefault();
+
     const input = {
       supplierId: parseInt(document.querySelector("select[name='supplier_id']").value),
       testerId: parseInt(document.querySelector("select[name='tester_id']").value),
@@ -240,8 +241,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const graphqlQuery = `
-      mutation CreateMilkLot($input: MilkLotInput!) {
-        createMilkLot(input: $input) {
+      mutation SaveMilkLot($input: MilkLotInput!, $lotId: Int) {
+        updateMilkLot(input: $input, lotId: $lotId) {
           id
           volumeL
           fatPercent
@@ -266,7 +267,10 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: graphqlQuery,
-          variables: { input }
+          variables: {
+            input,
+            lotId: lotId ? parseInt(lotId) : null
+          }
         })
       });
 
@@ -277,16 +281,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const milkLot = result.data.createMilkLot;
-      alert(`Milk lot created successfully! ID: ${milkLot.id}`);
+      const milkLot = result.data.updateMilkLot;
+      alert(`Milk lot ${lotId ? 'updated' : 'created'} successfully! ID: ${milkLot.id}`);
       window.location.href = "/milk-lot/list/";
     } catch (error) {
       console.error("Request Error:", error);
-      alert("Network error creating milk lot.");
+      alert("Network error saving milk lot.");
     }
   });
 });
 
+//-------------------------------------------------------define functions to load suppliers and testers----------------------------------------------//
 async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTesterId = null) {
     const supplierQuery = `
     query {
@@ -344,7 +349,7 @@ async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTester
     });
 }
 
-
+//-------------------------------use above functions to populate result into dropdowns and result if milk lot ID present -------------------//
 document.addEventListener("DOMContentLoaded", function() {
     const lotId = "{{ lot_id|default:'' }}";
     if (lotId) {
@@ -353,6 +358,8 @@ document.addEventListener("DOMContentLoaded", function() {
         loadSuppliersAndTesters(); 
     }
 });
+
+
 
 async function fetchMilkLotAndFillForm(lotId) {
     const query = `

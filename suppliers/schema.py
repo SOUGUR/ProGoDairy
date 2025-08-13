@@ -264,9 +264,9 @@ class Mutation:
         except Supplier.DoesNotExist:
             raise Exception("Supplier not found with the given ID")
 
-        milk_lot, _ = MilkLot.objects.update_or_create(
+        milk_lot, _ = MilkLot.objects.create(
             supplier=supplier,
-            tester=tester,
+            tester=tester,  
             date_created = date.today(),
             defaults={
                 "volume_l": input.volume_l,
@@ -308,22 +308,31 @@ class Mutation:
         )
 
     @strawberry.mutation
-    def update_milk_lot(
-        self, info: Info, id: strawberry.ID, input: MilkLotInput
-    ) -> MilkLotType:
-        lot = get_object_or_404(MilkLot, id=id)
-        lot.volume_l = input.volume_l
-        lot.fat_percent = input.fat_percent
-        lot.protein_percent = input.protein_percent
-        lot.lactose_percent = input.lactose_percent
-        lot.total_solids = input.total_solids
-        lot.snf = input.snf
-        lot.urea_nitrogen = input.urea_nitrogen
-        lot.bacterial_count = input.bacterial_count
+    def update_milk_lot(self, info: Info, input: MilkLotInput, lot_id: Optional[int] = None) -> MilkLotType:
+        if lot_id:
+            try:
+                milk_lot = MilkLot.objects.get(id=lot_id)
+            except MilkLot.DoesNotExist:
+                raise Exception("Milk Lot not found")
+        else:
+            milk_lot = MilkLot()
 
-        lot.evaluate_and_price()
-        lot.save()
-        return lot
+        milk_lot.supplier_id = input.supplier_id
+        milk_lot.tester_id = input.tester_id
+        milk_lot.volume_l = input.volume_l
+        milk_lot.fat_percent = input.fat_percent
+        milk_lot.protein_percent = input.protein_percent
+        milk_lot.lactose_percent = input.lactose_percent
+        milk_lot.total_solids = input.total_solids
+        milk_lot.snf = input.snf
+        milk_lot.urea_nitrogen = input.urea_nitrogen
+        milk_lot.bacterial_count = input.bacterial_count
+        milk_lot.added_water_percent = input.added_water_percent
+
+        milk_lot.evaluate_and_price()
+        milk_lot.save()
+
+        return milk_lot
 
     @strawberry.mutation
     def create_payment_bill(

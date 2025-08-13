@@ -164,7 +164,6 @@ class MilkLot(models.Model):
             self.total_price = Decimal("0.00")
             return self.total_price
         elif self.added_water_percent > 0.0:
-            # Deduct ₹0.10 per % added water
             bonus -= Decimal(str(0.10 * self.added_water_percent))
 
     # Final price calculation
