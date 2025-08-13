@@ -18,7 +18,7 @@ class BulkCoolerLog(models.Model):
     emptied_at = models.DateTimeField(null=True, blank=True)
     last_cleaned_at = models.DateTimeField(null=True, blank=True)
     last_sanitized_at = models.DateTimeField(null=True, blank=True)
-    last_stirred_at = models.DateTimeField(null=True, blank=True)
+    last_calibration_date = models.DateTimeField(null=True, blank=True)
     last_serviced_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -56,7 +56,7 @@ class BulkCooler(models.Model):
     service_interval_days = models.PositiveSmallIntegerField(default=90) 
     last_serviced_at = models.DateTimeField(null=True, blank=True)
 
-    last_stirred_at = models.DateTimeField(null=True, blank=True)
+    last_calibration_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def add_lots(self, *milk_lots):
@@ -96,7 +96,7 @@ class BulkCooler(models.Model):
             emptied_at=self.emptied_at,
             last_cleaned_at=self.last_cleaned_at,
             last_sanitized_at=self.last_sanitized_at,
-            last_stirred_at=self.last_stirred_at,
+            last_calibration_date=self.last_calibration_date,
             last_serviced_at=self.last_serviced_at
         )
         

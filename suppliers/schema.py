@@ -1,6 +1,6 @@
 import strawberry
 from strawberry_django import type as strawberry_django_type, field
-from distribution.schema import MilkTransferType
+from distribution.schema import RouteType
 from suppliers.models import Supplier, MilkLot, PaymentBill
 from plants.models import Tester
 from django.contrib.auth.models import User
@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 from typing import Optional
 from decimal import Decimal
 from graphql import GraphQLError
-from datetime import date
+from datetime import date, datetime
 from distribution.schema import UserType
 from collection_center.schema import BulkCoolerType
 from plants.schema import TesterType
@@ -53,6 +53,7 @@ class MilkLotInput:
     snf: float
     urea_nitrogen: float
     bacterial_count: int
+    added_water_percent: Optional[float] = 0.0
 
 
 @strawberry.type
@@ -67,24 +68,25 @@ class PaymentBillType:
 @strawberry.type
 class MilkLotType:
     id: int
-    supplier_id: int
-    tester:Optional[TesterType]
+    supplier: SupplierType
+    tester: Optional[TesterType]
     volume_l: float
     fat_percent: float
-    total_price: Optional[Decimal]
     protein_percent: float
-    urea_nitrogen: float
     lactose_percent: float
     total_solids: float
     snf: float
-    price_per_litre: Optional[Decimal]
-    status: str
+    urea_nitrogen: float
     bacterial_count: int
+    added_water_percent: Optional[float]
+    price_per_litre: Optional[Decimal]
+    total_price: Optional[Decimal]
+    status: str
     date_created: Optional[date]
-    supplier: SupplierType
     bill: Optional[PaymentBillType]
-    transfer: Optional[MilkTransferType]
     bulk_cooler: Optional["BulkCoolerType"]
+    on_farm_tank: Optional["OnFarmTankType"]
+    can_collection: Optional["CanCollectionType"]
 
 
 @strawberry.input
@@ -112,6 +114,36 @@ class PaymentBillTypeList:
     is_paid: bool
     pdf_url: Optional[str]
     supplier: SupplierType
+
+
+@strawberry.type
+class OnFarmTankType:
+    id: int
+    supplier: SupplierType
+    name: str
+    capacity_liters: int
+    current_volume_liters: float
+    temperature_celsius: Optional[float]
+    filled_at: Optional[datetime]
+    emptied_at: Optional[datetime]
+    last_cleaned_at: Optional[datetime]
+    last_sanitized_at: Optional[datetime]
+    service_interval_days: int
+    last_serviced_at: Optional[datetime]
+    last_stirred_at: Optional[datetime]
+    created_at: datetime
+
+
+@strawberry.type
+class CanCollectionType:
+    id: int
+    route: RouteType
+    name: str
+    total_volume_liters: float
+    group_parameter: str
+    group_value: float
+    group_unit: str
+    created_at: datetime
 
 
 @strawberry.type
@@ -235,6 +267,7 @@ class Mutation:
         milk_lot, _ = MilkLot.objects.update_or_create(
             supplier=supplier,
             tester=tester,
+            date_created = date.today(),
             defaults={
                 "volume_l": input.volume_l,
                 "fat_percent": input.fat_percent,
@@ -244,6 +277,7 @@ class Mutation:
                 "snf": input.snf,
                 "urea_nitrogen": input.urea_nitrogen,
                 "bacterial_count": input.bacterial_count,
+                "added_water_percent": input.added_water_percent,
             },
         )
 
@@ -252,8 +286,7 @@ class Mutation:
 
         return MilkLotType(
             id=milk_lot.id,
-            supplier_id=supplier.id,
-            tester=milk_lot.tester, 
+            tester=tester,
             supplier=supplier,
             volume_l=milk_lot.volume_l,
             fat_percent=milk_lot.fat_percent,
@@ -263,13 +296,15 @@ class Mutation:
             snf=milk_lot.snf,
             urea_nitrogen=milk_lot.urea_nitrogen,
             bacterial_count=milk_lot.bacterial_count,
+            added_water_percent=milk_lot.added_water_percent,
             total_price=milk_lot.total_price,
             price_per_litre=milk_lot.price_per_litre,
             status=milk_lot.status,
             date_created=milk_lot.date_created,
             bill=milk_lot.bill,
-            transfer=milk_lot.transfer,
             bulk_cooler=milk_lot.bulk_cooler,
+            on_farm_tank=milk_lot.on_farm_tank,
+            can_collection=milk_lot.can_collection,
         )
 
     @strawberry.mutation

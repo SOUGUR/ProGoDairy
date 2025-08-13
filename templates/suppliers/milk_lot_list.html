@@ -14,16 +14,16 @@
     }
     
     .container {
-  width: 100%;               /* Take full available width */
-  height: 100%;              /* Stretch full height */
-  margin: 0;                 /* No outer margin */
-  border-radius: 0;          /* Remove rounded corners if you want edge to edge */
-  max-width: none;           /* Remove the 1200px limit */
-  box-shadow: none;          /* Remove shadow if not needed in full screen mode */
-  padding: 30px;
-  box-sizing: border-box;    /* Keeps padding inside total width/height */
-  overflow: auto;            /* Allow scrolling if content is taller than viewport */
-}
+      width: 100%;              
+      height: 100%;           
+      margin: 0;                 
+      border-radius: 0;         
+      max-width: none;         
+      box-shadow: none;          
+      padding: 30px;
+      box-sizing: border-box;   
+      overflow: auto;           
+    }
     
     h2 {
       color: #2c5282;
@@ -45,16 +45,17 @@
     }
     
     .milk-lot-table th {
-      padding: 15px;
+      padding: 10px;
       text-align: left;
       font-weight: 600;
       text-transform: uppercase;
-      font-size: 0.85em;
+      font-size: 0.75em;
       letter-spacing: 0.5px;
     }
     
     .milk-lot-table td {
-      padding: 15px;
+      font-size: small;
+      padding: 7px;
       border-bottom: 1px solid #e2e8f0;
     }
     
@@ -157,7 +158,8 @@
 
   
   #create-milk-lot-btn {
-    bottom: 450px;             
+    bottom: 495px;      
+    right:10px       
   }
 
 
@@ -171,9 +173,46 @@
     transform: translateY(0);
   }
 
-
-
-  </style>
+</style>
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+  }
+  .modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    width: 60%;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  .modal-table th, .modal-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+  .modal-table th {
+    background-color: #f4f4f4;
+  }
+</style>
 </head>
 <body>
   <div class="container">
@@ -188,12 +227,12 @@
     <table class="milk-lot-table">
       <thead>
         <tr>
-          <th>Date Created</th>
+          <th>Date tested</th>
           <th>Milk Lot ID</th>
           <th>Volume (L)</th>
           <th>Fat %</th>
-          <th>Protein %</th>
           <th>Bacterial Count (CFU)</th>
+          <th>Protein %</th>
           <th>Status</th>
           <th>Total Price</th>
           <th>Supplier ID name</th>
@@ -204,7 +243,33 @@
       </tbody>
     </table>
   </div>
+  <!-- Modal for view MilkLot -->
+   <div id="milkLotModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Milk Lot Details</h2>
+    <table class="modal-table">
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>ID</td><td id="modal-id"></td></tr>
+      <tr><td>Date tested</td><td id="modal-dateCreated"></td></tr>
+      <tr><td>Volume (L)</td><td id="modal-volumeL"></td></tr>
+      <tr><td>Fat (%)</td><td id="modal-fatPercent"></td></tr>
+      <tr><td>Protein (%)</td><td id="modal-proteinPercent"></td></tr>
+      <tr><td>Lactose (%)</td><td id="modal-lactosePercent"></td></tr>
+      <tr><td>Total Solids</td><td id="modal-totalSolids"></td></tr>
+      <tr><td>SNF</td><td id="modal-snf"></td></tr>
+      <tr><td>Urea Nitrogen</td><td id="modal-ureaNitrogen"></td></tr>
+      <tr><td>Bacterial Count</td><td id="modal-bacterialCount"></td></tr>
+      <tr><td>Total Price</td><td id="modal-totalPrice">₹<span></span></td></tr>
+      <tr><td>Price Per Litre</td><td id="modal-pricePerLitre">₹<span></span></td></tr>
+      <tr><td>Status</td><td id="modal-status"></td></tr>
+      <tr><td>Added Water (%)</td><td id="modal-addedWaterPercent"></td></tr>
+      <tr><td>Supplier</td><td id="modal-supplier"></td></tr>
+    </table>
+  </div>
+</div>
 <script>
+  //function to gather all Milk Lots and associated information
 document.addEventListener("DOMContentLoaded", async () => {
   const tableBody = document.querySelector(".milk-lot-table tbody");
 
@@ -256,8 +321,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${lot.id}</td>
         <td>${lot.volumeL}</td>
         <td>${lot.fatPercent}%</td>
-        <td>${lot.proteinPercent}%</td>
         <td>${lot.bacterialCount}</td>
+        <td>${lot.proteinPercent}%</td>
         <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
         <td class="price-cell">₹${lot.totalPrice}</td>
         <td>${lot.supplier.id} - ${lot.supplier.email}</td>
@@ -274,6 +339,100 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (err) {
     console.error("Error fetching milk lots:", err);
     tableBody.innerHTML = `<tr><td colspan="10">Error loading data</td></tr>`;
+  }
+});
+
+//modal view function to dispaly Milk Lot Information
+document.addEventListener("click", async function (e) {
+  const viewBtn = e.target.closest(".btn-view");
+  if (!viewBtn) return;
+
+  e.preventDefault();
+
+  // Extract lot ID from href (e.g., "/milk-lot/edit/123")
+  const href = viewBtn.getAttribute("href");
+  const lotId = parseInt(href.split("/").pop()); 
+
+  const fetchMilkLotQuery = `
+        query GetMilkLotById($id: Int!) {
+            milkLotById(id: $id) {
+                id
+                supplier {
+                    id
+                    email
+                    user { username }
+                }
+                tester {
+                    id
+                    user { username }
+                }
+                volumeL
+                fatPercent
+                proteinPercent
+                lactosePercent
+                totalSolids
+                snf
+                pricePerLitre
+                totalPrice
+                ureaNitrogen
+                bacterialCount
+                addedWaterPercent
+                dateCreated
+            }
+        }
+    `;
+
+  try {
+    const res = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: fetchMilkLotQuery,
+        variables: { id: lotId }
+      })
+    });
+    console.log(res)
+    const result = await res.json();
+    if (result.errors) {
+      alert("Error: " + result.errors[0].message);
+      return;
+    }
+
+    const lot = result.data.milkLotById;
+    document.getElementById("modal-id").textContent = lot.id;
+    document.getElementById("modal-dateCreated").textContent = lot.dateCreated;
+    document.getElementById("modal-volumeL").textContent = lot.volumeL + " L";
+    document.getElementById("modal-fatPercent").textContent = lot.fatPercent + "%";
+    document.getElementById("modal-proteinPercent").textContent = lot.proteinPercent + "%";
+    document.getElementById("modal-lactosePercent").textContent = lot.lactosePercent + "%";
+    document.getElementById("modal-totalSolids").textContent = lot.totalSolids;
+    document.getElementById("modal-snf").textContent = lot.snf;
+    document.getElementById("modal-ureaNitrogen").textContent = lot.ureaNitrogen;
+    document.getElementById("modal-bacterialCount").textContent = lot.bacterialCount;
+    document.getElementById("modal-totalPrice").querySelector("span").textContent = lot.totalPrice;
+    document.getElementById("modal-pricePerLitre").querySelector("span").textContent = lot.pricePerLitre;
+    document.getElementById("modal-status").textContent = lot.status;
+    document.getElementById("modal-addedWaterPercent").textContent = lot.addedWaterPercent + "%";
+    document.getElementById("modal-supplier").textContent = `${lot.supplier.id} - ${lot.supplier.email}`;
+
+    // Show modal
+    document.getElementById("milkLotModal").style.display = "block";
+
+    document.querySelector("#milkLotModal .close").addEventListener("click", function () {
+    document.getElementById("milkLotModal").style.display = "none";
+    });
+
+  // optional: close modal when clicking outside content
+    window.addEventListener("click", function (e) {
+      const modal = document.getElementById("milkLotModal");
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+  } catch (error) {
+    console.error("Network error:", error);
+    alert("Failed to load milk lot details.");
   }
 });
 </script>

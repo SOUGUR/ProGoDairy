@@ -6,8 +6,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 
 
+
 class Supplier(models.Model):
-    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     address = models.TextField()
     phone_number = models.CharField(
@@ -76,10 +76,15 @@ class MilkLot(models.Model):
     snf = models.FloatField(verbose_name="Solids-Not-Fat")
     urea_nitrogen = models.FloatField(verbose_name="MUN (mg/dL)")
     bacterial_count = models.PositiveIntegerField()
+    added_water_percent = models.FloatField(
+        default=0.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+        help_text="Percentage of water added (adulteration)."
+    )
 
     # Pricing
     price_per_litre = models.DecimalField(
-        max_digits=6, decimal_places=2, blank=True, null=True
+        max_digits=8, decimal_places=2, blank=True, null=True
     )
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True
@@ -130,44 +135,45 @@ class MilkLot(models.Model):
             )
         
     def save(self, *args, **kwargs):
+        if not self.supplier_id:
+            raise ValidationError("Supplier is required.")
         self.full_clean() 
         super().save(*args, **kwargs)
 
-
-
     def evaluate_and_price(self):
-        """
-        Evaluate quality parameters and set price_per_litre and total_price
-        """
-        # Thresholds based on industry guidelines (simplified)
-        THRESHOLDS = {
-            "fat": 3.5,
-            "snf": 8.5,
-            "protein": 3.0,
-            "urea_max": 70,  # mg/dL
-            "bacteria_max": 50000,  # per mL
-        }
-
-        # Base price logic (per litre)
+        ADDED_WATER_MAX = 3.0 
         base_price = Decimal("26.00")
         bonus = Decimal("0.00")
 
-        # Quality Bonus system
-        if self.fat_percent >= THRESHOLDS["fat"]:
+        # Quality-based bonuses
+        if self.fat_percent >= 3.5:
             bonus += Decimal("1.50")
-        if self.snf >= THRESHOLDS["snf"]:
+        if self.snf >= 8.5:
             bonus += Decimal("1.00")
-        if self.protein_percent >= THRESHOLDS["protein"]:
+        if self.protein_percent >= 3.0:
             bonus += Decimal("0.50")
-        if self.urea_nitrogen <= THRESHOLDS["urea_max"]:
+        if self.urea_nitrogen <= 70:
             bonus += Decimal("0.50")
-        if self.bacterial_count <= THRESHOLDS["bacteria_max"]:
+        if self.bacterial_count <= 50000:
             bonus += Decimal("0.50")
 
+        # Added water penalty / rejection
+        if self.added_water_percent > ADDED_WATER_MAX:
+            self.status = "rejected"
+            self.price_per_litre = Decimal("0.00")
+            self.total_price = Decimal("0.00")
+            return self.total_price
+        elif self.added_water_percent > 0.0:
+            # Deduct ₹0.10 per % added water
+            bonus -= Decimal(str(0.10 * self.added_water_percent))
+
+    # Final price calculation
         final_price_per_litre = base_price + bonus
+        if final_price_per_litre < Decimal("0.00"):
+            final_price_per_litre = Decimal("0.00")
+
         self.price_per_litre = final_price_per_litre
         self.total_price = round(Decimal(self.volume_l) * final_price_per_litre, 2)
-
         return self.total_price
 
 

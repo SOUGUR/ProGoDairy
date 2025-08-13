@@ -138,7 +138,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Record Milk Lot Results</h1>
+    <h1>Record Milk Lot Test Result</h1>
     <form id="milkLotForm" method="POST" action="{% if milk_lot %}{% url 'edit_milk_lot' milk_lot.id %}{% else %}{% url 'create_milk_lot' %}{% endif %}">
       {% csrf_token %}
       <div class="section-title">Select Supplier</div>
@@ -162,7 +162,7 @@
       
       <div class="form-group">
         <label class="required-field">Volume (Liters)</label>
-        <input type="number" step="0.01" name="volume_l" value="{% if milk_lot %}{{ milk_lot.volumeL }}{% endif %}" required>
+        <input type="number" step="0.01" name="volume_l" value="" required>
       </div>
       
       <div class="section-title">Composition Analysis</div>
@@ -170,42 +170,49 @@
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">Fat Percentage</label>
-          <input type="number" step="0.01" name="fat_percent" value="{% if milk_lot %}{{ milk_lot.fatPercent }}{% endif %}" required>
+          <input type="number" step="0.01" name="fat_percent" value="" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Protein Percentage</label>
-          <input type="number" step="0.01" name="protein_percent" value="{% if milk_lot %}{{ milk_lot.proteinPercent }}{% endif %}" required>
+          <input type="number" step="0.01" name="protein_percent" value="" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">Lactose Percentage</label>
-          <input type="number" step="0.01" name="lactose_percent" value="{% if milk_lot %}{{ milk_lot.lactosePercent }}{% endif %}" required>
+          <input type="number" step="0.01" name="lactose_percent" value="" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Total Solids</label>
-          <input type="number" step="0.01" name="total_solids" value="{% if milk_lot %}{{ milk_lot.totalSolids }}{% endif %}" required>
+          <input type="number" step="0.01" name="total_solids" value="" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">SNF (Solids Not Fat)</label>
-          <input type="number" step="0.01" name="snf" value="{% if milk_lot %}{{ milk_lot.snf }}{% endif %}" required>
+          <input type="number" step="0.01" name="snf" value="" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Urea Nitrogen</label>
-          <input type="number" step="0.01" name="urea_nitrogen" value="{% if milk_lot %}{{ milk_lot.ureaNitrogen }}{% endif %}" required>
+          <input type="number" step="0.01" name="urea_nitrogen" value="" required>
         </div>
       </div>
       
-      <div class="form-group">
-        <label class="required-field">Bacterial Count (CFU/mL)</label>
-        <input type="number" name="bacterial_count" value="{% if milk_lot %}{{ milk_lot.bacterialCount }}{% endif %}" required>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required-field">Bacterial Count (CFU/mL)</label>
+          <input type="number" name="bacterial_count" value="" required>
+        </div>
+
+        <div class="form-group">
+          <label class="required-field">Added water adulteration (%)</label>
+          <input type="number" name="added_water_percent" value="" required>
+        </div>
       </div>
       
     <button type="submit" id="milk-test-btn">Submit Milk Test</button>
@@ -228,7 +235,8 @@ document.addEventListener("DOMContentLoaded", () => {
       totalSolids: parseFloat(document.querySelector("input[name='total_solids']").value),
       snf: parseFloat(document.querySelector("input[name='snf']").value),
       ureaNitrogen: parseFloat(document.querySelector("input[name='urea_nitrogen']").value),
-      bacterialCount: parseInt(document.querySelector("input[name='bacterial_count']").value)
+      bacterialCount: parseInt(document.querySelector("input[name='bacterial_count']").value),
+      addedWaterPercent: parseFloat(document.querySelector("input[name='added_water_percent']").value)
     };
 
     const graphqlQuery = `
@@ -247,6 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
           pricePerLitre
           status
           dateCreated
+          addedWaterPercent
         }
       }
     `;
@@ -350,48 +359,6 @@ async function fetchMilkLotAndFillForm(lotId) {
         query GetMilkLotById($id: Int!) {
             milkLotById(id: $id) {
                 id
-                supplier { id user { username } }
-                tester { id user { username } }
-                volumeL
-                fatPercent
-                proteinPercent
-                lactosePercent
-                totalSolids
-                snf
-                ureaNitrogen
-                bacterialCount
-            }
-        }
-    `;
-
-    const res = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, variables: { id: parseInt(lotId) } })
-    });
-
-    const result = await res.json();
-    const lot = result.data.milkLotById;
-
-    // Load dropdowns with preselection
-    await loadSuppliersAndTesters(lot.supplier.id, lot.tester.id);
-
-    // Fill other inputs
-    document.querySelector("input[name='volume_l']").value = lot.volumeL;
-    document.querySelector("input[name='fat_percent']").value = lot.fatPercent;
-    document.querySelector("input[name='protein_percent']").value = lot.proteinPercent;
-    document.querySelector("input[name='lactose_percent']").value = lot.lactosePercent;
-    document.querySelector("input[name='total_solids']").value = lot.totalSolids;
-    document.querySelector("input[name='snf']").value = lot.snf;
-    document.querySelector("input[name='urea_nitrogen']").value = lot.ureaNitrogen;
-    document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
-}
-
-async function fetchMilkLotAndFillForm(lotId) {
-    const query = `
-        query GetMilkLotById($id: Int!) {
-            milkLotById(id: $id) {
-                id
                 supplier {
                     id
                     email
@@ -409,6 +376,7 @@ async function fetchMilkLotAndFillForm(lotId) {
                 snf
                 ureaNitrogen
                 bacterialCount
+                addedWaterPercent
             }
         }
     `;
@@ -423,10 +391,9 @@ async function fetchMilkLotAndFillForm(lotId) {
     const lot = result.data.milkLotById;
     if (!lot) return;
 
-    // Fill dropdowns first
+
     await loadSuppliersAndTesters(lot.supplier.id, lot.tester.id);
 
-    // Fill other fields
     document.querySelector("input[name='volume_l']").value = lot.volumeL;
     document.querySelector("input[name='fat_percent']").value = lot.fatPercent;
     document.querySelector("input[name='protein_percent']").value = lot.proteinPercent;
@@ -435,6 +402,7 @@ async function fetchMilkLotAndFillForm(lotId) {
     document.querySelector("input[name='snf']").value = lot.snf;
     document.querySelector("input[name='urea_nitrogen']").value = lot.ureaNitrogen;
     document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
+    document.querySelector("input[name='added_water_percent']").value = lot.addedWaterPercent;
 }
 </script>
 {% endblock %}

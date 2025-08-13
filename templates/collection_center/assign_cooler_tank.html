@@ -1,334 +1,110 @@
 {% extends "base.html" %}
 
-{% block title %}Assign Cooler Tanks as Per Routes{% endblock %}
+{% block title %}Assign Bulk Cooler to Milk Lots{% endblock %}
 
 {% block content %}
-  <title>Assign Cooler Tanks</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f9fc;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-      padding-left:60px
-    }
+<div class="container">
+  <h1>Bulk Cooler Management</h1>
+  
+  <!-- Cooler Selection Card -->
+  <div class="cooler-selection-card">
+    <div class="section-title">Cooler Details</div>
     
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      padding: 30px;
-    }
-    
-    h1 {
-      color: #2c5282;
-      margin-bottom: 25px;
-      font-weight: 600;
-      border-bottom: 2px solid #ebf2f7;
-      padding-bottom: 10px;
-    }
-    
-    .selection-card {
-      background-color: #ebf8ff;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 30px;
-    }
-    
-    .selection-title {
-      color: #2b6cb0;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-    
-    .selection-form {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-    }
-    
-    .form-group {
-      margin-bottom: 0;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: #4a5568;
-    }
-    
-    select, input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      font-size: 16px;
-      transition: all 0.3s;
-      box-sizing: border-box;
-      background-color: white;
-      height: 44px;
-    }
-    
-    select:focus, input:focus {
-      border-color: #63b3ed;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
-    }
-    
-    .capacity-info {
-      background-color: #f0fff4;
-      border: 1px solid #c6f6d5;
-      border-radius: 8px;
-      padding: 15px;
-      margin-top: 15px;
-    }
-    
-    .capacity-info p {
-      margin: 0;
-      color: #22543d;
-      font-weight: 500;
-    }
-    
-    .milk-lot-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    
-    .milk-lot-table thead {
-      background-color: #ebf8ff;
-      color: #2b6cb0;
-    }
-    
-    .milk-lot-table th {
-      padding: 15px;
-      text-align: left;
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 0.85em;
-      letter-spacing: 0.5px;
-    }
-    
-    .milk-lot-table td {
-      padding: 15px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .milk-lot-table tr:nth-child(even) {
-      background-color: #f8fafc;
-    }
-    
-    .milk-lot-table tr:hover {
-      background-color: #ebf8ff;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 0.85em;
-      font-weight: 500;
-    }
-    
-    .status-approved {
-      background-color: #c6f6d5;
-      color: #22543d;
-    }
-    
-    .status-pending {
-      background-color: #feebc8;
-      color: #7b341e;
-    }
-    
-    .payment-paid {
-      color: #38a169;
-      font-weight: 500;
-    }
-    
-    .payment-pending {
-      color: #d69e2e;
-      font-weight: 500;
-    }
-    
-    .assigned {
-      color: #4299e1;
-      font-weight: 500;
-    }
-    
-    .unassigned {
-      color: #e53e3e;
-      font-weight: 500;
-    }
-    
-    .checkbox-cell {
-      text-align: center;
-    }
-    
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #4299e1;
-      cursor: pointer;
-    }
-    
-    .action-bar {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 20px;
-      padding: 15px 0;
-      border-top: 1px solid #e2e8f0;
-    }
-    
-    .btn {
-      padding: 12px 24px;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s;
-      border: none;
-    }
-    
-    .btn-primary {
-      background-color: #4299e1;
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background-color: #3182ce;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #718096;
-      background-color: #f8fafc;
-      border-radius: 4px;
-    }
-    
-    .select-all-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    
-    .select-all-checkbox {
-      width: 18px;
-      height: 18px;
-    }
-    
-    .select-all-label {
-      font-weight: 500;
-      color: #4a5568;
-    }
-
-    
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      font-family: Arial, sans-serif;
-    }
-
-    .lot-row:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    .lot-cell {
-      padding: 10px 14px;
-      text-align: center;
-      border-bottom: 1px solid #ddd;
-    }
-
-    
-    .paid {
-      color: #2e7d32;       
-      font-weight: bold;
-    }
-
-    .unpaid {
-      color: #c62828;       
-      font-weight: bold;
-    }
-
-    .lot-row:hover {
-      background-color: #f1f1f1;
-      cursor: pointer;
-    }
-
-    .lot-select input[type="checkbox"] {
-      transform: scale(1.2);
-      cursor: pointer;
-    }
-
-    #assign-btn {
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      transition: background-color 0.3s ease;
-      position: fixed;
-      bottom: 20px;  
-      right: 20px;    
-      z-index: 999;   
-      padding: 12px 20px;
-      border-radius: 8px;
-    }
-
-    #assign-btn:hover {
-      background-color: #0056b3;
-    }
-
-
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Assign Cooler Tank to Approved Milk Lots</h1>
-    
-    <div class="selection-card">
-      <div class="selection-title">Cooler Tank Assignment</div>
+    <div class="cooler-form-grid">
+      <!-- Route and Cooler Selection -->
+      <div class="form-group">
+        <label for="route">Route</label>
+        <select id="route" name="route" required>
+          <option value="">Select Route</option>
+        </select>
+      </div>
       
-      <form class="selection-form" method="post">
-        <div class="form-group">
-          <label for="route">Route</label>
-          <select id="route" name="route" required>
-            <option value="">Select Route</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="cooler-tank">Available Cooler Tank</label>
-          <select id="cooler-tank" name="cooler_tank" required>
-            <option value="">Select Cooler Tank</option>
-          </select>
-        </div>
-      </form>
+      <div class="form-group">
+        <label for="cooler">Bulk Cooler</label>
+        <select id="cooler" name="cooler" required>
+          <option value="">Select Bulk Cooler</option>
+        </select>
+      </div>
       
-      <div class="capacity-info">
-        
+      <!-- Capacity Display -->
+      <div class="capacity-display">
+        <div class="capacity-item">
+          <span>Total Capacity:</span>
+          <strong id="total-capacity">0</strong> L
+        </div>
+        <div class="capacity-item">
+          <span>Current Volume:</span>
+          <strong id="current-volume">0</strong> L
+        </div>
+        <div class="capacity-item">
+          <span>Available Space:</span>
+          <strong id="available-space">0</strong> L
+        </div>
+      </div>
+      
+      <!-- Cooler Status Fields -->
+      <div class="form-group">
+        <label for="temperature">Temperature (°C)</label>
+        <input type="number" id="temperature" name="temperature_celsius" 
+               step="0.1" min="0" max="8" value="4.0" required>
+      </div>
+      
+      
+      <!-- Maintenance Fields -->
+      <div class="form-group">
+        <label for="last_cleaned">Last Cleaned At</label>
+        <input type="datetime-local" id="last_cleaned" name="last_cleaned_at">
+      </div>
+      
+      <div class="form-group">
+        <label for="last_sanitized">Last Sanitized At</label>
+        <input type="datetime-local" id="last_sanitized" name="last_sanitized_at">
+      </div>
+      
+      <div class="form-group">
+        <label for="last_calibrated">Last Calibrated At</label>
+        <input type="datetime-local" id="last_calibrated" name="last_calibration_date">
+      </div>
+      
+      <div class="form-group">
+        <label for="service_interval">Service Interval (days)</label>
+        <input type="number" id="service_interval" name="service_interval_days" 
+               min="1" value="90">
+      </div>
+      
+      <div class="form-group">
+        <label for="last_serviced">Last Serviced At</label>
+        <input type="datetime-local" id="last_serviced" name="last_serviced_at">
+      </div>
+    </div>
+  </div>
+  
+  <!-- Milk Lots Assignment Section -->
+  <div class="milk-lots-section">
+    <div class="section-header">
+      <h2>Approved Milk Lots</h2>
+      <div class="selection-info">
+        <span>Selected Volume: </span>
+        <strong id="selected-volume">0</strong> L
       </div>
     </div>
     
     <div class="select-all-container">
-      <input type="checkbox" id="select-all" class="select-all-checkbox">
-      <label for="select-all" class="select-all-label">Select all unassigned milk lots</label>
+      <input type="checkbox" id="select-all">
+      <label for="select-all">Select all unassigned lots</label>
     </div>
     
-    <table class="milk-lot-table">
+    <table class="milk-lots-table">
       <thead>
         <tr>
           <th>MilkLot ID</th>
           <th>Supplier</th>
-          <th>Payment Status</th>
-          <th>Test Status</th>
-          <th>Date Created</th>
           <th>Volume (L)</th>
-          <th>Cooler Assignment</th>
+          <th>Fat %</th>
+          <th>Protein %</th>
+          <th>added water %</th>
+          <th>Status</th>
+          <th>Assigned To</th>
           <th>Select</th>
         </tr>
       </thead>
@@ -336,201 +112,460 @@
       </tbody>
     </table>
     
-    <div class="action-bar">
-      <button type="submit" class="btn btn-primary" id="assign-btn">
-        Assign Selected Milk Lots
+    <div class="action-buttons">
+      <button type="button" class="btn btn-primary" id="assign-btn">
+        Assign Selected to Cooler
       </button>
     </div>
   </div>
-  <script>
-    async function loadRoutes() {
-  const response = await fetch("/graphql/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query {
-          allRoutes {
-            id
-            name
-          }
-        }
-      `
-    })
-  });
+</div>
 
-  const data = await response.json();
-  const routes = data.data.allRoutes;
+<script>
+
+//--------------------------------------------------populate routes and associated Bulk Coolers---------------------------------------------//
+document.addEventListener("DOMContentLoaded", async () => {
   const routeSelect = document.getElementById("route");
+  const coolerSelect = document.getElementById("cooler");
 
-  routes.forEach(route => {
-    const option = document.createElement("option");
-    option.value = route.id;
-    option.textContent = route.name;
-    routeSelect.appendChild(option);
-  });
+  const totalCapacityEl = document.getElementById("total-capacity");
+  const currentVolumeEl = document.getElementById("current-volume");
+  const availableSpaceEl = document.getElementById("available-space");
 
-  routeSelect.addEventListener("change", function () {
+  let coolersCache = []; // Store the coolers for the selected route
+
+  // Fetch all routes first
+  try {
+    const routeQuery = `
+      query {
+        allRoutes {
+          id
+          name
+        }
+      }
+    `;
+    const routeRes = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: routeQuery })
+    });
+
+    const routeData = await routeRes.json();
+    const routes = routeData.data.allRoutes || [];
+
+    routeSelect.innerHTML = '<option value="">Select Route</option>';
+    routes.forEach(route => {
+      const option = document.createElement("option");
+      option.value = route.id;
+      option.textContent = route.name;
+      routeSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error fetching routes:", error);
+  }
+
+  // When route changes, fetch coolers consequently
+  routeSelect.addEventListener("change", async function () {
     const routeId = this.value;
-    if (routeId) {
-      loadCoolers(routeId);
-    }
-  });
-}
+    coolerSelect.innerHTML = '<option value="">Select Bulk Cooler</option>';
+    if (!routeId) return;
 
-async function loadCoolers(routeId) {
-  const response = await fetch("/graphql/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query($id: Int!) {
-          bulkCoolersByRoute(routeId: $id) {
+    try {
+      const coolerQuery = `
+        query GetCoolers($routeId: Int!) {
+          bulkCoolersByRoute(routeId: $routeId) {
             id
             name
             capacityLiters
             currentVolumeLiters
-          }
-        }
-      `,
-      variables: { id: parseInt(routeId, 10) }
-    })
-  });
-
-  const data = await response.json();
-  const coolers = data.data.bulkCoolersByRoute;
-  const coolerSelect = document.getElementById("cooler-tank");
-  const capacityInfo = document.querySelector(".capacity-info p strong");
-
-  coolerSelect.innerHTML = `<option value="">Select Cooler Tank</option>`;
-
-  coolers.forEach(cooler => {
-    const option = document.createElement("option");
-    option.value = cooler.id;
-    option.textContent = cooler.name;
-    option.dataset.capacity = cooler.capacityLiters;
-    option.dataset.available = cooler.capacityLiters - cooler.currentVolumeLiters;
-    coolerSelect.appendChild(option);
-  });
-
-
-  coolerSelect.addEventListener("change", function () {
-    const selected = this.options[this.selectedIndex];
-    if (selected && selected.value) {
-      document.querySelector(".capacity-info").innerHTML = `
-        <p>
-          Selected Cooler Tank Capacity: <strong>${selected.dataset.capacity}L</strong> |
-          Available Space: <strong>${selected.dataset.available}L</strong>
-        </p>
-      `;
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", loadRoutes);
-
-async function loadApprovedMilkLots() {
-  const response = await fetch("/graphql/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query {
-          approvedMilkLotList {
-            id
-            supplier {
-              user {
-                username
-              }
-            }
-            bill {
-              isPaid
-            }
-            status
-            dateCreated
-            volumeL
-            bulkCooler {
+            route {
               name
             }
           }
         }
-      `
-    })
+      `;
+      const coolerRes = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: coolerQuery,
+          variables: { routeId: parseInt(routeId) }
+        })
+      });
+
+      const coolerData = await coolerRes.json();
+      coolersCache = coolerData.data.bulkCoolersByRoute || [];
+
+      coolersCache.forEach(cooler => {
+        const option = document.createElement("option");
+        option.value = cooler.id;
+        option.textContent = `${cooler.name} (${cooler.route.name})`;
+        coolerSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error fetching coolers:", error);
+    }
   });
 
-  const data = await response.json();
-  const milkLots = data.data.approvedMilkLotList;
-  const tableBody = document.querySelector(".milk-lot-table tbody");
-  tableBody.innerHTML = "";
+  coolerSelect.addEventListener("change", function () {
+    const selectedCooler = coolersCache.find(c => c.id === parseInt(this.value));
+    if (selectedCooler) {
+      const totalCapacity = selectedCooler.capacityLiters;
+      const currentVolume = selectedCooler.currentVolumeLiters;
+      const availableSpace = totalCapacity - currentVolume;
 
-  milkLots.forEach(lot => {
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td class="lot-cell lot-id">${lot.id}</td>
-      <td class="lot-cell lot-supplier">${lot.supplier.user.username}</td>
-      <td class="lot-cell lot-status ${lot.bill && lot.bill.isPaid ? 'paid' : 'unpaid'}">${lot.bill ? (lot.bill.isPaid ? "Paid" : "Unpaid") : "Unpaid"}</td>
-      <td class="lot-cell lot-state">${lot.status}</td>
-      <td class="lot-cell lot-date">${new Date(lot.dateCreated).toLocaleDateString()}</td>
-      <td class="lot-cell lot-volume">${lot.volumeL} L</td>
-      <td class="lot-cell lot-cooler">${lot.bulkCooler ? lot.bulkCooler.name : "Not Assigned"}</td>
-      <td class="lot-cell lot-select">
-      <input type="checkbox" 
-            data-id="${lot.id}"
-            ${lot.bulkCooler ? "checked disabled" : ""}
-      >
-    </td>
-    `;
-
-    tableBody.appendChild(row);
+      totalCapacityEl.textContent = totalCapacity;
+      currentVolumeEl.textContent = currentVolume;
+      availableSpaceEl.textContent = availableSpace;
+    } else {
+      totalCapacityEl.textContent = "0";
+      currentVolumeEl.textContent = "0";
+      availableSpaceEl.textContent = "0";
+    }
   });
-}
+});
 
-document.addEventListener("DOMContentLoaded", loadApprovedMilkLots);
 
-document.getElementById("assign-btn").addEventListener("click", async () => {
-    const coolerId = document.getElementById("cooler-tank").value;
+
+//-------------------------------------------------------populate the Milk Lot Table with APPROVED Milk Lots------------------------------//
+document.addEventListener("DOMContentLoaded", async () => {
+  const tableBody = document.querySelector(".milk-lots-table tbody");
+  const totalVolumeSpan = document.getElementById("selected-volume");
+  let totalVolume = 0;
+
+  // GraphQL query
+  const query = `
+    query {
+      approvedMilkLotList {
+        id
+        supplier {
+          user {
+            username
+          }
+        }
+        volumeL
+        fatPercent
+        proteinPercent
+        addedWaterPercent
+        status
+        bulkCooler {
+          name
+        }
+      }
+    }
+  `;
+
+  try {
+    const res = await fetch("/graphql/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: JSON.stringify({ query })
+    });
+
+    const data = await res.json();
+    const lots = data.data?.approvedMilkLotList || [];
+
+    tableBody.innerHTML = "";
+
+    if (lots.length === 0) {
+      const emptyRow = document.createElement("tr");
+      emptyRow.innerHTML = `<td colspan="8" class="empty-message">No approved milk lots available</td>`;
+      tableBody.appendChild(emptyRow);
+      return;
+    }
+
+    lots.forEach(lot => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${lot.id}</td>
+        <td>${lot.supplier.user.username}</td>
+        <td>${lot.volumeL}</td>
+        <td>${lot.fatPercent}%</td>
+        <td>${lot.proteinPercent}%</td>
+        <td>${lot.addedWaterPercent}%</td>
+        <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
+        <td>
+          ${lot.bulkCooler ? lot.bulkCooler.name : '<span class="unassigned">Unassigned</span>'}
+        </td>
+        <td>
+          <input type="checkbox"
+                 name="selected_lots"
+                 value="${lot.id}"
+                 data-volume="${lot.volumeL}"
+                 ${lot.bulkCooler ? "disabled" : ""}>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+    document.querySelectorAll('input[type="checkbox"][data-volume]').forEach(checkbox => {
+      checkbox.addEventListener("change", function () {
+        const volume = parseFloat(this.getAttribute("data-volume")) || 0;
+        totalVolume += this.checked ? volume : -volume;
+        updateTotalVolume();
+      });
+    });
+
+    function updateTotalVolume() {
+      totalVolumeSpan.textContent = totalVolume.toFixed(2);
+    }
+
+  } catch (error) {
+    console.error("Error fetching milk lots:", error);
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+});
+
+// -----------------------------------------------------assign milk lots to Bulk Cooler -------------------------------------------------//
+document.addEventListener("DOMContentLoaded", () => {
+  const assignBtn = document.getElementById("assign-btn");
+
+  assignBtn.addEventListener("click", async () => {
+    const coolerId = parseInt(document.getElementById("cooler").value);
     if (!coolerId) {
-        alert("Please select a cooler tank first.");
-        return;
+      alert("Please select a bulk cooler first.");
+      return;
     }
 
-    const selectedIds = Array.from(document.querySelectorAll(".lot-cell input[type='checkbox']:checked"))
-        .map(cb => parseInt(cb.dataset.id));
+   
+    const selectedLotIds = Array.from(
+      document.querySelectorAll('input[name="selected_lots"]:checked')
+    ).map(cb => parseInt(cb.value));
 
-    if (selectedIds.length === 0) {
-        alert("Please select at least one milk lot.");
-        return;
+    if (selectedLotIds.length === 0) {
+      alert("Please select at least one milk lot.");
+      return;
     }
+
+    const temperature = parseFloat(document.getElementById("temperature").value);
+    const lastCleaned = document.getElementById("last_cleaned").value || null;
+    const lastSanitized = document.getElementById("last_sanitized").value || null;
+    const lastCalibrated = document.getElementById("last_calibrated").value || null;
+    const serviceInterval = parseInt(document.getElementById("service_interval").value) || null;
+    const lastServiced = document.getElementById("last_serviced").value || null;
 
     const mutation = `
-      mutation AssignMilkLots($coolerId: Int!, $lotIds: [Int!]!) {
-        assignMilkLotsToCooler(bulkCoolerId: $coolerId, milkLotIds: $lotIds) {
+      mutation AssignLots(
+        $bulkCoolerId: Int!,
+        $milkLotIds: [Int!]!,
+        $temperature: Float!,
+        $lastCleaned: DateTime,
+        $lastSanitized: DateTime,
+        $lastCalibrated: DateTime,
+        $serviceInterval: Int,
+        $lastServiced: DateTime
+      ) {
+        assignMilkLotsToCooler(
+          bulkCoolerId: $bulkCoolerId,
+          milkLotIds: $milkLotIds,
+          temperatureCelsius: $temperature,
+          lastCleanedAt: $lastCleaned,
+          lastSanitizedAt: $lastSanitized,
+          lastCalibrationDate: $lastCalibrated,
+          serviceIntervalDays: $serviceInterval,
+          lastServicedAt: $lastServiced
+        ) {
           success
           message
         }
       }
     `;
 
-    const response = await fetch("/graphql/", {
+    try {
+      const res = await fetch("/graphql/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            query: mutation,
-            variables: {
-                coolerId: parseInt(coolerId),
-                lotIds: selectedIds
-            }
+          query: mutation,
+          variables: {
+            bulkCoolerId: coolerId,
+            milkLotIds: selectedLotIds,
+            temperature: temperature,
+            lastCleaned: lastCleaned || null,
+            lastSanitized: lastSanitized || null,
+            lastCalibrated: lastCalibrated || null,
+            serviceInterval: serviceInterval,
+            lastServiced: lastServiced || null
+          }
         })
-    });
+      });
 
-    const result = await response.json();
-    if (result.data.assignMilkLotsToCooler.success) {
-        alert(result.data.assignMilkLotsToCooler.message);
+      const data = await res.json();
+      if (data.errors) {
+        alert("Error: " + data.errors[0].message);
+      } else {
+        alert(data.data.assignMilkLotsToCooler.message);
         location.reload();
-    } else {
-        alert("Error: " + (result.errors?.[0]?.message || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Mutation error:", err);
+      alert("Something went wrong.");
     }
+  });
 });
+
 </script>
+
+<style>
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .cooler-selection-card {
+    background-color: #ebf8ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .cooler-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+  
+  select, input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .capacity-display {
+    display: flex;
+    gap: 20px;
+    padding: 15px;
+    background-color: #f0fff4;
+    border-radius: 8px;
+    margin: 15px 0;
+    grid-column: 1 / -1;
+  }
+  
+  .capacity-item {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .milk-lots-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .selection-info {
+    font-size: 1.1em;
+  }
+  
+  .select-all-container {
+    margin-bottom: 15px;
+  }
+  
+  .milk-lots-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .milk-lots-table th {
+    background-color: #ebf8ff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+  }
+  
+  .milk-lots-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .milk-lots-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .status-approved {
+    color: #38a169;
+    font-weight: 500;
+  }
+  
+  .status-pending {
+    color: #d69e2e;
+    font-weight: 500;
+  }
+  
+  .unassigned {
+    color: #e53e3e;
+    font-weight: 500;
+  }
+  
+  .action-buttons {
+    text-align: right;
+    margin-top: 20px;
+  }
+  
+  .btn {
+    padding: 12px 24px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .btn-primary {
+    background-color: #4299e1;
+  }
+  
+  .empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #718096;
+  }
+</style>
 {% endblock %}
