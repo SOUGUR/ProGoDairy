@@ -253,61 +253,6 @@ class Mutation:
         return supplier
 
     @strawberry.mutation
-    def create_milk_lot(self, info: Info, input: MilkLotInput) -> MilkLotType:
-        try:
-            tester = Tester.objects.get(id=input.tester_id)
-        except Tester.DoesNotExist:
-            raise Exception("Tester not found for the authenticated user")
-
-        try:
-            supplier = Supplier.objects.get(id=input.supplier_id)
-        except Supplier.DoesNotExist:
-            raise Exception("Supplier not found with the given ID")
-
-        milk_lot, _ = MilkLot.objects.create(
-            supplier=supplier,
-            tester=tester,  
-            date_created = date.today(),
-            defaults={
-                "volume_l": input.volume_l,
-                "fat_percent": input.fat_percent,
-                "protein_percent": input.protein_percent,
-                "lactose_percent": input.lactose_percent,
-                "total_solids": input.total_solids,
-                "snf": input.snf,
-                "urea_nitrogen": input.urea_nitrogen,
-                "bacterial_count": input.bacterial_count,
-                "added_water_percent": input.added_water_percent,
-            },
-        )
-
-        milk_lot.evaluate_and_price()
-        milk_lot.save()
-
-        return MilkLotType(
-            id=milk_lot.id,
-            tester=tester,
-            supplier=supplier,
-            volume_l=milk_lot.volume_l,
-            fat_percent=milk_lot.fat_percent,
-            protein_percent=milk_lot.protein_percent,
-            lactose_percent=milk_lot.lactose_percent,
-            total_solids=milk_lot.total_solids,
-            snf=milk_lot.snf,
-            urea_nitrogen=milk_lot.urea_nitrogen,
-            bacterial_count=milk_lot.bacterial_count,
-            added_water_percent=milk_lot.added_water_percent,
-            total_price=milk_lot.total_price,
-            price_per_litre=milk_lot.price_per_litre,
-            status=milk_lot.status,
-            date_created=milk_lot.date_created,
-            bill=milk_lot.bill,
-            bulk_cooler=milk_lot.bulk_cooler,
-            on_farm_tank=milk_lot.on_farm_tank,
-            can_collection=milk_lot.can_collection,
-        )
-
-    @strawberry.mutation
     def update_milk_lot(self, info: Info, input: MilkLotInput, lot_id: Optional[int] = None) -> MilkLotType:
         if lot_id:
             try:

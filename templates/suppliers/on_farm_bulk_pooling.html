@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}On-Farm Tank Management{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>On-Farm Tank Management</h1>
+  
+  <!-- Tank Selection Card -->
+  <div class="tank-selection-card">
+    <div class="section-title">Tank Details</div>
+    
+    <div class="tank-form-grid">
+      <!-- Supplier and Tank Selection -->
+      <div class="form-group">
+        <label for="supplier">Supplier</label>
+        <select id="supplier" name="supplier" required>
+          <option value="">Select Supplier</option>      
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="tank">Farm Tank</label>
+        <select id="tank" name="tank" required>
+          <option value="">Select Farm Tank</option>
+          {% for tank in farm_tanks %}
+          <option value="{{ tank.id }}" 
+                  data-capacity="{{ tank.capacity_liters }}"
+                  data-current="{{ tank.current_volume_liters }}">
+            {{ tank.supplier.user.username }}'s Tank ({{ tank.capacity_liters }}L)
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <!-- Capacity Display -->
+      <div class="capacity-display">
+        <div class="capacity-item">
+          <span>Total Capacity:</span>
+          <strong id="total-capacity">0</strong> L
+        </div>
+        <div class="capacity-item">
+          <span>Current Volume:</span>
+          <strong id="current-volume">0</strong> L
+        </div>
+        <div class="capacity-item">
+          <span>Available Space:</span>
+          <strong id="available-space">0</strong> L
+        </div>
+      </div>
+      
+      <!-- Tank Status Fields -->
+      <div class="form-group">
+        <label for="temperature">Temperature (°C)</label>
+        <input type="number" id="temperature" name="temperature_celsius" 
+               step="0.1" min="0" max="8">
+      </div>
+      
+      <!-- Maintenance Fields -->
+      <div class="form-group">
+        <label for="last_cleaned">Last Cleaned At</label>
+        <input type="datetime-local" id="last_cleaned" name="last_cleaned_at">
+      </div>
+      
+      <div class="form-group">
+        <label for="last_sanitized">Last Sanitized At</label>
+        <input type="datetime-local" id="last_sanitized" name="last_sanitized_at">
+      </div>
+      
+      <div class="form-group">
+        <label for="last_calibrated">Last Calibrated At</label>
+        <input type="datetime-local" id="last_calibrated" name="last_calibration_date">
+      </div>
+      
+      <div class="form-group">
+        <label for="service_interval">Service Interval (days)</label>
+        <input type="number" id="service_interval" name="service_interval_days" 
+               min="1" value="90">
+      </div>
+      
+      <div class="form-group">
+        <label for="last_serviced">Last Serviced At</label>
+        <input type="datetime-local" id="last_serviced" name="last_serviced_at">
+      </div>
+      
+    </div>
+  </div>
+  
+  <!-- Milk Lots Assignment Section -->
+  <div class="milk-lots-section">
+    <div class="section-header">
+      <h2>Approved Milk Lots</h2>
+      <div class="selection-info">
+        <span>Selected Volume: </span>
+        <strong id="selected-volume">0</strong> L
+      </div>
+    </div>
+    
+    <div class="select-all-container">
+      <input type="checkbox" id="select-all">
+      <label for="select-all">Select all unassigned lots</label>
+    </div>
+    
+    <table class="milk-lots-table">
+      <thead>
+        <tr>
+          <th>MilkLot ID</th>
+          <th>Supplier</th>
+          <th>Volume (L)</th>
+          <th>Fat %</th>
+          <th>Protein %</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+          <th>Select</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lot in milk_lots %}
+        <tr>
+          <td>{{ lot.id }}</td>
+          <td>{{ lot.supplier.user.username }}</td>
+          <td>{{ lot.volume_l }}</td>
+          <td>{{ lot.fat_percent }}%</td>
+          <td>{{ lot.protein_percent }}%</td>
+          <td class="status-{{ lot.status|lower }}">{{ lot.status }}</td>
+          <td>
+            {% if lot.on_farm_tank %}
+              {{ lot.on_farm_tank.supplier.user.username }}'s Tank
+            {% else %}
+              <span class="unassigned">Unassigned</span>
+            {% endif %}
+          </td>
+          <td>
+            <input type="checkbox" name="selected_lots" 
+                   value="{{ lot.id }}" 
+                   data-volume="{{ lot.volume_l }}"
+                   {% if lot.on_farm_tank %}disabled{% endif %}>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="empty-message">No approved milk lots available</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <div class="action-buttons">
+      <button type="button" class="btn btn-primary" id="assign-btn">
+        Assign Selected to Tank
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+  }
+  
+  h1 {
+    color: #2c5282;
+    font-weight: 600;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #ebf2f7;
+    padding-bottom: 10px;
+  }
+  
+  .tank-selection-card {
+    background-color: #ebf8ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .tank-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+  
+  select, input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+  }
+  
+  .capacity-display {
+    display: flex;
+    gap: 20px;
+    padding: 15px;
+    background-color: #f0fff4;
+    border-radius: 8px;
+    margin: 15px 0;
+    grid-column: 1 / -1;
+    border: 1px solid #c6f6d5;
+  }
+  
+  .capacity-item {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .capacity-item strong {
+    color: #2b6cb0;
+    font-weight: 600;
+  }
+  
+  .milk-lots-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .selection-info {
+    font-size: 1.1em;
+    color: #4a5568;
+  }
+  
+  .selection-info strong {
+    color: #2b6cb0;
+  }
+  
+  .select-all-container {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .milk-lots-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  
+  .milk-lots-table th {
+    background-color: #ebf8ff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+    text-transform: uppercase;
+    font-size: 0.85em;
+  }
+  
+  .milk-lots-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .milk-lots-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .milk-lots-table tr:hover {
+    background-color: #ebf8ff;
+  }
+  
+  .status-approved {
+    color: #38a169;
+    font-weight: 500;
+  }
+  
+  .status-pending {
+    color: #d69e2e;
+    font-weight: 500;
+  }
+  
+  .unassigned {
+    color: #e53e3e;
+    font-weight: 500;
+  }
+  
+  .action-buttons {
+    text-align: right;
+    margin-top: 20px;
+  }
+  
+  .btn {
+    padding: 12px 24px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn:hover {
+    background-color: #3182ce;
+  }
+  
+  .empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #718096;
+    background-color: #f8fafc;
+    border-radius: 4px;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Can Collection Management{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Can Collection Management</h1>
+  
+  <!-- Collection Setup Card -->
+  <div class="setup-card">
+    <div class="section-title">Collection Parameters</div>
+    
+    <div class="form-grid">
+      <!-- Route Selection -->
+      <div class="form-group">
+        <label for="route">Route</label>
+        <select id="route" name="route" required>
+          <option value="">Select Route</option>
+          {% for route in routes %}
+          <option value="{{ route.id }}">{{ route.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <!-- Collection Name -->
+      <div class="form-group">
+        <label for="collection_name">Collection Name/Code</label>
+        <input type="text" id="collection_name" name="collection_name" 
+               placeholder="e.g. Morning Route A – {% now 'Y-m-d' %}">
+      </div>
+      
+      <!-- Grouping Parameters -->
+      <div class="form-group">
+        <label for="grouping_param">Grouping Parameter</label>
+        <select id="grouping_param" name="grouping_param" required>
+          <option value="">Select Parameter</option>
+          <option value="fat">Fat %</option>
+          <option value="protein">Protein %</option>
+          <option value="snf">Solids-Not-Fat %</option>
+          <option value="water">Water Content %</option>
+          <option value="density">Density</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="grouping_value">Target Value</label>
+        <div class="value-input-group">
+          <input type="number" id="grouping_value" name="grouping_value" step="0.01" required>
+          <select id="grouping_unit" name="grouping_unit" required>
+            <option value="%">Percentage</option>
+            <option value="g/L">Grams per Liter</option>
+            <option value="kg/m³">Kilograms per Cubic Meter</option>
+            <option value="°C">Degrees Celsius</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Milk Lots Assignment Section -->
+  <div class="milk-lots-section">
+    <div class="section-header">
+      <h2>Approved Milk Lots (Unassigned Cans)</h2>
+      <div class="selection-stats">
+        <div class="stat-item">
+          <span>Selected Volume:</span>
+          <strong id="selected-volume">0</strong> L
+        </div>
+        <div class="stat-item">
+          <span>Avg <span id="param-label">Fat</span>:</span>
+          <strong id="avg-param-value">0.00</strong> <span id="param-unit">%</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="select-all-container">
+      <input type="checkbox" id="select-all">
+      <label for="select-all">Select all matching cans</label>
+    </div>
+    
+    <table class="milk-lots-table">
+      <thead>
+        <tr>
+          <th>MilkLot ID</th>
+          <th>Supplier</th>
+          <th>Volume (L)</th>
+          <th>Fat %</th>
+          <th>Protein %</th>
+          <th>SNF %</th>
+          <th>Density</th>
+          <th>Select</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lot in milk_lots %}
+        <tr>
+          <td>{{ lot.id }}</td>
+          <td>{{ lot.supplier.user.username }}</td>
+          <td>{{ lot.volume_l }}</td>
+          <td>{{ lot.fat_percent }}</td>
+          <td>{{ lot.protein_percent }}</td>
+          <td>{{ lot.snf }}</td>
+          <td>{{ lot.density }}</td>
+          <td class="checkbox-cell">
+            <input type="checkbox" name="selected_lots" 
+                   value="{{ lot.id }}" 
+                   data-volume="{{ lot.volume_l }}"
+                   data-fat="{{ lot.fat_percent }}"
+                   data-protein="{{ lot.protein_percent }}"
+                   data-snf="{{ lot.snf }}"
+                   data-density="{{ lot.density }}">
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="empty-message">No unassigned milk cans available</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+    <div class="action-buttons">
+      <button type="button" class="btn btn-primary" id="assign-btn">
+        Create Can Collection
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+  }
+  
+  h1 {
+    color: #2c5282;
+    font-weight: 600;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #ebf2f7;
+    padding-bottom: 10px;
+  }
+  
+  .setup-card {
+    background-color: #ebf8ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+  
+  select, input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+  }
+  
+  .value-input-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .value-input-group input {
+    flex: 2;
+  }
+  
+  .value-input-group select {
+    flex: 1;
+  }
+  
+  .milk-lots-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .selection-stats {
+    display: flex;
+    gap: 30px;
+    background-color: #f0fff4;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #c6f6d5;
+  }
+  
+  .stat-item {
+    text-align: center;
+  }
+  
+  .stat-item span:first-child {
+    color: #4a5568;
+    margin-right: 5px;
+  }
+  
+  .stat-item strong {
+    color: #2b6cb0;
+    font-weight: 600;
+  }
+  
+  .select-all-container {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .milk-lots-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  
+  .milk-lots-table th {
+    background-color: #ebf8ff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+    text-transform: uppercase;
+    font-size: 0.85em;
+  }
+  
+  .milk-lots-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .milk-lots-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .milk-lots-table tr:hover {
+    background-color: #ebf8ff;
+  }
+  
+  .checkbox-cell {
+    text-align: center;
+  }
+  
+  .empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #718096;
+    background-color: #f8fafc;
+    border-radius: 4px;
+  }
+  
+  .action-buttons {
+    text-align: right;
+    margin-top: 20px;
+  }
+  
+  .btn {
+    padding: 12px 24px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn:hover {
+    background-color: #3182ce;
+  }
+</style>
+{% endblock %}

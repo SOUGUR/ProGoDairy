@@ -233,7 +233,7 @@ class OnFarmTank(models.Model):
     service_interval_days = models.PositiveSmallIntegerField(default=90) 
     last_serviced_at = models.DateTimeField(null=True, blank=True)
 
-    last_stirred_at = models.DateTimeField(null=True, blank=True)
+    last_calibration_date  = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(
         auto_now_add=True,
