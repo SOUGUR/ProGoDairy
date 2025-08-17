@@ -467,6 +467,85 @@
             font-size: 1.8rem;
             }
         }
+
+    /*--------------------------------------Login Form styles -----------------------------------------------------*/
+    .login-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-form-container {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .login-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .login-header h3 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .close-login {
+    font-size: 24px;
+    cursor: pointer;
+    color: #777;
+  }
+  
+  .close-login:hover {
+    color: #333;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .login-submit-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .login-submit-btn:hover {
+    background-color: #3a5a80;
+  }
     </style>
 </head>
 <body>
@@ -656,6 +735,29 @@
         </div>
     </section>
 
+<!------------------------------------------------ Login Form ------------------------------------------->
+<div id="login-modal" class="login-modal">
+  <div class="login-form-container">
+    <div class="login-header">
+      <h3>Login</h3>
+      <span class="close-login">&times;</span>
+    </div>
+    <form class="login-form" method="POST" action="{% url 'accounts:login' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_username">Email/Username</label>
+        <input type="text" id="id_username" name="username" placeholder="Enter your email or username" required>
+      </div>
+      <div class="form-group">
+        <label for="id_password">Password</label>
+        <input type="password" id="id_password" name="password" placeholder="Enter your password" required>
+      </div>
+      <input type="hidden" name="next" value="{{ request.GET.next }}">
+      <button type="submit" class="login-submit-btn">Login</button>
+    </form>
+  </div>
+</div>
+
     <section class="cta">
         <div class="container">
             <h2>Ready to Modernize Your Milk Collection?</h2>
@@ -670,4 +772,34 @@
     </div>
 
 </body>
+<script>
+  const loginModal = document.getElementById('login-modal');
+  const loginBtn = document.querySelector('.login-btn');
+  const closeBtn = document.querySelector('.close-login');
+  
+  loginBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    loginModal.style.display = 'flex';
+  });
+  
+  closeBtn.addEventListener('click', function() {
+    loginModal.style.display = 'none';
+  });
+  
+  window.addEventListener('click', function(event) {
+    if (event.target === loginModal) {
+      loginModal.style.display = 'none';
+    }
+  });
+  
+  document.querySelector('.login-form').addEventListener('submit', function(e) {
+    const email = document.getElementById('id_username').value;
+    const password = document.getElementById('id_password').value;
+    
+    console.log('Login attempt with:', email, password);
+    
+    loginModal.style.display = 'none';
+    
+  });
+</script>
 </html>
