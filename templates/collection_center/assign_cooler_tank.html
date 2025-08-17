@@ -248,6 +248,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         addedWaterPercent
         status
         bulkCooler {
+          id
+          name
+        }
+        onFarmTank{
+          id
+          name
+        }
+        canCollection{
+          id
           name
         }
       }
@@ -288,15 +297,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${lot.addedWaterPercent}%</td>
         <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
         <td>
-          ${lot.bulkCooler ? lot.bulkCooler.name : '<span class="unassigned">Unassigned</span>'}
+          ${lot.onFarmTank ? lot.onFarmTank.name : lot.bulkCooler ? lot.bulkCooler.name : lot.canCollection ? lot.canCollection.name : '<span class="unassigned">Unassigned</span>'}
         </td>
         <td>
           <input type="checkbox"
-                 name="selected_lots"
-                 value="${lot.id}"
-                 data-volume="${lot.volumeL}"
-                 ${lot.bulkCooler ? "disabled" : ""}>
+                name="selected_lots"
+                value="${lot.id}"
+                data-volume="${lot.volumeL}"
+                ${(lot.onFarmTank || lot.bulkCooler || lot.canCollection) ? "disabled" : ""}>
         </td>
+
       `;
       tableBody.appendChild(row);
     });

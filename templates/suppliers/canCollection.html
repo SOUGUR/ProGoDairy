@@ -3,130 +3,6 @@
 {% block title %}Can Collection Management{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h1>Can Collection Management</h1>
-  
-  <!-- Collection Setup Card -->
-  <div class="setup-card">
-    <div class="section-title">Collection Parameters</div>
-    
-    <div class="form-grid">
-      <!-- Route Selection -->
-      <div class="form-group">
-        <label for="route">Route</label>
-        <select id="route" name="route" required>
-          <option value="">Select Route</option>
-          {% for route in routes %}
-          <option value="{{ route.id }}">{{ route.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      
-      <!-- Collection Name -->
-      <div class="form-group">
-        <label for="collection_name">Collection Name/Code</label>
-        <input type="text" id="collection_name" name="collection_name" 
-               placeholder="e.g. Morning Route A – {% now 'Y-m-d' %}">
-      </div>
-      
-      <!-- Grouping Parameters -->
-      <div class="form-group">
-        <label for="grouping_param">Grouping Parameter</label>
-        <select id="grouping_param" name="grouping_param" required>
-          <option value="">Select Parameter</option>
-          <option value="fat">Fat %</option>
-          <option value="protein">Protein %</option>
-          <option value="snf">Solids-Not-Fat %</option>
-          <option value="water">Water Content %</option>
-          <option value="density">Density</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label for="grouping_value">Target Value</label>
-        <div class="value-input-group">
-          <input type="number" id="grouping_value" name="grouping_value" step="0.01" required>
-          <select id="grouping_unit" name="grouping_unit" required>
-            <option value="%">Percentage</option>
-            <option value="g/L">Grams per Liter</option>
-            <option value="kg/m³">Kilograms per Cubic Meter</option>
-            <option value="°C">Degrees Celsius</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Milk Lots Assignment Section -->
-  <div class="milk-lots-section">
-    <div class="section-header">
-      <h2>Approved Milk Lots (Unassigned Cans)</h2>
-      <div class="selection-stats">
-        <div class="stat-item">
-          <span>Selected Volume:</span>
-          <strong id="selected-volume">0</strong> L
-        </div>
-        <div class="stat-item">
-          <span>Avg <span id="param-label">Fat</span>:</span>
-          <strong id="avg-param-value">0.00</strong> <span id="param-unit">%</span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="select-all-container">
-      <input type="checkbox" id="select-all">
-      <label for="select-all">Select all matching cans</label>
-    </div>
-    
-    <table class="milk-lots-table">
-      <thead>
-        <tr>
-          <th>MilkLot ID</th>
-          <th>Supplier</th>
-          <th>Volume (L)</th>
-          <th>Fat %</th>
-          <th>Protein %</th>
-          <th>SNF %</th>
-          <th>Density</th>
-          <th>Select</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for lot in milk_lots %}
-        <tr>
-          <td>{{ lot.id }}</td>
-          <td>{{ lot.supplier.user.username }}</td>
-          <td>{{ lot.volume_l }}</td>
-          <td>{{ lot.fat_percent }}</td>
-          <td>{{ lot.protein_percent }}</td>
-          <td>{{ lot.snf }}</td>
-          <td>{{ lot.density }}</td>
-          <td class="checkbox-cell">
-            <input type="checkbox" name="selected_lots" 
-                   value="{{ lot.id }}" 
-                   data-volume="{{ lot.volume_l }}"
-                   data-fat="{{ lot.fat_percent }}"
-                   data-protein="{{ lot.protein_percent }}"
-                   data-snf="{{ lot.snf }}"
-                   data-density="{{ lot.density }}">
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="8" class="empty-message">No unassigned milk cans available</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    
-    <div class="action-buttons">
-      <button type="button" class="btn btn-primary" id="assign-btn">
-        Create Can Collection
-      </button>
-    </div>
-  </div>
-</div>
-
 <style>
   .container {
     max-width: 1400px;
@@ -162,11 +38,12 @@
   .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    gap: 15px;
+    padding: 10px ;
   }
   
   .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 5px;
   }
   
   label {
@@ -184,7 +61,24 @@
     font-size: 16px;
     background-color: white;
   }
-  
+
+  .form-group button {
+  width: 100%;
+  padding: 12px;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  } 
+
+  .form-group button:hover {
+    background-color: #3182ce;
+  }
+
   .value-input-group {
     display: flex;
     gap: 10px;
@@ -284,6 +178,27 @@
     background-color: #f8fafc;
     border-radius: 4px;
   }
+
+  .unassigned {
+    color: #e53e3e;
+    font-weight: 500;
+  }
+
+  .status-pending {
+      color: #d69e2e;
+      font-weight: 500;
+    }
+    
+    .status-approved {
+      color: #38a169;
+      font-weight: 500;
+    }
+    
+    .status-rejected {
+      color: #e53e3e;
+      font-weight: 500;
+    }
+  
   
   .action-buttons {
     text-align: right;
@@ -304,5 +219,610 @@
   .btn:hover {
     background-color: #3182ce;
   }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .modal-header h3 {
+    color: #2c5282;
+    margin: 0;
+  }
+  
+  .close-modal {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+  }
+  
+  .close-modal:hover {
+    color: #000;
+  }
+
+  .btn-primary {
+    padding: 12px 24px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .btn-primary:hover {
+    background-color: #3182ce;
+    }
+
 </style>
+<div class="container">
+  <h1>Can Collection Management</h1>
+
+  <div class="setup-card">
+    <div class="section-title">Collection Parameters</div>
+    
+    <div class="form-grid">
+      <!-- Route Selection -->
+      <div class="form-group">
+        <label for="route">Route</label>
+        <select id="route" name="route" required>
+          <option value="">Select Route</option>
+        </select>
+      </div>
+      
+      <!-- Collection Name -->
+      <div class="form-group">
+        <label for="collection_name">Collection Name/Code</label>
+        <select id="collection_name" name="collection_name" required>
+          <option value="" disabled selected>select CanCollections created</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="collection_date">CanCollection Date</label>
+        <input type="date" id="collection_date" name="collection_date" 
+              value="{% now 'Y-m-d' %}">
+      </div>
+
+      <div class="form-group">
+        <label for="collection_volume">Volume (Liters)</label>
+        <input type="number" id="collection_volume" name="collection_volume" 
+              placeholder="CanCollection volume in liters" readonly >
+      </div>
+      
+      <div class="form-group">
+        <label for="CanCollection">Create CanCollection</label>
+        <button id="CanCollection" name="CanCollection">
+          Add CanCollection
+        </button>
+      </div>
+    
+    </div>
+  </div>
+  
+  <!-- Milk Lots Assignment Section -->
+  <div class="milk-lots-section">
+    <div class="section-header">
+      <h2>Approved Milk Lots (Unassigned Cans)</h2>
+      <div class="selection-stats">
+        <div class="stat-item">
+          <span>Selected Volume:</span>
+          <strong id="selected-volume">0</strong> L
+        </div>
+      </div>
+    </div>
+    
+    <div class="select-all-container">
+      <input type="checkbox" id="select-all">
+      <label for="select-all">Select all unassigned cans</label>
+    </div>
+    
+    <table class="milk-lots-table">
+      <thead>
+        <tr>
+          <th>MilkLot ID</th>
+          <th>Supplier</th>
+          <th>Volume (L)</th>
+          <th>Fat %</th>
+          <th>Protein %</th>
+          <th>Added water %</th>
+          <th>SNF %</th>
+          <th>Status</th>
+          <th>Assigned to</th>
+          <th>Select</th>
+        </tr>
+      </thead>
+      <tbody id="milk-lot-body">
+      </tbody>
+    </table>
+    
+    <div class="action-buttons">
+      <button type="button" class="btn btn-primary" id="assign-cancollection-btn">
+        Assign to CanCollection
+      </button>
+    </div>
+  </div>
+</div>
+
+<!--======================================================= HTML for Modal to create CanCollection ================================================-->>
+<div id="canCollectionModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create New Can Collection</h3>
+      <span class="close-modal">&times;</span>
+    </div>
+    <form id="canCollectionForm">
+      <div class="form-group">
+        <label for="modal_route">Route</label>
+        <select id="modal_route" name="route" required>
+          <option value="">Select Route</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="modal_collection_name">Collection Name/Code</label>
+        <input type="text" id="modal_collection_name" name="collection_name" 
+               placeholder="e.g. Morning Route A - {% now 'Y-m-d' %}" required>
+      </div>
+      <button type="submit" class="btn-primary">Create Collection</button>
+    </form>
+  </div>
+</div>
+<script>
+//================================================Populate Routes===================================================//
+async function fetchRoutesmain() {
+  const query = `
+    query {
+      allRoutes {
+        id
+        name
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {  
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+
+    const result = await response.json();
+    const routes = result.data.allRoutes;
+
+    const select = document.getElementById("route")    
+
+    routes.forEach(r => {
+      const option = document.createElement("option");
+      option.value = r.id;
+      option.textContent = r.name;
+      select.appendChild(option);
+    });
+
+
+  } catch (error) {
+    console.error("Error fetching routes:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", fetchRoutesmain);
+
+
+//===================================================Display approved Milk Lots ===============================================//
+ async function fetchApprovedMilkLots() {
+    const query = `
+      query {
+        approvedMilkLotList {
+          id
+          volumeL
+          fatPercent
+          proteinPercent
+          addedWaterPercent
+          snf
+          status
+          supplier {
+            user {
+              username
+            }
+          }
+          onFarmTank {
+            id
+            name
+          }
+          bulkCooler {
+            id
+            name
+          }
+          canCollection{
+            id
+            name
+          }
+        }
+      }
+    `;
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      const result = await response.json();
+      const milkLots = result.data.approvedMilkLotList;
+
+      const tbody = document.getElementById("milk-lot-body");
+    
+
+      milkLots.forEach(lot => {
+        const row = document.createElement("tr");
+
+        let assignedStatus = '<span class="unassigned">Unassigned</span>';
+
+        if (lot.onFarmTank) {
+          assignedStatus = `${lot.onFarmTank.name}`;
+        } else if (lot.bulkCooler) {
+          assignedStatus = `${lot.bulkCooler.name}`;
+        }
+        else if (lot.canCollection) {
+          assignedStatus = `${lot.canCollection.name}`;
+        }
+
+        row.innerHTML = `
+          <td>${lot.id}</td>
+          <td>${lot.supplier.user.username}</td>
+          <td>${lot.volumeL}</td>
+          <td>${lot.fatPercent}</td>
+          <td>${lot.proteinPercent}</td>
+          <td>${lot.addedWaterPercent ?? "-"}</td>
+          <td>${lot.snf}</td>
+          <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
+          <td>${assignedStatus}</td>
+          <td>
+            <input type="checkbox" class="milk-lot-checkbox"
+                   value="${lot.id}"
+                   data-volume="${lot.volumeL}"
+                   ${lot.onFarmTank || lot.bulkCooler || lot.canCollection? "disabled" : ""}>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+    } catch (error) {
+      console.error("Error fetching milk lots:", error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", fetchApprovedMilkLots);
+  
+//============================================== Show Selected volume from checkboxes ========================================================//
+function setupMilkLotCheckboxListeners() {
+  const checkboxes = document.querySelectorAll(".milk-lot-checkbox");
+  const selectedVolumeDisplay = document.getElementById("selected-volume");
+
+  function updateSelectedVolume() {
+    let total = 0;
+    checkboxes.forEach(cb => {
+      if (cb.checked && !cb.disabled) {
+        total += parseFloat(cb.dataset.volume) || 0;
+      }
+    });
+    selectedVolumeDisplay.textContent = total.toFixed(2); 
+  }
+
+  checkboxes.forEach(cb => {
+    cb.addEventListener("change", updateSelectedVolume);
+  });
+}
+setupMilkLotCheckboxListeners();
+//============================================= Dispaly Modal for adding and creating CanCollection ========================================================//  
+document.addEventListener('DOMContentLoaded', function() {
+  const addCanCollectionBtn = document.getElementById('CanCollection');
+  const modal = document.getElementById('canCollectionModal');
+  const closeBtn = document.querySelector('.close-modal');
+  const form = document.getElementById('canCollectionForm');
+
+  addCanCollectionBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+
+    const routeSelect = document.getElementById('modal_route');
+    routeSelect.innerHTML = '<option value="">Loading routes...</option>';
+    routeSelect.disabled = true;
+
+    try {
+      await fetchRoutes(); 
+    } catch (error) {
+      routeSelect.innerHTML = '<option value="">Failed to load</option>';
+      console.error("Failed to load routes:", error);
+    } finally {
+      routeSelect.disabled = false;
+    }
+
+    modal.style.display = 'block';
+  });
+
+
+  closeBtn.addEventListener('click', function() {
+    modal.style.display = 'none';
+  });
+
+  window.addEventListener('click', function(event) {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const routeSelect = document.getElementById('modal_route');
+    const collectionNameInput = document.getElementById('modal_collection_name');
+
+    const routeId = routeSelect.value;
+    const collectionName = collectionNameInput.value;
+
+    if (!routeId || !collectionName) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const routeIdNum = parseInt(routeId, 10);
+    if (isNaN(routeIdNum)) {
+      alert('Invalid route selected');
+      return;
+    }
+
+    console.log('Creating new CanCollection:', {
+      routeId: routeIdNum,
+      name: collectionName
+    });
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: `
+            mutation CreateCanCollection($routeId: Int!, $name: String!) {
+              createCanCollection(routeId: $routeId, name: $name) {
+                id
+                name
+                createdAt
+                route { id }
+              }
+            }
+          `,
+          variables: { routeId: routeIdNum, name: collectionName }
+        })
+      });
+
+      const result = await response.json();
+      if (result.errors) {
+        alert("Error: " + result.errors[0].message);
+      } else {
+        alert(" Collection created: " + result.data.createCanCollection.name);
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert("Failed to create collection.");
+    }
+
+    modal.style.display = 'none';
+    form.reset();
+  });
+});
+
+async function fetchRoutes() {
+  const query = `
+    query {
+      allRoutes {
+        id
+        name
+      }
+    }
+  `;
+
+  const routeSelect = document.getElementById('modal_route');
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+
+    const result = await response.json();
+    if (result.errors) {
+      routeSelect.innerHTML = '<option value="">Error loading</option>';
+      throw new Error(result.errors[0].message);
+    }
+
+    const routes = result.data.allRoutes;
+
+    routeSelect.innerHTML = '<option value="">Select Route</option>';
+    routes.forEach(route => {
+      const option = document.createElement('option');
+      option.value = route.id;         
+      option.textContent = route.name;
+      routeSelect.appendChild(option);
+    });
+
+    console.log(`✅ Loaded ${routes.length} routes`);
+  } catch (error) {
+    console.error("Error in fetchRoutes():", error);
+    routeSelect.innerHTML = '<option value="">Failed to load routes</option>';
+  }
+}
+
+//=============================================== fetch Collections and display when route or date changes ===========================================//
+async function fetchCanCollections() {
+  const routeSelect = document.getElementById("route");
+  const dateInput = document.getElementById("collection_date");
+  const collectionSelect = document.getElementById("collection_name");
+  const collectionVolume = document.getElementById("collection_volume");
+
+  const routeId = routeSelect.value;
+  const createdDate = dateInput.value;
+
+  if (!routeId || !createdDate) {
+    console.warn("Route and Date are required to fetch CanCollections.");
+    return;
+  }
+
+  const query = `
+    query GetCanCollectionsByDate($routeId: Int!, $date: Date!) {
+      canCollectionsByDate(routeId: $routeId, createdDate: $date) {
+        id
+        name
+        totalVolumeLiters
+        createdAt
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        variables: { routeId: parseInt(routeId), date: createdDate }
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error("GraphQL errors:", result.errors);
+      return;
+    }
+
+    const collections = result.data.canCollectionsByDate;
+
+    collectionSelect.innerHTML = `<option value="" disabled selected>Select CanCollections created</option>`;
+
+    collections.forEach(c => {
+      const option = document.createElement("option");
+      option.value = c.id;
+      option.textContent = `${c.name} (${new Date(c.createdAt).toLocaleDateString()})`;
+      option.dataset.volume = c.totalVolumeLiters;   
+      collectionSelect.appendChild(option);
+    });
+
+    const collectionVolumeInput = document.getElementById("collection_volume");
+      document.getElementById("collection_name").addEventListener("change", function() {
+      const selectedOption = this.options[this.selectedIndex];
+
+      if (selectedOption && selectedOption.value) {
+        collectionVolumeInput.value = selectedOption.dataset.volume || "";
+      } else {
+        collectionVolumeInput.value = "";
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching can collections:", error);
+  }
+}
+
+document.getElementById("route").addEventListener("change", () => {
+  collectionVolumeInput.value = "";
+});
+document.getElementById("route").addEventListener("change", fetchCanCollections);
+document.getElementById("collection_date").addEventListener("change", fetchCanCollections);
+
+
+//========================================= assign selected Milk Lots to selected CanCollections ===================================================//
+async function assignMilkLotsToCanCollection() {
+  const collectionSelect = document.getElementById("collection_name");
+  const canCollectionId = collectionSelect.value;
+
+  if (!canCollectionId) {
+    alert("Please select a CanCollection first.");
+    return;
+  }
+
+  const selectedLotIds = Array.from(
+    document.querySelectorAll(".milk-lot-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selectedLotIds.length === 0) {
+    alert("Please select at least one milk lot to assign.");
+    return;
+  }
+
+  const mutation = `
+    mutation AssignMilkLots($canCollectionId: Int!, $milkLotIds: [Int!]!) {
+      assignMilkLotsToCanCollection(
+        canCollectionId: $canCollectionId,
+        milkLotIds: $milkLotIds
+      ) {
+        success
+        message
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: mutation,
+        variables: {
+          canCollectionId: parseInt(canCollectionId),
+          milkLotIds: selectedLotIds
+        }
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error("GraphQL errors:", result.errors);
+      alert("Error assigning lots: " + result.errors[0].message);
+      return;
+    }
+
+    const payload = result.data.assignMilkLotsToCanCollection;
+    if (payload.success) {
+      alert(payload.message);
+    } else {
+      alert("Assignment failed: " + payload.message);
+    }
+
+  } catch (error) {
+    console.error("Error assigning milk lots:", error);
+    alert("Unexpected error assigning lots.");
+  }
+}
+
+document.getElementById("assign-cancollection-btn").addEventListener("click", assignMilkLotsToCanCollection);
+</script>
 {% endblock %}

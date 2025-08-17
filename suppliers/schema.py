@@ -1,21 +1,20 @@
 import strawberry
 from strawberry_django import type as strawberry_django_type, field
 from distribution.schema import RouteType
-from suppliers.models import Supplier, MilkLot, PaymentBill
-from plants.models import Tester
+from suppliers.models import Supplier, MilkLot, PaymentBill, OnFarmTank, CanCollection
 from django.contrib.auth.models import User
 from typing import List
 from strawberry.types import Info
 from strawberry.permission import BasePermission
-from django.shortcuts import get_object_or_404
 from typing import Optional
 from decimal import Decimal
 from graphql import GraphQLError
 from datetime import date, datetime
 from distribution.schema import UserType
-from collection_center.schema import BulkCoolerType
+from distribution.models import Route
+from collection_center.schema import BulkCoolerType, AssignLotsPayload
 from plants.schema import TesterType
-
+from django.core.exceptions import ValidationError
 
 class IsAuthenticated(BasePermission):
     message = "User is not authenticated"
@@ -130,7 +129,7 @@ class OnFarmTankType:
     last_sanitized_at: Optional[datetime]
     service_interval_days: int
     last_serviced_at: Optional[datetime]
-    last_stirred_at: Optional[datetime]
+    last_calibration_date: Optional[datetime]
     created_at: datetime
 
 
@@ -140,10 +139,12 @@ class CanCollectionType:
     route: RouteType
     name: str
     total_volume_liters: float
-    group_parameter: str
-    group_value: float
-    group_unit: str
     created_at: datetime
+
+@strawberry.type
+class AssignCanCollectionPayload:
+    success: bool
+    message: str
 
 
 @strawberry.type
@@ -201,6 +202,48 @@ class Query:
             return milk_lots
         except Supplier.DoesNotExist:
             raise GraphQLError("Supplier profile not found.")
+        
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def approved_milk_lot_list_by_supplier(self, supplier_id: int) -> List[MilkLotType]:
+        milk_lots = (
+        MilkLot.objects.select_related("supplier", "bill")
+        .filter(supplier_id=supplier_id, status="approved")
+        .order_by("-date_created")
+    )
+
+        if not milk_lots.exists():
+            raise GraphQLError("No approved milk lots found for this supplier.")
+
+        return milk_lots
+        
+    @strawberry.field
+    def on_farm_tanks_by_supplier(self, supplier_id: int) -> List[OnFarmTankType]:
+        return OnFarmTank.objects.filter(supplier_id=supplier_id)
+    
+    @strawberry.field
+    def can_collections_by_date(
+        self, 
+        route_id: int, 
+        created_date: date
+    ) -> List[CanCollectionType]:
+        try:
+            route = Route.objects.get(id=route_id)
+            collections = CanCollection.objects.filter(
+                route=route,
+                created_at__date=created_date
+            )
+            return [
+                CanCollectionType(
+                    id=c.id,
+                    route=c.route,
+                    name=c.name,
+                    total_volume_liters=c.total_volume_liters,
+                    created_at=c.created_at
+                )
+                for c in collections
+            ]
+        except Route.DoesNotExist:
+            raise GraphQLError("Route not found")
 
     @field
     def all_payment_bills(self) -> List[PaymentBillTypeList]:
@@ -314,5 +357,98 @@ class Mutation:
         except Exception as e:
             return CreatePaymentBillPayload(success=False, error=str(e))
 
+    
+    @strawberry.mutation
+    def assign_milk_lots_to_onfarm_tank(
+        self,
+        tank_id: int,
+        milk_lot_ids: List[int],
+        temperature_celsius: Optional[float] = None,
+        last_cleaned_at: Optional[datetime] = None,
+        last_sanitized_at: Optional[datetime] = None,
+        last_calibration_date: Optional[datetime] = None,
+        service_interval_days: Optional[int] = None,
+        last_serviced_at: Optional[datetime] = None,
+    ) -> AssignLotsPayload:
+        try:
+            tank = OnFarmTank.objects.get(id=tank_id)
+            lots = list(MilkLot.objects.filter(id__in=milk_lot_ids))
 
+            count = tank.add_lots(*lots)
+
+            if temperature_celsius is not None:
+                tank.temperature_celsius = temperature_celsius
+            if last_cleaned_at:
+                tank.last_cleaned_at = last_cleaned_at
+            if last_sanitized_at:
+                tank.last_sanitized_at = last_sanitized_at
+            if last_calibration_date:
+                tank.last_calibration_date = last_calibration_date
+            if service_interval_days is not None:
+                tank.service_interval_days = service_interval_days
+            if last_serviced_at:
+                tank.last_serviced_at = last_serviced_at
+
+            tank.save()
+
+            return AssignLotsPayload(
+                success=True,
+                message=f"{count} milk lots assigned to On-Farm Tank {tank.name}",
+            )
+        except OnFarmTank.DoesNotExist:
+            raise GraphQLError("On-Farm Tank not found")
+        except ValueError as e:
+            raise GraphQLError(str(e))
+        except Exception as e:
+            raise GraphQLError(f"Error assigning lots: {e}")
+        
+    @strawberry.mutation
+    def assign_milk_lots_to_can_collection(
+        self,
+        can_collection_id: int,
+        milk_lot_ids: List[int],
+    ) -> AssignCanCollectionPayload:
+        try:
+            collection = CanCollection.objects.get(id=can_collection_id)
+            lots = list(MilkLot.objects.filter(id__in=milk_lot_ids))
+
+            count = collection.add_lots(*lots)
+
+            return AssignCanCollectionPayload(
+                success=True,
+                message=f"{count} milk lots assigned to Can Collection {collection.name}",
+            )
+        except CanCollection.DoesNotExist:
+            raise GraphQLError("Can Collection not found")
+        except ValidationError as e:
+            raise GraphQLError(str(e))
+        except Exception as e:
+            raise GraphQLError(f"Error assigning lots: {e}")
+        
+    @strawberry.mutation
+    def create_can_collection(
+        self,
+        route_id: int,
+        name: str
+    ) -> CanCollectionType:
+        try:
+            route = Route.objects.get(id=route_id)
+            collection = CanCollection.objects.create(
+                route=route,
+                name=name,
+                total_volume_liters=0.0, 
+            )
+
+            return CanCollectionType(
+                id=collection.id,
+                route=collection.route,
+                name=collection.name,
+                total_volume_liters=collection.total_volume_liters,
+                created_at=collection.created_at,
+            )
+        except Route.DoesNotExist:
+            raise GraphQLError("Route not found")
+        except Exception as e:
+            raise GraphQLError(f"Error creating can collection: {e}")
+        
 schema = strawberry.Schema(query=Query, mutation=Mutation)

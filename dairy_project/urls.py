@@ -11,6 +11,7 @@ urlpatterns = [
     path("distribution/", include("distribution.urls")),
     path("bmcu/", include("collection_center.urls")),
     path("accounts/", include("accounts.urls")),
+    path("__reload__/", include("django_browser_reload.urls")),
 ]
 
 project_urls = [path("", homepage_view, name="home"),]

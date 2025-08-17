@@ -133,8 +133,96 @@
     #milk-test-btn:active {
       transform: translateY(0);
     }
-
-  </style>
+  /* ---------------------------Style for modal reference table of Standard Milk Composition--------------------------- */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    width: 80%;
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .close-modal {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .close-modal:hover {
+    color: #333;
+  }
+  
+  .standards-table-container {
+    margin-top: 20px;
+    overflow-x: auto;
+  }
+  
+  .standards-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+  }
+  
+  .standards-table th {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  
+  .standards-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .standards-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .standards-table tr:hover {
+    background-color: #ebf8ff;
+  }
+  
+  .btn-info {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-info:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+</style>
 </head>
 <body>
   <div class="container">
@@ -198,7 +286,7 @@
         </div>
         
         <div class="form-group">
-          <label class="required-field">Urea Nitrogen</label>
+          <label class="required-field">Urea Nitrogen (mg/dL)</label>
           <input type="number" step="0.01" name="urea_nitrogen" value="" required>
         </div>
       </div>
@@ -214,9 +302,90 @@
           <input type="number" name="added_water_percent" value="" required>
         </div>
       </div>
-      
+      <button id="show-standards-btn" class="btn btn-info">
+        <i class="fas fa-info-circle"></i> Show Quality Standards
+      </button>
     <button type="submit" id="milk-test-btn">Submit Milk Test</button>
   </div>
+<!---------------------- Modal to display the reference chart of Standard Milk composition-------------------------->>
+<div id="quality-standards-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h3>Milk Quality Standards Reference</h3>
+    <div class="standards-table-container">
+      <table class="standards-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Unit</th>
+            <th>India (FSSAI) Limits</th>
+            <th>Global/Codex Range</th>
+            <th>Reject If</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>fat_percent</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 3.5%</strong> (min.)</td>
+            <td>3.3 - 4.5%</td>
+            <td>&lt; 3.5%</td>
+          </tr>
+          <tr>
+            <td><strong>protein_percent</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 3.0%</strong> (min.)</td>
+            <td>2.8 - 3.5%</td>
+            <td>&lt; 2.8%</td>
+          </tr>
+          <tr>
+            <td><strong>lactose_percent</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≈ 4.6 - 5.0%</strong> (typical)</td>
+            <td>4.5 - 5.0%</td>
+            <td>outside ±0.5%</td>
+          </tr>
+          <tr>
+            <td><strong>total_solids</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 12.5%</strong></td>
+            <td>12.0 - 13.5%</td>
+            <td>&lt; 12.0%</td>
+          </tr>
+          <tr>
+            <td><strong>snf</strong> (Solids-Not-Fat)</td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 8.5%</strong></td>
+            <td>8.2 - 9.0%</td>
+            <td>&lt; 8.5%</td>
+          </tr>
+          <tr>
+            <td><strong>urea_nitrogen</strong> (MUN)</td>
+            <td>mg/dL</td>
+            <td><strong>15 - 40 mg/dL</strong></td>
+            <td>10 - 45 mg/dL</td>
+            <td>&lt; 10 or > 45</td>
+          </tr>
+          <tr>
+            <td><strong>bacterial_count</strong></td>
+            <td>CFU/mL</td>
+            <td><strong>≤ 50,000 CFU/mL</strong> (raw milk)</td>
+            <td>≤ 100,000 CFU/mL (Codex)</td>
+            <td>> 50,000</td>
+          </tr>
+          <tr>
+            <td><strong>added_water_percent</strong></td>
+            <td>%</td>
+            <td><strong>≤ 3%</strong> (FSSAI tolerance)</td>
+            <td><strong>0%</strong> (Codex ideal)</td>
+            <td>> 3%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script>
 //------------------------------------------CREATE Milk Lot if lot_Id not present, else UPDATE Milk Lot-------------------------------------//
 document.addEventListener("DOMContentLoaded", () => {
@@ -411,5 +580,28 @@ async function fetchMilkLotAndFillForm(lotId) {
     document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
     document.querySelector("input[name='added_water_percent']").value = lot.addedWaterPercent;
 }
+</script>
+
+<script>
+  // Simple modal control (can be added to your existing JS)
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('quality-standards-modal');
+    const btn = document.getElementById('show-standards-btn');
+    const span = document.querySelector('.close-modal');
+    
+    btn.onclick = function() {
+      modal.style.display = 'block';
+    }
+    
+    span.onclick = function() {
+      modal.style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+  });
 </script>
 {% endblock %}

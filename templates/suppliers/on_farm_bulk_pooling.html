@@ -23,13 +23,6 @@
         <label for="tank">Farm Tank</label>
         <select id="tank" name="tank" required>
           <option value="">Select Farm Tank</option>
-          {% for tank in farm_tanks %}
-          <option value="{{ tank.id }}" 
-                  data-capacity="{{ tank.capacity_liters }}"
-                  data-current="{{ tank.current_volume_liters }}">
-            {{ tank.supplier.user.username }}'s Tank ({{ tank.capacity_liters }}L)
-          </option>
-          {% endfor %}
         </select>
       </div>
       
@@ -105,43 +98,19 @@
       <thead>
         <tr>
           <th>MilkLot ID</th>
+          <th>Date tested</th>
           <th>Supplier</th>
           <th>Volume (L)</th>
           <th>Fat %</th>
           <th>Protein %</th>
+          <th>Added water %</th>
           <th>Status</th>
           <th>Assigned To</th>
           <th>Select</th>
         </tr>
       </thead>
       <tbody>
-        {% for lot in milk_lots %}
-        <tr>
-          <td>{{ lot.id }}</td>
-          <td>{{ lot.supplier.user.username }}</td>
-          <td>{{ lot.volume_l }}</td>
-          <td>{{ lot.fat_percent }}%</td>
-          <td>{{ lot.protein_percent }}%</td>
-          <td class="status-{{ lot.status|lower }}">{{ lot.status }}</td>
-          <td>
-            {% if lot.on_farm_tank %}
-              {{ lot.on_farm_tank.supplier.user.username }}'s Tank
-            {% else %}
-              <span class="unassigned">Unassigned</span>
-            {% endif %}
-          </td>
-          <td>
-            <input type="checkbox" name="selected_lots" 
-                   value="{{ lot.id }}" 
-                   data-volume="{{ lot.volume_l }}"
-                   {% if lot.on_farm_tank %}disabled{% endif %}>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="8" class="empty-message">No approved milk lots available</td>
-        </tr>
-        {% endfor %}
+     
       </tbody>
     </table>
     
@@ -333,5 +302,419 @@
     background-color: #f8fafc;
     border-radius: 4px;
   }
+  
 </style>
+
+<script>
+  //---------------------------------------load supplier name and Id------------------------------------------//
+  async function loadSuppliers() {
+    const query = `
+      query {
+        suppliers {
+          id
+          user{
+            username
+          }
+        }
+      }
+    `;
+
+    try {
+      const response = await fetch("/graphql/", {   
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"), 
+        },
+        body: JSON.stringify({ query })
+      });
+
+      const result = await response.json();
+      const suppliers = result.data.suppliers;
+
+      const supplierSelect = document.getElementById("supplier");
+
+      suppliers.forEach(supplier => {
+        const option = document.createElement("option");
+        option.value = supplier.id;
+        option.textContent = `${supplier.id} - ${supplier.user.username}`;
+        supplierSelect.appendChild(option);
+      });
+
+    } catch (error) {
+      console.error("Error loading suppliers:", error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadSuppliers);
+
+//--------------------------------------------load OnFarm Tanks for selected Suppliers -------------------------------------------------//
+async function loadTanksForSupplier(supplierId) {
+  const query = `
+    query ($supplierId: Int!) {
+      onFarmTanksBySupplier(supplierId: $supplierId) {
+        id
+        name
+        capacityLiters
+        currentVolumeLiters
+        supplier {
+          id
+          user{
+            username
+          }
+        }
+        temperatureCelsius
+        lastCleanedAt
+        lastSanitizedAt
+        lastCalibrationDate
+        serviceIntervalDays
+        lastServicedAt 
+      }
+    }
+  `;
+
+  const variables = { supplierId };
+
+  try {
+    const res = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables })
+    });
+
+    const result = await res.json();
+    const tanks = result.data.onFarmTanksBySupplier;
+
+    const tankSelect = document.getElementById("tank");
+    tankSelect.innerHTML = `
+      <option value="">Select Farm Tank</option>
+    `; 
+
+    tanks.forEach(tank => {
+      const option = document.createElement("option");
+      option.value = tank.id;
+      option.textContent = `${tank.supplier.user.username}'s ${tank.name} (${tank.capacityLiters} L)`;
+      option.dataset.capacity = tank.capacityLiters;
+      option.dataset.current = tank.currentVolumeLiters;
+      option.dataset.capacity = tank.capacityLiters;
+      option.dataset.current = tank.currentVolumeLiters;
+      option.dataset.temperature = tank.temperatureCelsius || "";
+      option.dataset.lastCleaned = tank.lastCleanedAt || "";
+      option.dataset.lastSanitized = tank.lastSanitizedAt || "";
+      option.dataset.lastCalibrated = tank.lastCalibrationDate || "";
+      option.dataset.serviceInterval = tank.serviceIntervalDays || 90;
+      option.dataset.lastServiced = tank.lastServicedAt || "";
+
+      tankSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error fetching tanks:", error);
+  }
+}
+
+document.getElementById("supplier").addEventListener("change", function () {
+  const supplierId = this.value; 
+  if (supplierId) {
+    loadTanksForSupplier(parseInt(supplierId));
+  } else {
+    const tankSelect = document.getElementById("tank");
+    tankSelect.innerHTML = `<option value="">Select Farm Tank</option>`;
+  }
+  document.getElementById("total-capacity").textContent = 0;
+  document.getElementById("current-volume").textContent = 0;
+  document.getElementById("available-space").textContent = 0;
+  document.getElementById("temperature").value = "";
+  document.getElementById("last_cleaned").value = "";
+  document.getElementById("last_sanitized").value = "";
+  document.getElementById("last_calibrated").value = "";
+  document.getElementById("service_interval").value = 90;
+  document.getElementById("last_serviced").value = "";
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const tankSelect = document.getElementById("tank");
+
+  tankSelect.addEventListener("change", () => {
+    const selectedOption = tankSelect.options[tankSelect.selectedIndex];
+
+    if (selectedOption && selectedOption.value) {
+      const capacity = parseFloat(selectedOption.dataset.capacity);
+      const current = parseFloat(selectedOption.dataset.current);
+      const available = capacity - current;
+
+      document.getElementById("total-capacity").textContent = capacity;
+      document.getElementById("current-volume").textContent = current;
+      document.getElementById("available-space").textContent = available;
+      document.getElementById("temperature").value = selectedOption.dataset.temperature ;
+      document.getElementById("last_cleaned").value = formatDateForInput(selectedOption.dataset.lastCleaned);
+      document.getElementById("last_sanitized").value = formatDateForInput(selectedOption.dataset.lastSanitized);
+      document.getElementById("last_calibrated").value = formatDateForInput(selectedOption.dataset.lastCalibrated);
+      document.getElementById("service_interval").value = selectedOption.dataset.serviceInterval;
+      document.getElementById("last_serviced").value = formatDateForInput(selectedOption.dataset.lastServiced);
+    } else {
+  
+      document.getElementById("total-capacity").textContent = 0;
+      document.getElementById("current-volume").textContent = 0;
+      document.getElementById("available-space").textContent = 0;
+      document.getElementById("last_cleaned").value = "";
+      document.getElementById("last_sanitized").value = "";
+      document.getElementById("last_calibrated").value = "";
+      document.getElementById("service_interval").value = 90;
+      document.getElementById("last_serviced").value = "";
+    }
+  });
+});
+
+//===============================================Load Approved Milk Lots related to selected Supplier only ===================================//
+async function loadMilkLotsForSupplier(supplierId) {
+  const query = `
+    query ($supplierId: Int!) {
+      approvedMilkLotListBySupplier(supplierId: $supplierId) {
+        id
+        dateCreated
+        volumeL
+        fatPercent
+        proteinPercent
+        addedWaterPercent
+        status
+        volumeL
+        supplier {
+          id
+          user {
+            username
+          }
+        }
+        bulkCooler{
+          id
+          name
+        }
+        onFarmTank {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const variables = { supplierId };
+
+  try {
+    const res = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    const result = await res.json();
+
+    if (result.errors) {
+      console.error(result.errors);
+      renderEmptyMessage("No approved milk lots available");
+      return;
+    }
+
+    const milkLots = result.data.approvedMilkLotListBySupplier;
+    renderMilkLotsTable(milkLots);
+    
+  } catch (error) {
+    console.error("Error fetching milk lots:", error);
+    renderEmptyMessage("Error fetching milk lots");
+  }
+}
+
+function renderMilkLotsTable(milkLots) {
+  const tbody = document.querySelector(".milk-lots-table tbody");
+  tbody.innerHTML = "";
+
+  if (!milkLots.length) {
+    renderEmptyMessage("No approved milk lots available");
+    return;
+  }
+
+  milkLots.forEach((lot) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${lot.id}</td>
+      <td>${lot.dateCreated}</td>
+      <td>${lot.supplier.user.username}</td>
+      <td>${lot.volumeL}</td>
+      <td>${lot.fatPercent}</td>
+      <td>${lot.proteinPercent}</td>
+      <td>${lot.addedWaterPercent}</td>
+      <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
+      <td>${lot.onFarmTank ? lot.onFarmTank.name : (lot.bulkCooler ? lot.bulkCooler.name : '<span class="unassigned">Unassigned</span>')}</td>
+      <td>
+        <input type="checkbox" class="milk-lot-checkbox" name="selected_lots" 
+               value="${lot.id}" 
+               data-volume="${lot.volumeL}"
+               ${lot.onFarmTank || lot.bulkCooler ? "disabled" : ""}>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderEmptyMessage(message) {
+  const tbody = document.querySelector(".milk-lots-table tbody");
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" class="empty-message">${message}</td>
+    </tr>
+  `;
+}
+
+document.getElementById("supplier").addEventListener("change", function () {
+  const supplierId = this.value;
+  if (supplierId) {
+    loadMilkLotsForSupplier(parseInt(supplierId));
+  } else {
+    renderEmptyMessage("No supplier selected");
+  }
+});
+
+//==================================== displaying Volume change for selected milk Lots ===============================================================//
+document.addEventListener("DOMContentLoaded", function () {
+  const tbody = document.querySelector(".milk-lots-table tbody");
+  const selectedVolumeEl = document.getElementById("selected-volume");
+  let totalVolume = 0;
+
+  tbody.addEventListener("change", function (event) {
+    const checkbox = event.target.closest(".milk-lot-checkbox");
+    if (!checkbox) return; 
+
+    const volume = parseFloat(checkbox.dataset.volume);
+
+    if (!isNaN(volume)) {
+      if (checkbox.checked) {
+        totalVolume += volume;
+      } else {
+        totalVolume -= volume;
+      }
+    }
+
+    selectedVolumeEl.textContent = totalVolume.toFixed(2);
+  });
+});
+
+//============================================== assign selected Milk Lots to OnFarm Tank =================================================//
+
+document.addEventListener("DOMContentLoaded", function () {
+    const assignBtn = document.getElementById("assign-btn");
+
+    assignBtn.addEventListener("click", async function () {
+        const checkboxes = document.querySelectorAll(".milk-lot-checkbox:checked");
+        const selectedLotIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        const tankSelect = document.getElementById("tank");
+        const tankId = tankSelect ? parseInt(tankSelect.value) : null;
+
+        const temperatureCelsius = document.getElementById("temperature")?.value || null;
+        const lastCleanedAt = document.getElementById("last_cleaned")?.value || null;
+        const lastSanitizedAt = document.getElementById("last_sanitized")?.value || null;
+        const lastCalibratedAt = document.getElementById("last_calibrated")?.value || null;
+        const lastServicedAt = document.getElementById("last_serviced")?.value || null;
+        const serviceIntervalDays = document.getElementById("service_interval")?.value || null;
+
+        if (!tankId) {
+            alert("Please select a tank.");
+            return;
+        }
+        if (selectedLotIds.length === 0) {
+            alert("Please select at least one milk lot.");
+            return;
+        }
+
+        const query = `
+          mutation AssignLots(
+            $tankId: Int!, 
+            $lotIds: [Int!]!, 
+            $temp: Float, 
+            $lastCleanedAt: DateTime, 
+            $lastSanitizedAt: DateTime, 
+            $lastCalibratedAt: DateTime, 
+            $lastServicedAt: DateTime, 
+            $serviceIntervalDays: Int  
+          ) {
+            assignMilkLotsToOnfarmTank(
+              tankId: $tankId,
+              milkLotIds: $lotIds,
+              temperatureCelsius: $temp,
+              lastCleanedAt: $lastCleanedAt,
+              lastSanitizedAt: $lastSanitizedAt,
+              lastCalibrationDate: $lastCalibratedAt,
+              lastServicedAt: $lastServicedAt,
+              serviceIntervalDays: $serviceIntervalDays
+            ) {
+              success
+              message
+            }
+          }
+        `;
+
+        const variables = {
+          tankId: tankId,
+          lotIds: selectedLotIds,
+          temp: temperatureCelsius ? parseFloat(temperatureCelsius) : null,
+          lastCleanedAt: lastCleanedAt || null,
+          lastSanitizedAt: lastSanitizedAt || null,
+          lastCalibratedAt: lastCalibratedAt || null,
+          lastServicedAt: lastServicedAt || null,
+          serviceIntervalDays: serviceIntervalDays ? parseInt(serviceIntervalDays) : null
+        };
+
+        try {
+            const response = await fetch("/graphql/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")  
+                },
+                body: JSON.stringify({ query, variables })
+            });
+
+            const result = await response.json();
+            if (result.data.assignMilkLotsToOnfarmTank.success) {
+                alert(result.data.assignMilkLotsToOnfarmTank.message);
+                window.location.reload();
+            } else {
+                alert("Error: " + result.data.assignMilkLotsToOnfarmTank.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong while assigning lots.");
+        }
+    });
+
+});
+
+//=================================================== Helper Functions =========================================//
+function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+function formatDateForInput(isoString) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+
+  const pad = (n) => (n < 10 ? "0" + n : n);
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+</script>
 {% endblock %}

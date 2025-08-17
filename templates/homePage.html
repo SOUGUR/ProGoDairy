@@ -364,6 +364,109 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
+
+        .features-section {
+            padding: 60px 0;
+            background-color: #f5f9fc;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .section-title {
+            text-align: center;
+            color: #2c5282;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: #4a5568;
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background-color: #ebf8ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .feature-icon img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+        
+        .feature-card h3 {
+            color: #2c5282;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .feature-card p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .feature-stats {
+            font-size: 0.9rem;
+            color: #718096;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .stat-badge {
+            background-color: #c6f6d5;
+            color: #22543d;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .features-grid {
+            grid-template-columns: 1fr;
+            }
+            
+            .section-title {
+            font-size: 1.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -449,6 +552,86 @@
         </div>
     </div>
 
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Revolutionizing Milk Collection Logistics</h2>
+            <p class="section-subtitle">Our platform transforms traditional dairy operations with smart digital solutions</p>
+            
+            <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3058/3058979.png" alt="Real-time Tracking">
+                </div>
+                <h3>Real-time Collection Monitoring</h3>
+                <p>Track every milk lot from farm to processing plant with recorded updates on volume, quality parameters, and transfer status for better investigations.</p>
+                <div class="feature-stats">
+                <span class="stat-badge">+40%</span> collection efficiency reported by users
+                </div>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/2491/2491935.png" alt="Quality Control">
+                </div>
+                <h3>Tracked Quality Assurance</h3>
+                <p>Three-tier testing system ensures milk quality at every stage - farm, collection center, and plant gate.</p>
+                <div class="feature-stats">
+                <span class="stat-badge">98.7%</span> quality compliance rate
+                </div>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3576/3576210.png" alt="Route Optimization">
+                </div>
+                <h3>Intelligent Route Management</h3>
+                <p>Optimize collection routes based on updated data from 300+ BMCUs across India.</p>
+                <div class="feature-stats">
+                <span class="stat-badge">2.5 hrs</span> average daily time savings
+                </div>
+            </div>
+            
+            <!-- Feature 4 -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/3663/3663343.png" alt="Payment System">
+                </div>
+                <h3>Transparent Payment System</h3>
+                <p>Automated payments based on quality parameters with complete audit trails.</p>
+                <div class="feature-stats">
+                <span class="stat-badge">24 hrs</span> faster payments to farmers
+                </div>
+            </div>
+            
+            <!-- Feature 5 -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/4392/4392527.png" alt="Cold Chain">
+                </div>
+                <h3>Cold Chain Integrity</h3>
+                <p>Monitor temperature at every stage from farm bulk tanks to transport vehicles.</p>
+                <div class="feature-stats">
+                <span class="stat-badge">4°C</span> maintained throughout
+                </div>
+            </div>
+            
+            <!-- Feature 6 -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                <img src="https://cdn-icons-png.flaticon.com/512/4392/4392505.png" alt="Analytics">
+                </div>
+                <h3>Advanced Analytics</h3>
+                <p>Powerful insights into collection patterns, quality trends, and operational efficiency.</p>
+                <div class="feature-stats">
+                <span class="stat-badge">15%</span> reduced milk spoilage
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
 
     <section class="testimonials">
         <div class="container">

@@ -158,7 +158,7 @@
 
   
   #create-milk-lot-btn {
-    bottom: 495px;      
+    bottom: 555px;      
     right:10px       
   }
 
@@ -173,46 +173,122 @@
     transform: translateY(0);
   }
 
-</style>
-<style>
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-  }
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  overflow: auto; /* Enable scrolling if needed */
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 2% auto; /* Reduced from 15% to give more space */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 80%;
+  max-width: 900px;
+  max-height: 85vh; /* Limit height and enable scrolling */
+  overflow-y: auto; /* Enable vertical scrolling */
+  border: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.modal h2 {
+  color: #2c5282;
+  margin-bottom: 20px;
+  font-weight: 600;
+  border-bottom: 2px solid #ebf2f7;
+  padding-bottom: 10px;
+}
+
+.close {
+  position: absolute;
+  right: 25px;
+  top: 15px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close:hover {
+  color: #2c5282;
+}
+
+/*------------------------------------------------ Modal Table Styles ----------------------------------------------------------------------------*/
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.modal-table th, 
+.modal-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-table th {
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.5px;
+}
+
+.modal-table tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.modal-table tr:hover {
+  background-color: #ebf8ff;
+}
+
+@media (max-width: 768px) {
   .modal-content {
-    background-color: #fff;
-    margin: 10% auto;
-    padding: 20px;
-    width: 60%;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    width: 95%;
+    margin: 10px auto;
+    padding: 15px;
   }
-  .close {
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
+  
+  .modal-table th, 
+  .modal-table td {
+    padding: 8px 10px;
+    font-size: 13px;
   }
-  .modal-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  .modal-table th, .modal-table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-  }
-  .modal-table th {
-    background-color: #f4f4f4;
-  }
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 </style>
+
 </head>
 <body>
   <div class="container">
@@ -243,31 +319,31 @@
       </tbody>
     </table>
   </div>
-  <!-- Modal for view MilkLot -->
-   <div id="milkLotModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Milk Lot Details</h2>
-    <table class="modal-table">
-      <tr><th>Field</th><th>Value</th></tr>
-      <tr><td>ID</td><td id="modal-id"></td></tr>
-      <tr><td>Date tested</td><td id="modal-dateCreated"></td></tr>
-      <tr><td>Volume (L)</td><td id="modal-volumeL"></td></tr>
-      <tr><td>Fat (%)</td><td id="modal-fatPercent"></td></tr>
-      <tr><td>Protein (%)</td><td id="modal-proteinPercent"></td></tr>
-      <tr><td>Lactose (%)</td><td id="modal-lactosePercent"></td></tr>
-      <tr><td>Total Solids</td><td id="modal-totalSolids"></td></tr>
-      <tr><td>SNF</td><td id="modal-snf"></td></tr>
-      <tr><td>Urea Nitrogen</td><td id="modal-ureaNitrogen"></td></tr>
-      <tr><td>Bacterial Count</td><td id="modal-bacterialCount"></td></tr>
-      <tr><td>Total Price</td><td id="modal-totalPrice">₹<span></span></td></tr>
-      <tr><td>Price Per Litre</td><td id="modal-pricePerLitre">₹<span></span></td></tr>
-      <tr><td>Status</td><td id="modal-status"></td></tr>
-      <tr><td>Added Water (%)</td><td id="modal-addedWaterPercent"></td></tr>
-      <tr><td>Supplier</td><td id="modal-supplier"></td></tr>
-    </table>
+  <!-------------------------------------------------- Modal for view MilkLot ---------------------------------------------------------------->
+  <div id="milkLotModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Milk Lot Details</h2>
+      <table class="modal-table">
+        <tr><th>Field</th><th>Value</th><th>Standard</th><th>Anomaly (%)</th></tr>
+        <tr><td>ID</td><td id="modal-id"></td><td>-</td><td>-</td></tr>
+        <tr><td>Date tested</td><td id="modal-dateCreated"></td><td>-</td><td>-</td></tr>
+        <tr><td>Volume (L)</td><td id="modal-volumeL"></td><td>-</td><td>-</td></tr>
+        <tr><td>Fat (%)</td><td id="modal-fatPercent"></td><td id="modal-fatStandard"></td><td id="modal-fatAnomaly"></td></tr>
+        <tr><td>Protein (%)</td><td id="modal-proteinPercent"></td><td id="modal-proteinStandard"></td><td id="modal-proteinAnomaly"></td></tr>
+        <tr><td>Lactose (%)</td><td id="modal-lactosePercent"></td><td id="modal-lactoseStandard"></td><td id="modal-lactoseAnomaly"></td></tr>
+        <tr><td>Total Solids</td><td id="modal-totalSolids"></td><td id="modal-totalSolidsStandard"></td><td id="modal-totalSolidsAnomaly"></td></tr>
+        <tr><td>SNF</td><td id="modal-snf"></td><td id="modal-snfStandard"></td><td id="modal-snfAnomaly"></td></tr>
+        <tr><td>Urea Nitrogen</td><td id="modal-ureaNitrogen"></td><td id="modal-ureaNitrogenStandard"></td><td id="modal-ureaNitrogenAnomaly"></td></tr>
+        <tr><td>Bacterial Count</td><td id="modal-bacterialCount"></td><td id="modal-bacterialCountStandard"></td><td id="modal-bacterialCountAnomaly"></td></tr>
+        <tr><td>Total Price</td><td id="modal-totalPrice">₹<span></span></td><td>-</td><td>-</td></tr>
+        <tr><td>Price Per Litre</td><td id="modal-pricePerLitre">₹<span></span></td><td>-</td><td>-</td></tr>
+        <tr><td>Status</td><td id="modal-status"></td><td>-</td><td>-</td></tr>
+        <tr><td>Added Water (%)</td><td id="modal-addedWaterPercent"></td><td id="modal-addedWaterStandard"></td><td id="modal-addedWaterAnomaly"></td></tr>
+        <tr><td>Supplier</td><td id="modal-supplier"></td><td>-</td><td>-</td></tr>
+      </table>
+    </div>
   </div>
-</div>
 <script>
   //function to gather all Milk Lots and associated information
 document.addEventListener("DOMContentLoaded", async () => {
@@ -342,98 +418,132 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-//modal view function to dispaly Milk Lot Information
+//============================================= modal view function to dispaly Milk Lot Information =================================================//
 document.addEventListener("click", async function (e) {
   const viewBtn = e.target.closest(".btn-view");
   if (!viewBtn) return;
 
   e.preventDefault();
 
-  // Extract lot ID from href (e.g., "/milk-lot/edit/123")
-  const href = viewBtn.getAttribute("href");
-  const lotId = parseInt(href.split("/").pop()); 
+  const standards = { fatPercent: 3.5, proteinPercent: 3.0, lactosePercent: 4.6, totalSolids: 12.5, snf: 8.5, ureaNitrogen: {min:15,max:40}, bacterialCount:50000, addedWaterPercent:3 };
+
+  const lotId = parseInt(viewBtn.getAttribute("href").split("/").pop());
 
   const fetchMilkLotQuery = `
-        query GetMilkLotById($id: Int!) {
-            milkLotById(id: $id) {
-                id
-                supplier {
-                    id
-                    email
-                    user { username }
-                }
-                tester {
-                    id
-                    user { username }
-                }
-                volumeL
-                fatPercent
-                proteinPercent
-                lactosePercent
-                totalSolids
-                snf
-                pricePerLitre
-                totalPrice
-                ureaNitrogen
-                bacterialCount
-                addedWaterPercent
-                dateCreated
-            }
-        }
-    `;
+    query GetMilkLotById($id: Int!) {
+      milkLotById(id: $id) {
+        id
+        supplier { id email user { username } }
+        tester { id user { username } }
+        volumeL fatPercent proteinPercent lactosePercent totalSolids snf pricePerLitre totalPrice ureaNitrogen bacterialCount addedWaterPercent dateCreated
+      }
+    }
+  `;
 
   try {
     const res = await fetch("/graphql/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: fetchMilkLotQuery,
-        variables: { id: lotId }
-      })
+      body: JSON.stringify({ query: fetchMilkLotQuery, variables: { id: lotId } })
     });
-    console.log(res)
     const result = await res.json();
-    if (result.errors) {
-      alert("Error: " + result.errors[0].message);
-      return;
-    }
+    if (result.errors) { alert(result.errors[0].message); return; }
 
     const lot = result.data.milkLotById;
+
+    // Fill modal fields
     document.getElementById("modal-id").textContent = lot.id;
     document.getElementById("modal-dateCreated").textContent = lot.dateCreated;
     document.getElementById("modal-volumeL").textContent = lot.volumeL + " L";
-    document.getElementById("modal-fatPercent").textContent = lot.fatPercent + "%";
-    document.getElementById("modal-proteinPercent").textContent = lot.proteinPercent + "%";
-    document.getElementById("modal-lactosePercent").textContent = lot.lactosePercent + "%";
-    document.getElementById("modal-totalSolids").textContent = lot.totalSolids;
-    document.getElementById("modal-snf").textContent = lot.snf;
-    document.getElementById("modal-ureaNitrogen").textContent = lot.ureaNitrogen;
-    document.getElementById("modal-bacterialCount").textContent = lot.bacterialCount;
-    document.getElementById("modal-totalPrice").querySelector("span").textContent = lot.totalPrice;
-    document.getElementById("modal-pricePerLitre").querySelector("span").textContent = lot.pricePerLitre;
-    document.getElementById("modal-status").textContent = lot.status;
-    document.getElementById("modal-addedWaterPercent").textContent = lot.addedWaterPercent + "%";
+
+    // Fat
+    const fat = lot.fatPercent;
+    const fatStd = standards.fatPercent;
+    let fatAnomaly = fat < fatStd ? `Low (below ${fatStd}%) – potential dilution` : `Normal`;
+    document.getElementById("modal-fatPercent").textContent = fat + "%";
+    document.getElementById("modal-fatStandard").textContent = fatStd + "%";
+    document.getElementById("modal-fatAnomaly").textContent = fatAnomaly;
+
+    // Protein
+    const protein = lot.proteinPercent;
+    const proteinStd = standards.proteinPercent;
+    let proteinAnomaly = protein < proteinStd ? `Low (below ${proteinStd}%) – poor quality or adulteration` : `Normal`;
+    document.getElementById("modal-proteinPercent").textContent = protein + "%";
+    document.getElementById("modal-proteinStandard").textContent = proteinStd + "%";
+    document.getElementById("modal-proteinAnomaly").textContent = proteinAnomaly;
+
+    // Lactose
+    const lactose = lot.lactosePercent;
+    const lactoseStd = standards.lactosePercent;
+    let lactoseAnomaly = Math.abs(lactose - lactoseStd) > 0.5 ? `Deviation detected – possible adulteration` : `Normal`;
+    document.getElementById("modal-lactosePercent").textContent = lactose + "%";
+    document.getElementById("modal-lactoseStandard").textContent = lactoseStd + "%";
+    document.getElementById("modal-lactoseAnomaly").textContent = lactoseAnomaly;
+
+    // Total Solids
+    const ts = lot.totalSolids;
+    const tsStd = standards.totalSolids;
+    let tsAnomaly = ts < tsStd ? `Low – potential water addition` : `Normal`;
+    document.getElementById("modal-totalSolids").textContent = ts;
+    document.getElementById("modal-totalSolidsStandard").textContent = tsStd + "%";
+    document.getElementById("modal-totalSolidsAnomaly").textContent = tsAnomaly;
+
+    // SNF
+    const snf = lot.snf;
+    const snfStd = standards.snf;
+    let snfAnomaly = snf < snfStd ? `Below standard – quality concern` : `Normal`;
+    document.getElementById("modal-snf").textContent = snf;
+    document.getElementById("modal-snfStandard").textContent = snfStd + "%";
+    document.getElementById("modal-snfAnomaly").textContent = snfAnomaly;
+
+    // Urea Nitrogen
+    const urea = lot.ureaNitrogen;
+    let ureaAnomaly = "Normal";
+    if (urea < standards.ureaNitrogen.min) ureaAnomaly = `Below min – possible adulteration`;
+    else if (urea > standards.ureaNitrogen.max) ureaAnomaly = `Above max – excessive urea addition`;
+    document.getElementById("modal-ureaNitrogen").textContent = urea;
+    document.getElementById("modal-ureaNitrogenStandard").textContent = `${standards.ureaNitrogen.min} – ${standards.ureaNitrogen.max} mg/dL`;
+    document.getElementById("modal-ureaNitrogenAnomaly").textContent = ureaAnomaly;
+
+    // Bacterial Count
+    const bac = lot.bacterialCount;
+    const bacStd = standards.bacterialCount;
+    let bacAnomaly = bac > bacStd ? `High – microbiological risk` : `Normal`;
+    document.getElementById("modal-bacterialCount").textContent = bac;
+    document.getElementById("modal-bacterialCountStandard").textContent = bacStd.toLocaleString();
+    document.getElementById("modal-bacterialCountAnomaly").textContent = bacAnomaly;
+
+    // Added Water
+    const water = lot.addedWaterPercent;
+    const waterStd = standards.addedWaterPercent;
+    let waterAnomaly = water > waterStd ? `Excess water detected` : `Normal`;
+    document.getElementById("modal-addedWaterPercent").textContent = water + "%";
+    document.getElementById("modal-addedWaterStandard").textContent = waterStd + "%";
+    document.getElementById("modal-addedWaterAnomaly").textContent = waterAnomaly;
+
+    const totalPrice = lot.totalPrice;
+    document.getElementById("modal-totalPrice").textContent = totalPrice;
+
+    const pricePerLitre = lot.pricePerLitre;
+    document.getElementById("modal-pricePerLitre").textContent = pricePerLitre;
+
+    // Supplier
     document.getElementById("modal-supplier").textContent = `${lot.supplier.id} - ${lot.supplier.email}`;
 
     // Show modal
     document.getElementById("milkLotModal").style.display = "block";
+    document.querySelector("#milkLotModal .close").addEventListener("click", () => { document.getElementById("milkLotModal").style.display = "none"; });
 
-    document.querySelector("#milkLotModal .close").addEventListener("click", function () {
-    document.getElementById("milkLotModal").style.display = "none";
-    });
-
-  // optional: close modal when clicking outside content
-    window.addEventListener("click", function (e) {
-      const modal = document.getElementById("milkLotModal");
-      if (e.target === modal) {
-        modal.style.display = "none";
-      }
-    });
-
-  } catch (error) {
+  } catch(error){
     console.error("Network error:", error);
     alert("Failed to load milk lot details.");
   }
 });
+
+window.addEventListener("click", function(e){
+  const modal = document.getElementById("milkLotModal");
+  if(e.target === modal) modal.style.display = "none";
+});
+
 </script>
 {% endblock %}

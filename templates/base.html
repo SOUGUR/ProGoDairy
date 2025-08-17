@@ -1,3 +1,5 @@
+{% load django_browser_reload %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,6 +56,10 @@
       white-space: nowrap;
     }
 
+    ul {
+      margin-left: 10px; 
+      list-style-type: disc;     
+    }
     .toggle-btn, .full-sidebar-btn {
       background: none;
       border: none;
@@ -115,7 +121,7 @@
 
     .main-content {
       flex: 1;
-      margin-left: 160px;
+      margin-left: 210px;
       min-height: 100vh;
       transition: margin-left 0.3s ease-in-out;
     }
@@ -139,8 +145,139 @@
       font-size: 1.1rem;
       color: #7f8c8d;
     }
+
+/* -------------------------------------- ChatBot Styles --------------------------------------------------*/
+    .chatbot-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #4a6fa5;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      font-size: 24px;
+      z-index: 1000;
+    }
+
+    .chatbot-window {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 350px;
+      height: 500px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .chatbot-header {
+      padding: 15px;
+      background-color: #4a6fa5;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chatbot-messages {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+
+    .chatbot-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #eee;
+    }
+
+    .chatbot-input input {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .chatbot-input button {
+      margin-left: 10px;
+      padding: 8px 15px;
+      background-color: #4a6fa5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      max-width: 80%;
+    }
+
+    .user-message {
+      background-color: #e3f2fd;
+      margin-left: auto;
+    }
+
+    .bot-message {
+      background-color: #f1f1f1;
+      margin-right: auto;
+    }
+
+    .menu-category {
+    margin-bottom: 5px;
+  }
+  
+  .category-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    background-color: #3e6288;
+    border-radius: 4px;
+  }
+  
+  .category-header:hover {
+    background-color: #2f8f8f;
+  }
+  
+  .category-header .menu-icon {
+    margin-right: 10px;
+    font-size: 14px;
+  }
+  
+  .category-header .menu-text {
+    flex-grow: 1;
+    font-weight: 600;
+  }
+  
+  .category-toggle {
+    transition: transform 0.1s ease;
+    font-size: 12px;
+  }
+  
+  .submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.1s ease;
+    padding-left: 20px;
+  }
+  
+  .submenu.active {
+    max-height: 1000px; 
+  }
   </style>
 </head>
+{% django_browser_reload_script %}
 <body>
 
   <div class="sidebar" id="sidebar">
@@ -150,98 +287,153 @@
         <i class="fas fa-chevron-left"></i>
       </button>
       <button class="full-sidebar-btn" id="full-sidebar-btn">
-        <i class="fas fa-expand-arrows-alt"></i>
       </button>
     </div>
     <ul class="sidebar-menu">
-      <li class="menu-item">
-        <a href="{% url 'supplier_list' %}" class="menu-link active">
-          <span class="menu-icon"><i class="fas fa-people-carry"></i></i></span>
-          <span class="menu-text">Suppliers</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'create_supplier' %}" class="menu-link active">
-          <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
-          <span class="menu-text">Add Supplier</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'create_milk_lot' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-plus-circle"></i></span>
-          <span class="menu-text">Add Milk Lot</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'milk_lot_list' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-wine-bottle"></i></span>
-          <span class="menu-text">Milk Lots</span>
-        </a>
-      </li>
-      
-      <li class="menu-item">
-        <a href="{% url 'create_payment_bill' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-          <span class="menu-text">Payment Bills</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
-          <span class="menu-text">Vehicles</span>
-        </a>
-      </li>
+  <!-- Suppliers & Procurement Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-boxes"></i></span>
+        <span class="menu-text">Suppliers & Procurement</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'supplier_list' %}" class="menu-link active">
+            <span class="menu-icon"><i class="fas fa-people-carry"></i></span>
+            <span class="menu-text">Suppliers</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'create_supplier' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
+            <span class="menu-text">Add Supplier</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'create_milk_lot' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-plus-circle"></i></span>
+            <span class="menu-text">Add Milk Lot</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'milk_lot_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-wine-bottle"></i></span>
+            <span class="menu-text">Milk Lots</span>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <li class="menu-item">
-        <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+    <!-- Finance & Billing Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-money-bill-wave"></i></span>
+        <span class="menu-text">Finance & Billing</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'create_payment_bill' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+            <span class="menu-text">Payment Bills</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Logistics & Transport Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-truck"></i></span>
+        <span class="menu-text">Logistics & Transport</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
+            <span class="menu-text">Vehicles</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="milk_distribution.html" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-route"></i></span>
+            <span class="menu-text">Distribution</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Milk Storage & Pooling Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
+        <span class="menu-text">Milk Storage & Pooling</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
             <span class="menu-text">Bulk Cooler Milk Pooling</span>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'on_farm_bulk_pooling' %}" class="menu-link">
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'on_farm_bulk_pooling' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
             <span class="menu-text">On-Farm Tank Milk Pooling</span>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'can_collection' %}" class="menu-link">
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'can_collection' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
-            <span class="menu-text">Can Collection and segregation </span>
-        </a>
-      </li>
+            <span class="menu-text">Can Collection and Segregation</span>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <li class="menu-item">
-        <a href="milk_distribution.html" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-route"></i></span>
-          <span class="menu-text">Distribution</span>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+    <!-- Quality & Testing Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-flask"></i></span>
+        <span class="menu-text">Quality & Testing</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-microscope"></i></span>
             <span class="menu-text">Samples & Tests</span>
-        </a>
-      </li>
+          </a>
+        </li>
+      </ul>
+    </li>
 
-      <li class="menu-item">
-        <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+    <!-- Reporting & Admin Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-chart-line"></i></span>
+        <span class="menu-text">Reporting & Admin</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-file-pdf"></i></span>
             <span class="menu-text">Reports</span>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'accounts:user_access' %}" class="menu-link">
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'accounts:user_access' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-user-cog"></i></span>
             <span class="menu-text">Admin</span>
-        </a>
-      </li>
-
-    </ul>
+          </a>
+        </li>
+      </ul>
+    </li>
+</ul>
   </div>
 
 
@@ -249,6 +441,28 @@
     <div class="page-container">
       {% block content %}
       {% endblock %}
+    </div>
+  </div>
+
+  <!-- Chatbot Button (fixed position) -->
+  <button id="chatbot-button" class="chatbot-button">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <!-- Chatbot Window (hidden by default) -->
+  <div id="chatbot-window" class="chatbot-window">
+    <div class="chatbot-header">
+      <h3>Ollama Assistant</h3>
+      <button id="close-chatbot" class="close-chatbot">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="chatbot-messages" class="chatbot-messages">
+      <!-- Messages will appear here -->
+    </div>
+    <div class="chatbot-input">
+      <input type="text" id="chatbot-user-input" placeholder="Type your message...">
+      <button id="chatbot-send"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 
@@ -302,6 +516,127 @@
         }
       });
     });
-  </script>
+
+////
+document.querySelectorAll('.category-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const submenu = header.nextElementSibling;
+      const toggleIcon = header.querySelector('.category-toggle');
+      
+      submenu.classList.toggle('active');
+      toggleIcon.classList.toggle('fa-chevron-down');
+      toggleIcon.classList.toggle('fa-chevron-up');
+    });
+  });
+
+//=======================================================Chat Bot ==============================================//  
+document.getElementById('chatbot-button').addEventListener('click', function() {
+      const chatbotWindow = document.getElementById('chatbot-window');
+      if (chatbotWindow.style.display === 'flex') {
+        chatbotWindow.style.display = 'none';
+      } else {
+        chatbotWindow.style.display = 'flex';
+      }
+    });
+
+    document.getElementById('close-chatbot').addEventListener('click', function() {
+      document.getElementById('chatbot-window').style.display = 'none';
+    });
+
+    
+    document.getElementById('chatbot-send').addEventListener('click', sendMessage);
+    document.getElementById('chatbot-user-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+  const input = document.getElementById('chatbot-user-input');
+  const message = input.value.trim();
+  
+  if (!message) return;
+
+  addMessage(message, 'user');
+  input.value = '';
+
+  try {
+    // Using Groq with Llama 3 70B (fastest free model!)
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer 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"  
+      },
+      body: JSON.stringify({
+        model: "llama3-70b-8192",  
+        messages: [
+          { role: "user", content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 1024
+      })
+    });
+
+    const data = await response.json();
+    const botReply = data.choices[0].message.content;
+    addMessage(botReply, 'bot');
+  } catch (error) {
+    console.error("AI API Error:", error);
+    addMessage("Sorry, I couldn't reach the AI. Try again later.", "bot");
+  }
+}
+
+    function addMessage(text, sender) {
+      const messagesContainer = document.getElementById('chatbot-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', sender + '-message');
+      messageDiv.textContent = text;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    
+//================================================= make chatBot button draggable ========================================================//
+const button = document.querySelector('.chatbot-button');
+
+let isDragging = false;
+let offsetX, offsetY;
+
+button.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  offsetX = e.clientX - button.getBoundingClientRect().left;
+  offsetY = e.clientY - button.getBoundingClientRect().top;
+  button.style.transition = 'none'; // Disable transitions while dragging
+});
+
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  button.style.transition = ''; 
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+
+  let left = e.clientX - offsetX;
+  let top = e.clientY - offsetY;
+
+
+  const maxLeft = window.innerWidth - button.offsetWidth;
+  const maxTop = window.innerHeight - button.offsetHeight;
+  
+  if (left < 0) left = 0;
+  if (top < 0) top = 0;
+  if (left > maxLeft) left = maxLeft;
+  if (top > maxTop) top = maxTop;
+
+  button.style.left = left + 'px';
+  button.style.top = top + 'px';
+  button.style.bottom = 'auto';
+  button.style.right = 'auto';
+  button.style.position = 'fixed';
+});
+
+</script>
 </body>
 </html>
