@@ -221,6 +221,10 @@ class Query:
         return OnFarmTank.objects.filter(supplier_id=supplier_id)
     
     @strawberry.field
+    def onfarm_tanks_by_route(self, route_id: int) -> List[OnFarmTankType]:
+        return OnFarmTank.objects.filter(supplier__route_id=route_id)
+    
+    @strawberry.field
     def can_collections_by_date(
         self, 
         route_id: int, 

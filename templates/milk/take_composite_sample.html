@@ -1,0 +1,717 @@
+{% extends "base.html" %}
+
+{% block title %}Composite Sample Collection{% endblock %}
+
+{% block content %}
+
+<style>
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+  }
+  
+  h1 {
+    color: #2c5282;
+    margin-bottom: 25px;
+    font-weight: 600;
+    border-bottom: 2px solid #ebf2f7;
+    padding-bottom: 10px;
+  }
+  
+  .selection-card {
+    background-color: #ebf8ff;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+  
+  select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+  }
+  
+  .tanks-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .section-header h2 {
+    color: #2c5282;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .selection-info {
+    background-color: #f0fff4;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid #c6f6d5;
+    color: #4a5568;
+  }
+  
+  .selection-info strong {
+    color: #2b6cb0;
+  }
+  
+  .tanks-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  
+  .tanks-table th {
+    background-color: #ebf8ff;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+  }
+  
+  .tanks-table td {
+    padding: 15px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .tanks-table tr:nth-child(even):not(.empty-row) {
+    background-color: #f8fafc;
+  }
+  
+  .tanks-table tr:hover:not(.empty-row) {
+    background-color: #ebf8ff;
+  }
+  
+  .checkbox-cell {
+    text-align: center;
+  }
+  
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #4299e1;
+    cursor: pointer;
+  }
+  
+  .sample-btn {
+    padding: 8px 16px;
+    background-color: #38a169;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .sample-btn:hover {
+    background-color: #2f855a;
+  }
+  
+  .sample-btn:disabled {
+    background-color: #a0aec0;
+    cursor: not-allowed;
+  }
+  
+  .samples-count {
+    text-align: center;
+    font-weight: 600;
+    color: #2b6cb0;
+  }
+  
+  .empty-message {
+    text-align: center;
+    padding: 40px;
+    color: #718096;
+    background-color: #f8fafc;
+    border-radius: 4px;
+  }
+  
+  .temperature-cell {
+    font-weight: 500;
+  }
+  
+  .temperature-good {
+    color: #38a169;
+  }
+  
+  .temperature-warning {
+    color: #d69e2e;
+  }
+  
+  .temperature-bad {
+    color: #e53e3e;
+  }
+
+  .btn-sample {
+  background-color: #3578e5;   
+  color: #fff;                  
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  margin: 2px 0;
+  display: inline-block;
+  min-width: 70px;              
+}
+
+.btn-sample:hover,
+.btn-sample:focus {
+  background-color: #cc0b12;   
+}
+
+/*============================================================= Modal box Styles ========================================================== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(44, 82, 130, 0.85); /* #2c5282 with opacity - matches your primary color */
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 20px;
+  transition: background 0.3s ease;
+  backdrop-filter: blur(4px); /* Modern glass effect */
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(44, 82, 130, 0.25), 
+              0 4px 16px rgba(44, 82, 130, 0.15);
+  animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0; /* Matches your border color */
+}
+
+.modal-content h3 {
+  color: #2c5282; /* Your primary blue */
+  font-weight: 600;
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #ebf2f7; /* Matches your section borders */
+  padding-bottom: 12px;
+}
+
+.close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #718096; /* Your text secondary color */
+  background: none;
+  border: none;
+  line-height: 1;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.close-modal:hover {
+  color: #e53e3e; /* Error red that matches your theme */
+  background-color: #fed7d7; /* Light red background on hover */
+}
+
+/* Form elements matching your theme */
+.modal-content .form-group {
+  margin-bottom: 20px;
+}
+
+.modal-content label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #4a5568; /* Your label color */
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus,
+.modal-content select:focus {
+  border-color: #4299e1; /* Your button blue */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.modal-content .btn {
+  width: 100%;
+  padding: 14px 24px;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 8px;
+}
+
+.modal-content .btn:hover {
+  background-color: #3182ce; /* Darker blue on hover */
+}
+
+/* Scrollbar styling to match theme */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f8fafc; /* Your light background */
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .modal {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    padding: 24px 20px;
+    margin: 10px;
+  }
+  
+  .close-modal {
+    top: 15px;
+    right: 15px;
+  }
+}
+
+
+</style>
+
+<div class="container">
+  <h1>Composite Sample Collection</h1>
+  
+  <!-- Selection Section -->
+  <div class="selection-card">
+    <div class="section-title">Sample Collection Parameters</div>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="route">Route</label>
+        <select id="route" name="route" required>
+          <option value="">Select Route</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="source_type">Source of Pooled Milk</label>
+        <select id="source_type" name="source_type" required>
+          <option value="">Select Source Type</option>
+          <option value="1">Bulk Cooler Tank</option>
+          <option value="2">On-Farm Tank</option>
+        </select>
+      </div>
+    </div>
+  </div>
+    
+    <table class="tanks-table">
+      <thead>
+        <tr>
+          <th>Tank ID</th>
+          <th>Tank Name</th>
+          <th>Supplier/Farm</th>
+          <th>Current Volume (L)</th>
+          <th>Temperature (°C)</th>
+          <th>Is Stirred</th>
+          <th>Take Sample</th>
+          <th>Samples Taken</th>
+        </tr>
+      </thead>
+      <tbody id="tanks-table-body">
+        <tr class="empty-row">
+          <td colspan="8" class="empty-message">
+            Please select a route and source type to view available tanks
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+<!-- Sample Modal Template (Hidden by default) -->
+<div id="sampleModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h3>Take Composite Sample</h3>
+
+    <!-- Display the selected tank info -->
+    <div id="sampleSourceInfo" class="form-group" style="margin-bottom: 1rem;">
+      <strong>Source:</strong> <span id="sample_tank_label">-</span>
+      (<span id="sample_tank_id_display">-</span>)
+    </div>
+
+    <form id="sampleForm">
+      <input type="hidden" id="sample_tank_id" name="tank_id">
+      <input type="hidden" id="sample_tank_type" name="tank_type">
+      
+      <div class="form-group">
+        <label for="sample_volume">Sample Volume (ml)</label>
+        <input type="number" id="sample_volume" name="sample_volume" min="50" max="500" value="250" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="sample_temperature">Temperature (°C)</label>
+        <input type="number" id="sample_temperature" name="sample_temperature" step="0.1" value="4.0" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="sample_notes">Notes</label>
+        <textarea id="sample_notes" name="sample_notes" rows="3" placeholder="Any observations about the sample"></textarea>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Record Sample</button>
+    </form>
+  </div>
+</div>
+
+<script>
+//===================================================== Load Routes ==============================================//
+  async function loadRoutes() {
+    const query = `
+      query {
+        allRoutes {
+          id
+          name
+        }
+      }
+    `;
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query })
+      });
+
+      const result = await response.json();
+      const routes = result.data.allRoutes;
+
+      const select = document.getElementById("route");
+
+      routes.forEach(route => {
+        const option = document.createElement("option");
+        option.value = route.id;
+        option.textContent = route.name;
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error loading routes:", error);
+    }
+  }
+  loadRoutes();
+
+//================================== Populate the table based on selected route and source of pooled Milk Lots =============================//
+  const routeSelect = document.getElementById("route");
+  const sourceTypeSelect = document.getElementById("source_type");
+  const tableBody = document.getElementById("tanks-table-body");
+
+  async function fetchGraphQL(query, variables = {}) {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+    const result = await response.json();
+    return result.data;
+  }
+
+  async function loadTanks() {
+    const routeId = routeSelect.value;
+    const sourceType = sourceTypeSelect.value;
+
+    if (!routeId || !sourceType) {
+      tableBody.innerHTML = `
+        <tr class="empty-row">
+          <td colspan="8" class="empty-message">
+            Please select a route and source type to view available tanks
+          </td>
+        </tr>`;
+      return;
+    }
+
+    let query = "";
+    let key = "";
+
+    if (sourceType === "1") { // Bulk Cooler
+      query = `
+        query ($routeId: Int!) {
+          bulkCoolersByRoute(routeId: $routeId) {
+            id
+            name
+            currentVolumeLiters
+            temperatureCelsius
+            route { name }
+          }
+        }`;
+      key = "bulkCoolersByRoute";
+    } else if (sourceType === "2") { // On-Farm Tank
+      query = `
+        query ($routeId: Int!) {
+          onfarmTanksByRoute(routeId: $routeId) {
+            id
+            name
+            currentVolumeLiters
+            temperatureCelsius
+            supplier { 
+                user {
+                    username
+                }
+             }
+          }
+        }`;
+      key = "onfarmTanksByRoute";
+    }
+
+    const data = await fetchGraphQL(query, { routeId: parseInt(routeId) });
+    const tanks = data[key];
+
+    if (!tanks || tanks.length === 0) {
+      tableBody.innerHTML = `
+        <tr class="empty-row">
+          <td colspan="8" class="empty-message">
+            No tanks found for this selection.
+          </td>
+        </tr>`;
+      return;
+    }
+
+    tableBody.innerHTML = tanks.map(tank => `
+      <tr>
+        <td>${tank.id}</td>
+        <td>${tank.name}</td>
+        <td>${tank.supplier ? tank.supplier.user.username : (tank.route ? tank.route.name : "-")}</td>
+        <td>${tank.currentVolumeLiters}</td>
+        <td>${tank.temperatureCelsius ?? "-"}</td>
+        <td><input type="checkbox"></td>
+        <td><button class="btn-sample">Take Sample</button></td>
+        <td><span class="samples-count">0</span></td>
+      </tr>
+    `).join("");
+    attachSampleButtonEvents();
+  }
+  routeSelect.addEventListener("change", loadTanks);
+  sourceTypeSelect.addEventListener("change", loadTanks);
+
+//======================================================== Modal to take Composite sample ==================================================//
+const sampleModal = document.getElementById("sampleModal");
+const closeModalBtn = document.querySelector(".close-modal");
+const sampleForm = document.getElementById("sampleForm");
+
+function openSampleModal(tankId, tankType, tankName) {
+  document.getElementById("sample_tank_id").value = tankId;
+  document.getElementById("sample_tank_type").value = tankType;
+  document.getElementById("sample_tank_label").textContent = tankName;
+  document.getElementById("sample_tank_id_display").textContent = tankId;
+
+  sampleModal.style.display = "flex";
+}
+
+
+function closeSampleModal() {
+  sampleModal.style.display = "none";
+  sampleForm.reset();
+}
+
+closeModalBtn.addEventListener("click", closeSampleModal);
+
+window.addEventListener("click", function(e) {
+  if (e.target === sampleModal) {
+    closeSampleModal();
+  }
+});
+
+function attachSampleButtonEvents() {
+  document.querySelectorAll(".btn-sample").forEach((btn, index) => {
+    btn.addEventListener("click", function() {
+      // Get tank row info
+      const row = btn.closest("tr");
+      const tankId = row.querySelector("td").textContent.trim(); 
+      const tankName = row.querySelectorAll("td")[1].textContent.trim(); 
+      const tankType = document.getElementById("source_type").value; 
+      // 1 = BulkCooler, 2 = OnFarmTank
+
+      openSampleModal(tankId, tankType,tankName);
+    });
+  });
+}
+//=========================================Modal form Submission for record sample =========================================//
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+
+  const result = await response.json();
+
+  console.log("GraphQL raw response:", result);
+
+  if (result.errors) {
+    throw new Error(result.errors.map(e => e.message).join(", "));
+  }
+
+  return result.data;   // ⚠️ this ensures you only return `data`
+}
+
+sampleForm.addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const tankId = document.getElementById("sample_tank_id").value;
+  const tankType = document.getElementById("sample_tank_type").value;
+  const sampleVolume = parseInt(document.getElementById("sample_volume").value);
+  const temperature = parseFloat(document.getElementById("sample_temperature").value);
+  const remark = document.getElementById("sample_notes").value;
+
+  let input = {
+    remark: remark,
+    sampleVolumeMl: sampleVolume,
+    temperatureC: temperature
+  };
+
+  if (tankType === "1") {
+    input.bulkCoolerId = parseInt(tankId);
+  } else if (tankType === "2") {
+    input.onFarmTankId = parseInt(tankId);
+  } else if (tankType === "3") {
+    input.vehicleId = parseInt(tankId);
+  }
+
+  const mutation = `
+    mutation CreateSample($input: CompositeSampleInput!) {
+      createCompositeSample(input: $input) {
+        id
+        collectedAt
+        sampleVolumeMl
+        temperatureC
+        remark
+        bulkCooler { id name }
+        onFarmTank { id name }
+        vehicle { id }
+      }
+    }
+  `;
+
+  try {
+    const data = await fetchGraphQL(mutation, { input });
+    console.log("Sample created:", data.createCompositeSample);
+
+    alert("Sample recorded successfully!");
+    closeSampleModal();
+
+    const row = [...tableBody.querySelectorAll("tr")]
+      .find(r => r.querySelector("td")?.textContent.trim() === tankId);
+    if (row) {
+      const countEl = row.querySelector(".samples-count");
+      if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+    }
+
+  } catch (err) {
+    console.error("Error creating sample:", err);
+    alert("Failed to record sample.");
+  }
+});
+
+</script>
+{% endblock %}

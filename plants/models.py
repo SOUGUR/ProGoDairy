@@ -1,5 +1,4 @@
 from django.db import models
-from suppliers.models import MilkLot
 from distribution.models import Route
 from django.contrib.auth.models import User
 
@@ -21,34 +20,19 @@ class Tester(models.Model):
 
 
 
-class Batch(models.Model):
-    """
-    Aggregated container of milk lots, after lab approval; stored in cold-room.
-    """
-    lots = models.ManyToManyField(MilkLot, through='BatchMembership')
-    total_volume_l = models.FloatField()
+class Plant(models.Model):
+    name = models.CharField(max_length=100, unique=True)  
+    location = models.CharField(max_length=200)  
+    capacity = models.DecimalField(max_digits=10, decimal_places=2, help_text="Daily processing capacity in liters")
+    contact_person = models.CharField(max_length=100, blank=True, null=True)
+    contact_number = models.CharField(max_length=15, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    established_date = models.DateField(blank=True, null=True)
+    active = models.BooleanField(default=True, help_text="Mark inactive if plant is closed or not in use")
+
     created_at = models.DateTimeField(auto_now_add=True)
-    use_by_date = models.DateField()
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Batch {self.id} – {self.total_volume_l} L"
+        return f"{self.name} ({self.location})"
 
-    def calculate_total_volume(self):
-        self.total_volume_l = sum([bm.volume_l for bm in self.batchmembership_set.all()])
-        self.save()
-
-
-class BatchMembership(models.Model):
-    """
-    Through table to record how much volume of each lot went into a batch.
-    Useful when only part of a MilkLot is poured into a batch.
-    """
-    batch = models.ForeignKey(Batch, on_delete=models.CASCADE)
-    milk_lot = models.ForeignKey(MilkLot, on_delete=models.CASCADE)
-    volume_l = models.FloatField()
-
-    class Meta:
-        unique_together = ('batch', 'milk_lot')
-
-    def __str__(self):
-        return f"{self.volume_l} L from {self.milk_lot} in Batch {self.batch.id}"

@@ -5,5 +5,5 @@ app_name = "distribution"
 
 urlpatterns = [
     path('vehicles/', vehicle_list, name='vehicle_list'),
-    path('milk-transfer/', create_milk_transfer, name='milk_transfer'),
+    path('create_milk_transfer/', create_milk_transfer, name='create_milk_transfer'),
 ]

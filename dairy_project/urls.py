@@ -11,6 +11,7 @@ urlpatterns = [
     path("distribution/", include("distribution.urls")),
     path("bmcu/", include("collection_center.urls")),
     path("accounts/", include("accounts.urls")),
+    path("milk/", include("milk.urls")),
     path("__reload__/", include("django_browser_reload.urls")),
 ]
 

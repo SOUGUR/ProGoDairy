@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Tester, Batch,BatchMembership
+from .models import Tester
 
 admin.site.register(Tester)
-admin.site.register(Batch)
-admin.site.register(BatchMembership)
+

@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 
 class Route(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    plant = models.ForeignKey("plants.Plant", on_delete=models.CASCADE, related_name="routes",null=True, blank=True) 
     def __str__(self):
         return self.name
 
@@ -41,20 +42,31 @@ class Vehicle(models.Model):
         return f"{self.name} ({self.vehicle_id})"
     
 class MilkTransfer(models.Model):
+    SOURCE_CHOICES = [
+        ('on_farm_tank', 'On-Farm Tank'),
+        ('bulk_cooler', 'Bulk Cooler'),
+        ('can_collection', 'Can Collection'),
+    ]
+
+    STATUS_CHOICES = [
+        ('scheduled', 'Scheduled'),
+        ('in_transit', 'In Transit'),
+        ('completed', 'Completed'),
+    ]
+
     vehicle = models.ForeignKey(
-        Vehicle,
+        'Vehicle',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='transfers'
     )
-    transfer_date = models.DateField(auto_now_add=True)
-    route = models.ForeignKey(
-        Route,
-        on_delete=models.SET_NULL,
+
+    source_type = models.CharField(
+        max_length=20,
+        choices=SOURCE_CHOICES,
         null=True,
-        blank=True,
-        related_name='route_milk_transfers'
+        blank=True
     )
 
     bulk_cooler = models.ForeignKey(
@@ -79,28 +91,30 @@ class MilkTransfer(models.Model):
         related_name='milk_transfers'
     )
 
-    status_choices = [
-        ('scheduled', 'Scheduled'),
-        ('in_transit', 'In Transit'),
-        ('completed', 'Completed'),
-    ]
+    destination = models.CharField(max_length=200, blank=True, null=True)
+
+    transfer_date = models.DateTimeField(auto_now_add=True)
+    arrival_datetime = models.DateTimeField(null=True, blank=True)
+
     status = models.CharField(
         max_length=20,
-        choices=status_choices,
+        choices=STATUS_CHOICES,
         default='scheduled'
     )
     total_volume = models.FloatField(blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
 
     def clean(self):
-       
         sources = [self.bulk_cooler, self.on_farm_tank, self.can_collection]
         if sum(1 for s in sources if s is not None) > 1:
             raise ValidationError("Milk transfer can have only one source location.")
 
-    def __str__(self):
-        source = self.bulk_cooler or self.on_farm_tank or self.can_collection
-        return f"Transfer #{self.id} from {source} – {self.transfer_date}"
+        if self.source_type == 'bulk_cooler' and not self.bulk_cooler:
+            raise ValidationError("Source type is Bulk Cooler but no Bulk Cooler is set.")
+        if self.source_type == 'on_farm_tank' and not self.on_farm_tank:
+            raise ValidationError("Source type is On-Farm Tank but no On-Farm Tank is set.")
+        if self.source_type == 'can_collection' and not self.can_collection:
+            raise ValidationError("Source type is Can Collection but no Can Collection is set.")
 
     def calculate_total_volume(self):
         if self.bulk_cooler:
@@ -113,3 +127,7 @@ class MilkTransfer(models.Model):
             self.total_volume = 0
         self.save(update_fields=['total_volume'])
         return self.total_volume
+
+    def __str__(self):
+        source = self.bulk_cooler or self.on_farm_tank or self.can_collection or "Unknown Source"
+        return f"Transfer #{self.id} from {source} → {self.destination or 'Unknown Destination'} on {self.transfer_date}"

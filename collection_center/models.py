@@ -107,34 +107,3 @@ class BulkCooler(models.Model):
         return f"{self.route.name} – {self.name} ({self.capacity_liters} L)"
 
 
-class CompositeSample(models.Model):
-    
-    bulk_cooler = models.ForeignKey(
-        BulkCooler,
-        on_delete=models.CASCADE,
-        related_name="composite_samples",
-    )
-    transfer = models.OneToOneField(
-        "distribution.MilkTransfer",
-        on_delete=models.CASCADE,
-        related_name="composite_sample",
-        null=True,
-        blank=True,
-        help_text="Linked once the tanker is actually loaded.",
-    )
-    sampled_at = models.DateTimeField(auto_now_add=True)
-
-    # LAB RESULTS (plant gate)
-    fat_percent = models.FloatField(null=True, blank=True)
-    snf_percent = models.FloatField(null=True, blank=True)
-    protein_percent = models.FloatField(null=True, blank=True)
-    bacterial_count = models.PositiveIntegerField(null=True, blank=True)
-    antibiotic_residue = models.BooleanField(
-        default=False,
-        help_text="True if β-lactams or other residues detected.",
-    )
-    added_water = models.BooleanField(default=False)
-    passed = models.BooleanField(null=True)
-
-    def __str__(self):
-        return f"Composite {self.id} – {self.bulk_cooler} – {self.sampled_at:%d-%b %H:%M}"

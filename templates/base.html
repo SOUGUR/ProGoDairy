@@ -351,6 +351,13 @@
       </div>
       <ul class="submenu">
         <li class="menu-item">
+          <a href="{% url 'distribution:create_milk_transfer' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
+            <span class="menu-text">Create Milk Lot Delivery </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
           <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
             <span class="menu-text">Vehicles</span>
@@ -403,9 +410,23 @@
       </div>
       <ul class="submenu">
         <li class="menu-item">
-          <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+          <a href="{% url 'milk:list_composite_samples' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-microscope"></i></span>
-            <span class="menu-text">Samples & Tests</span>
+            <span class="menu-text">Composite Samples List</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-text">Composite Samples for Bulk Cooler and OnFarm tank</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-text">Composite Samples for CanCollection</span>
           </a>
         </li>
       </ul>
@@ -444,15 +465,14 @@
     </div>
   </div>
 
-  <!-- Chatbot Button (fixed position) -->
+
   <button id="chatbot-button" class="chatbot-button">
     <i class="fas fa-robot"></i>
   </button>
 
-  <!-- Chatbot Window (hidden by default) -->
   <div id="chatbot-window" class="chatbot-window">
     <div class="chatbot-header">
-      <h3>Ollama Assistant</h3>
+      <h3>Your Assistant</h3>
       <button id="close-chatbot" class="close-chatbot">
         <i class="fas fa-times"></i>
       </button>
