@@ -1,6 +1,5 @@
 import strawberry
 from strawberry_django import type as strawberry_django_type, field
-from distribution.schema import RouteType
 from suppliers.models import Supplier, MilkLot, PaymentBill, OnFarmTank, CanCollection
 from django.contrib.auth.models import User
 from typing import List
@@ -10,11 +9,13 @@ from typing import Optional
 from decimal import Decimal
 from graphql import GraphQLError
 from datetime import date, datetime
-from distribution.schema import UserType
+from accounts.schema import UserType
 from distribution.models import Route
 from collection_center.schema import BulkCoolerType, AssignLotsPayload
-from plants.schema import TesterType
+from plants.schema import EmployeeType
 from django.core.exceptions import ValidationError
+
+from accounts.schema import RouteType
 
 class IsAuthenticated(BasePermission):
     message = "User is not authenticated"
@@ -68,7 +69,7 @@ class PaymentBillType:
 class MilkLotType:
     id: int
     supplier: SupplierType
-    tester: Optional[TesterType]
+    tester: Optional[EmployeeType]
     volume_l: float
     fat_percent: float
     protein_percent: float

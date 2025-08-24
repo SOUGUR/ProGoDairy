@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Tester
+from .models import Role, Employee, Plant
 
-admin.site.register(Tester)
+admin.site.register(Role)
+admin.site.register(Employee)
+admin.site.register(Plant)
 

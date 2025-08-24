@@ -7,7 +7,8 @@ from strawberry.types import Info
 from graphql import GraphQLError
 from typing import List
 from suppliers.models import MilkLot
-from distribution.schema import RouteType
+from accounts.schema import RouteType
+
 
 
 

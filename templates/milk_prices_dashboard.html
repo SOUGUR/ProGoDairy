@@ -1,0 +1,317 @@
+
+{% extends "base.html" %}
+{% load myfilters %}
+
+{% block title %}Milk Prices & News by State - India Dairy Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+  <header class="page-header">
+    <h1>🥛 Milk Prices & Market Updates (India)</h1>
+    <p class="last-updated">Last updated: <strong>{{ last_updated }}</strong></p>
+  </header>
+
+  <!-- Filters -->
+  <div class="filter-card">
+    <form method="GET" class="filter-form">
+      <label for="state_filter">Filter by State:</label>
+      <select name="state" id="state_filter">
+        <option value="">All States</option>
+        {% for state in available_states %}
+        <option value="{{ state }}" {% if selected_state == state %}selected{% endif %}>
+          {{ state }}
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">Update View</button>
+    </form>
+  </div>
+
+  <!-- Prices Table -->
+  <section class="data-section">
+    <h2>📊 State-wise Milk Prices (Per Liter) with Brand Comparison</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Taluka-level co-operative milk unions</th>
+          <th>Variant</th>
+          <th>Milk Type</th>
+          <th>Use-case / Notes</th>
+          <th>Current Price (₹)</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for price in milk_prices %}
+        <tr>
+          <td class="state-name">{{ price.state }}</td>
+          <td>{{ price.brand }}</td>
+          <td>{{ price.variant }}</td>
+          <td>
+            {% if price.variant|percent_to_float <= 1.5 %}
+              Toned Milk
+            {% elif price.variant|percent_to_float <= 3.5 %}
+              Standard Milk
+            {% elif price.variant|percent_to_float <= 4.5 %}
+              Full-cream and Premium
+            {% else %}
+              General Milk
+            {% endif %}
+          </td>
+
+          <td class="use-case">
+            {% if price.variant|percent_to_float <= 1.5 %}
+              Daily drinking, low-calorie, ideal for urban consumers
+            {% elif price.variant|percent_to_float <= 3.5 %}
+              General household use, balanced nutrition
+            {% elif price.variant|percent_to_float <= 4.5 %}
+              Tea, coffee, khoa, sweets, traditional dairy products
+            {% else %}
+              General purpose
+            {% endif %}
+          </td>
+          
+          <td class="price-current">₹{{ price.current_price }}</td>
+          <td>{{ price.updated_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="empty-state">No price data available. Try refreshing or check the source.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- News Section -->
+  <section class="data-section">
+    <h2>📰 Latest Dairy & Milk News</h2>
+    <div class="news-grid">
+      {% for article in news_articles %}
+      <div class="news-card">
+        <h3 class="news-title">
+          <a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.title }}</a>
+        </h3>
+        <p class="news-excerpt">{{ article.excerpt|truncatechars:120 }}</p>
+        <div class="news-meta">
+          <span class="news-source">{{ article.source }}</span>
+          <span class="news-date">{{ article.published_at|date:"d M Y" }}</span>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state">No recent news articles found.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <footer class="dashboard-footer">
+    <p>Data sourced via <strong>FireCrawl</strong> from NCDFI and Economic Times portals.</p>
+    <p><small>Auto-updated daily. Always verify critical data before use.</small></p>
+  </footer>
+</div>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    background: #f8fafc;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .page-header h1 {
+    color: #2c5282;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .last-updated {
+    color: #4a5568;
+    font-size: 0.9em;
+  }
+
+  .filter-card {
+    background: #ebf8ff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+
+  .filter-form {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+    flex-wrap: wrap;
+  }
+
+  label {
+    font-weight: 500;
+    color: #4a5568;
+  }
+
+  select, button {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  button {
+    background-color: #4299e1;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #3182ce;
+  }
+
+  .data-section {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .data-section h2 {
+    color: #2b6cb0;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table th {
+    background-color: #ebf8ff;
+    text-align: left;
+    padding: 14px;
+    font-weight: 600;
+    color: #2b6cb0;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .data-table td {
+    padding: 14px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .data-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  .data-table tr:hover {
+    background-color: #ebf8ff;
+  }
+
+  .state-name {
+    font-weight: 500;
+    color: #2d3748;
+  }
+
+  .price-change {
+    font-weight: 600;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  .status-high {
+    background-color: #fed7d7;
+    color: #742a2a;
+  }
+
+  .status-medium {
+    background-color: #fff3bf;
+    color: #723b18;
+  }
+
+  .status-low {
+    background-color: #c6f6d5;
+    color: #22543d;
+  }
+
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+  }
+
+  .news-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    background: #f8fafc;
+    transition: transform 0.2s ease;
+  }
+
+  .news-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .news-title {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+  }
+
+  .news-title a {
+    color: #2c5282;
+    text-decoration: none;
+  }
+
+  .news-title a:hover {
+    text-decoration: underline;
+  }
+
+  .news-excerpt {
+    color: #4a5568;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .news-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #718096;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #718096;
+    font-style: italic;
+  }
+
+  .dashboard-footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #718096;
+    font-size: 0.9em;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+  }
+</style>
+{% endblock %}

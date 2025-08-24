@@ -4,14 +4,14 @@ from distribution.schema import Query as DistributionQuery, Mutation as Distribu
 from collection_center.schema import Query as CollectionCenterQuery, Mutation as CollectionCenterMutation
 from plants.schema import Query as PlantsQuery
 from milk.schema import Mutation as MilkSampleMutation, Query as MilkSampleQuery
-
+from accounts.schema import Query as AccountsQuery, Mutation as AccountsMutation
 
 @strawberry.type
-class Query(SupplierQuery, DistributionQuery, CollectionCenterQuery, PlantsQuery, MilkSampleQuery):
+class Query(SupplierQuery, DistributionQuery, CollectionCenterQuery, PlantsQuery, MilkSampleQuery, AccountsQuery):
     pass
 
 @strawberry.type
-class Mutation(SupplierMutation, DistributionMutation, CollectionCenterMutation, MilkSampleMutation):
+class Mutation(SupplierMutation, DistributionMutation, CollectionCenterMutation, MilkSampleMutation, AccountsMutation):
     pass
 
 

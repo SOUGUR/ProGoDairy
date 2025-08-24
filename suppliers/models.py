@@ -56,8 +56,8 @@ class MilkLot(models.Model):
     supplier = models.ForeignKey(
         Supplier, on_delete=models.CASCADE, related_name="lots"
     )
-    tester = models.ForeignKey(
-        "plants.Tester",
+    employee = models.ForeignKey(
+        "plants.Employee",
         on_delete=models.CASCADE,
         related_name="tested_lots",
         null=True,
@@ -334,7 +334,7 @@ class CanCollection(models.Model):
         CanCollectionLog.objects.create(can_collection=self, log_date=self.created_at)
 
     def __str__(self):
-        return f"Can Collection - {self.name} ({self.route.name})"
+        return f"Can Collection - {self.name} {self.created_at} ({self.route.name})"
 
 
 class CanCollectionLog(models.Model):

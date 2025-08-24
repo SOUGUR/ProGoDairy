@@ -88,9 +88,10 @@
   }
   
   .form-actions {
-    text-align: right;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 20px;
+    position: fixed;
+    bottom: 550px;
+    right: 20px;  
+    z-index: 1000; 
   }
   
   .btn {
@@ -223,13 +224,19 @@
 <div class="container">
   <h1>Milk Transfer Management</h1>
   
-  <!-- Transfer Creation Form -->
+  <!------------------------------- Milk Transfer Creation Form ------------------------->
   <div class="form-section">
     <div class="section-title">Create New Milk Transfer</div>
     
     <form class="transfer-form">
       <div class="form-grid">
-        <!-- Source Selection -->
+        <div class="form-group">
+          <label for="route">Select Route</label>
+          <select id="route" name="route" required>
+            <option value="">Select route</option>
+          </select>
+        </div>
+        <!-- Source Selection for milk transfer -->
         <div class="form-group">
           <label for="source_type">Source Type</label>
           <select id="source_type" name="source_type" required>
@@ -239,39 +246,35 @@
             <option value="can_collection">Can Collection</option>
           </select>
         </div>
-        
-        <!-- Source Selection (Dynamic based on source_type) -->
-        <div class="form-group" id="source_selection_group" style="display: none;">
-          <label id="source_label">Select Source</label>
-          <select id="source_id" name="source_id">
-            <option value="">Select Source</option>
-          </select>
+
+        <div class="form-group" id="date_field" style="display: none;">
+          <label for="collection_date">Collection Date</label>
+          <input type="date" id="collection_date" name="collection_date">
         </div>
 
         <div class="form-group">
-          <label for="pooled_milk_lots">Vehicle</label>
-          <select id="pooled_milk_lots" name="pooled_milk_lots" required>
+          <label for="pooled_milk_lots_source">Pooled MilkLot Source</label>
+          <select id="pooled_milk_lots_source" name="pooled_milk_lots_source" required>
             <option value="">Select Pooled MilkLot Source</option>
           </select>
         </div>
         
-        <!-- Vehicle Selection -->
+        <!-------------- select Vehicle which is availble  ---------->
         <div class="form-group">
           <label for="vehicle">Vehicle</label>
           <select id="vehicle" name="vehicle" required>
             <option value="">Select Vehicle</option>
-            {% for vehicle in vehicles %}
-            <option value="{{ vehicle.id }}">{{ vehicle.name }} ({{ vehicle.vehicle_id }})</option>
-            {% endfor %}
           </select>
         </div>
         
-        <!-- Destination -->
+        <!------------ Destination is the plant name that vehicle has to reach ------------>
         <div class="form-group">
           <label for="destination">Destination</label>
-          <input type="text" id="destination" name="destination" 
-                 placeholder="Enter destination plant name" required>
+          <select id="destination" name="destination" required>
+            <option value="">Select Destination</option>
+          </select>
         </div>
+
         
         <!-- Status -->
         <div class="form-group">
@@ -282,24 +285,25 @@
             <option value="completed">Completed</option>
           </select>
         </div>
+
         
+        <!-- Date/Time Fields -->
+        <div class="form-group">
+          <label for="transfer_date">Transfer Date & Time</label>
+          <input type="datetime-local" id="transfer_date" name="transfer_date">
+        </div>
+        
+        <div class="form-group">
+          <label for="arrival_datetime">Arrival Date & Time</label>
+          <input type="datetime-local" id="arrival_datetime" name="arrival_datetime">
+        </div>
+
         <!-- Volume Display -->
         <div class="form-group">
           <label>Estimated Volume</label>
           <div class="volume-display">
             <span id="estimated_volume">0.00</span> L
           </div>
-        </div>
-        
-        <!-- Date/Time Fields -->
-        <div class="form-group">
-          <label for="transfer_date">Transfer Date & Time</label>
-          <input type="datetime-local" id="transfer_date" name="transfer_date" required>
-        </div>
-        
-        <div class="form-group">
-          <label for="arrival_datetime">Arrival Date & Time</label>
-          <input type="datetime-local" id="arrival_datetime" name="arrival_datetime">
         </div>
         
         <!-- Remarks -->
@@ -337,54 +341,463 @@
         </tr>
       </thead>
       <tbody>
-        {% for transfer in milk_transfers %}
-        <tr>
-          <td>#{{ transfer.id }}</td>
-          <td>
-            {% if transfer.bulk_cooler %}
-              {{ transfer.bulk_cooler.name }}
-            {% elif transfer.on_farm_tank %}
-              {{ transfer.on_farm_tank.supplier.user.username }}'s Tank
-            {% elif transfer.can_collection %}
-              Can Collection #{{ transfer.can_collection.id }}
-            {% else %}
-              Unknown
-            {% endif %}
-          </td>
-          <td>
-            {% if transfer.vehicle %}
-              {{ transfer.vehicle.name }} ({{ transfer.vehicle.vehicle_id }})
-            {% else %}
-              Not assigned
-            {% endif %}
-          </td>
-          <td>{{ transfer.destination|default:"-" }}</td>
-          <td>{{ transfer.total_volume|default:"0" }}</td>
-          <td>
-            <span class="status-badge status-{{ transfer.status }}">
-              {{ transfer.status|title }}
-            </span>
-          </td>
-          <td>{{ transfer.transfer_date|date:"Y-m-d H:i" }}</td>
-          <td>{{ transfer.arrival_datetime|date:"Y-m-d H:i"|default:"-" }}</td>
-          <td>
-            <div class="action-buttons">
-              <button class="btn-icon view-btn" title="View Details">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn-icon edit-btn" title="Edit Transfer">
-                <i class="fas fa-edit"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="9" class="empty-state">No milk transfers found</td>
-        </tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+<script>
+//==================================================== Load Routes =====================================================//
+  document.addEventListener("DOMContentLoaded", function () {
+  const routeSelect = document.getElementById("route");
+  const query = `
+    query {
+      allRoutes {
+        id
+        name
+      }
+    }
+  `;
+
+  fetch("/graphql/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query })
+  })
+    .then(response => response.json())
+    .then(data => {
+      const routes = data.data.allRoutes;
+      routes.forEach(route => {
+        const option = document.createElement("option");
+        option.value = route.id;
+        option.textContent = route.name;
+        routeSelect.appendChild(option);
+      });
+    })
+    .catch(error => console.error("Error loading routes:", error));
+});
+
+//======================================================= Load plant names that is destination ======================================================//
+async function loadPlants() {
+    const query = `
+      query {
+        plants {
+          id
+          name
+        }
+      }
+    `;
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      const result = await response.json();
+      const plants = result.data.plants;
+
+      const select = document.getElementById("destination");
+
+      plants.forEach(plant => {
+        const option = document.createElement("option");
+        option.value = plant.id;  
+        option.textContent = plant.name;  
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error fetching plants:", error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadPlants);
+
+//===================================================== show CanCollection date is selected ====================================================//
+document.getElementById("source_type").addEventListener("change", function () {
+    let dateField = document.getElementById("date_field");
+    if (this.value === "can_collection") {
+      dateField.style.display = "block"; 
+    } else {
+      dateField.style.display = "none"; 
+    }
+  });
+
+//======================================================= Load Source of Pooled Milk Lots =====================================================//
+const routeSelect = document.getElementById("route");
+const sourceTypeSelect = document.getElementById("source_type");
+const dateField = document.getElementById("date_field");
+const collectionDateInput = document.getElementById("collection_date");
+const pooledSourceSelect = document.getElementById("pooled_milk_lots_source");
+const estimatedVolumeSpan = document.getElementById("estimated_volume");
+
+const GET_ONFARM_TANKS = `
+  query OnFarmTanks($routeId: Int!) {
+    onfarmTanksByRoute(routeId: $routeId) {
+      id
+      name
+      currentVolumeLiters
+      supplier { user { username } }
+    }
+  }
+`;
+
+const GET_BULK_COOLERS = `
+  query BulkCoolers($routeId: Int!) {
+    bulkCoolersByRoute(routeId: $routeId) {
+      id
+      name
+      currentVolumeLiters
+      capacityLiters
+    }
+  }
+`;
+
+const GET_CAN_COLLECTIONS = `
+  query CanCollections($routeId: Int!, $createdDate: Date!) {
+    canCollectionsByDate(routeId: $routeId, createdDate: $createdDate) {
+      id
+      name
+      totalVolumeLiters
+      createdAt
+    }
+  }
+`;
+
+sourceTypeSelect.addEventListener("change", async function () {
+  const routeId = routeSelect.value;
+  const sourceType = this.value;
+
+  // Show/hide date field
+  if (sourceType === "can_collection") {
+    dateField.style.display = "block";
+  } else {
+    dateField.style.display = "none";
+    collectionDateInput.value = "";
+  }
+
+  if (!routeId || !sourceType) return;
+
+  let query, variables;
+
+  if (sourceType === "on_farm_tank") {
+    query = GET_ONFARM_TANKS;
+    variables = { routeId: parseInt(routeId) };
+  } else if (sourceType === "bulk_cooler") {
+    query = GET_BULK_COOLERS;
+    variables = { routeId: parseInt(routeId) };
+  } else if (sourceType === "can_collection") {
+    const createdDate = collectionDateInput.value;
+    if (!createdDate) {
+      pooledSourceSelect.innerHTML = `<option value="">Select date first</option>`;
+      return;
+    }
+    query = GET_CAN_COLLECTIONS;
+    variables = { routeId: parseInt(routeId), createdDate };
+  }
+
+  try {
+    const data = await fetchGraphQL(query, variables);
+    populateSources(sourceType, data);
+  } catch (err) {
+    console.error("Error loading sources:", err);
+    pooledSourceSelect.innerHTML = `<option value="">Failed to load</option>`;
+  }
+});
+
+collectionDateInput.addEventListener("change", async function () {
+  if (sourceTypeSelect.value === "can_collection") {
+    sourceTypeSelect.dispatchEvent(new Event("change"));
+  }
+});
+
+function populateSources(sourceType, data) {
+  pooledSourceSelect.innerHTML = `<option value="">Select Pooled MilkLot Source</option>`;
+  estimatedVolumeSpan.textContent = "0.00"; // reset volume
+
+  let items = [];
+  if (sourceType === "on_farm_tank") {
+    items = data.onfarmTanksByRoute || [];
+    items.forEach(tank => {
+      pooledSourceSelect.insertAdjacentHTML(
+        "beforeend",
+        `<option value="${tank.id}" data-volume="${tank.currentVolumeLiters || 0}">
+          ${tank.name} (${tank.supplier?.user?.username || "Unknown"})
+        </option>`
+      );
+    });
+  } else if (sourceType === "bulk_cooler") {
+    items = data.bulkCoolersByRoute || [];
+    items.forEach(cooler => {
+      pooledSourceSelect.insertAdjacentHTML(
+        "beforeend",
+        `<option value="${cooler.id}" data-volume="${cooler.currentVolumeLiters || 0}">
+          ${cooler.name} (Cap: ${cooler.capacityLiters}L)
+        </option>`
+      );
+    });
+  } else if (sourceType === "can_collection") {
+    items = data.canCollectionsByDate || [];
+    items.forEach(col => {
+      pooledSourceSelect.insertAdjacentHTML(
+        "beforeend",
+        `<option value="${col.id}" data-volume="${col.totalVolumeLiters || 0}">
+          ${col.name} - ${col.totalVolumeLiters}L
+        </option>`
+      );
+    });
+  }
+}
+
+pooledSourceSelect.addEventListener("change", function () {
+  const selectedOption = this.options[this.selectedIndex];
+  const volume = selectedOption?.dataset.volume || 0;
+  estimatedVolumeSpan.textContent = parseFloat(volume).toFixed(2);
+});
+
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+  const result = await response.json();
+  if (result.errors) {
+    throw new Error(result.errors.map(e => e.message).join(", "));
+  }
+  return result.data;
+}
+
+
+//========================================================= Get Vehicles by Route ============================================================//
+const vehicleSelect = document.getElementById("vehicle");
+
+const GET_AVAILABLE_VEHICLES = `
+  query AvailableVehicles($routeId: Int!) {
+    availableVehiclesByRoute(routeId: $routeId) {
+      id
+      name
+      vehicleId
+      capacityLiters
+      distributor { 
+        user {
+            username
+        }
+      }
+    }
+  }
+`;
+
+routeSelect.addEventListener("change", async function () {
+  const routeId = this.value;
+  if (!routeId) {
+    vehicleSelect.innerHTML = `<option value="">Select Vehicle</option>`;
+    return;
+  }
+
+  try {
+    const data = await fetchGraphQL(GET_AVAILABLE_VEHICLES, { routeId: parseInt(routeId) });
+    populateVehicles(data.availableVehiclesByRoute);
+  } catch (err) {
+    console.error("Error loading vehicles:", err);
+    vehicleSelect.innerHTML = `<option value="">Failed to load vehicles</option>`;
+  }
+});
+
+function populateVehicles(vehicles) {
+  vehicleSelect.innerHTML = `<option value="">Select Vehicle</option>`;
+
+  if (!vehicles || vehicles.length === 0) {
+    vehicleSelect.innerHTML = `<option value="">No available vehicles</option>`;
+    return;
+  }
+
+  vehicles.forEach(v => {
+    vehicleSelect.insertAdjacentHTML(
+      "beforeend",
+      `<option value="${v.id}">
+        ${v.name || v.vehicleId} 
+        (${v.capacityLiters ? v.capacityLiters + "L" : "Unknown capacity"})
+        ${v.distributor?.name ? " - " + v.distributor.name : ""}
+      </option>`
+    );
+  });
+}
+
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+  const result = await response.json();
+  if (result.errors) {
+    throw new Error(result.errors.map(e => e.message).join(", "));
+  }
+  return result.data;
+}
+
+//================================================= Create a Milk Transfer instance =========================================//
+document.querySelector(".transfer-form").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const routeId = document.getElementById("route").value;
+  const sourceType = document.getElementById("source_type").value;
+  const pooledMilkLotId = parseInt(document.getElementById("pooled_milk_lots_source").value);
+  const vehicleId = parseInt(document.getElementById("vehicle").value);
+  const destinationId = parseInt(document.getElementById("destination").value);
+  const status = document.getElementById("status").value;
+  const transferDate = document.getElementById("transfer_date").value;
+  const arrivalDatetime = document.getElementById("arrival_datetime").value || null;
+  const remarks = document.getElementById("remarks").value;
+
+  const mutation = `
+    mutation CreateMilkTransfer($input: MilkTransferInput!) {
+      createMilkTransfer(input: $input) {
+        id
+        status
+        totalVolume
+        transferDate
+        arrivalDatetime
+        vehicle { id }
+        destination { id name }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      sourceType: sourceType,
+      sourceId: pooledMilkLotId,
+      vehicleId: vehicleId || null,
+      destinationId: destinationId || null,
+      status: status,
+      remarks: remarks || null,
+      transferDate: transferDate || null,
+      arrivalDatetime: arrivalDatetime || null
+    }
+  };
+
+  try {
+    const res = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: mutation, variables })
+    });
+
+    const result = await res.json();
+    if (result.errors) {
+      console.error("GraphQL Errors:", result.errors);
+      alert("Failed to create transfer: " + result.errors[0].message);
+      return;
+    }
+
+    const transfer = result.data.createMilkTransfer;
+    alert(`Milk Transfer #${transfer.id} created successfully with status ${transfer.status}`);
+    
+    e.target.reset();
+  } catch (error) {
+    console.error("Error creating transfer:", error);
+    alert("Unexpected error while creating transfer.");
+  }
+});
+
+//============================================== Populate the table with Scheduled Milk Transfers ==========================================//
+const tableBody = document.querySelector(".data-table tbody");
+const query = `
+  query {
+    milkTransfers(status: "scheduled") {
+      id
+      status
+      transferDate
+      arrivalDatetime
+      totalVolume
+      vehicle {
+        id
+        name
+        vehicleId
+      }
+      destination {
+        id
+        name
+      }
+      bulkCooler {
+        name
+      }
+      onFarmTank {
+        supplier {
+          user {
+            username
+          }
+        }
+      }
+      canCollection {
+        id
+      }
+    }
+  }
+`;
+
+fetch("/graphql/", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  },
+  body: JSON.stringify({ query })
+})
+.then(res => res.json())
+.then(result => {
+  const transfers = result.data.milkTransfers;
+
+  tableBody.innerHTML = ""; 
+
+  if (transfers.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="9" class="empty-state">No milk transfers found</td></tr>`;
+    return;
+  }
+
+  transfers.forEach(transfer => {
+    const source = transfer.bulkCooler?.name 
+                   || (transfer.onFarmTank?.supplier?.user?.username + "'s Tank")
+                   || (transfer.canCollection ? `Can Collection #${transfer.canCollection.id}` : "Unknown");
+
+    const vehicle = transfer.vehicle 
+                    ? `${transfer.vehicle.name} (${transfer.vehicle.vehicleId})` 
+                    : "Not assigned";
+
+    const destination = transfer.destination?.name || "-";
+    const totalVolume = transfer.totalVolume || 0;
+    const status = transfer.status?.charAt(0).toUpperCase() + transfer.status?.slice(1);
+    const transferDate = new Date(transfer.transferDate).toLocaleString();
+    const arrivalTime = transfer.arrivalDatetime ? new Date(transfer.arrivalDatetime).toLocaleString() : "-";
+
+    const row = `
+      <tr>
+        <td>${transfer.id}</td>
+        <td>${source}</td>
+        <td>${vehicle}</td>
+        <td>${destination}</td>
+        <td>${totalVolume}</td>
+        <td><span class="status-badge status-${transfer.status}">${status}</span></td>
+        <td>${transferDate}</td>
+        <td>${arrivalTime}</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn-icon view-btn" title="View Details"><i class="fas fa-eye"></i></button>
+            <button class="btn-icon edit-btn" title="Edit Transfer"><i class="fas fa-edit"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+    tableBody.insertAdjacentHTML("beforeend", row);
+  });
+})
+.catch(error => {
+  console.error("Error fetching milk transfers:", error);
+  tableBody.innerHTML = `<tr><td colspan="9" class="empty-state">Error loading data</td></tr>`;
+});
+</script>
 {% endblock %}

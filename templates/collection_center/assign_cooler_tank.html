@@ -99,6 +99,7 @@
         <tr>
           <th>MilkLot ID</th>
           <th>Supplier</th>
+          <th>Date created</th>
           <th>Volume (L)</th>
           <th>Fat %</th>
           <th>Protein %</th>
@@ -232,11 +233,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const totalVolumeSpan = document.getElementById("selected-volume");
   let totalVolume = 0;
 
-  // GraphQL query
+  // GraphQL query to fetch approved Milk Lots
   const query = `
     query {
       approvedMilkLotList {
         id
+        dateCreated
         supplier {
           user {
             username
@@ -291,6 +293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       row.innerHTML = `
         <td>${lot.id}</td>
         <td>${lot.supplier.user.username}</td>
+        <td>${lot.dateCreated}</td>
         <td>${lot.volumeL}</td>
         <td>${lot.fatPercent}%</td>
         <td>${lot.proteinPercent}%</td>

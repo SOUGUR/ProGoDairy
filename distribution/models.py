@@ -91,7 +91,13 @@ class MilkTransfer(models.Model):
         related_name='milk_transfers'
     )
 
-    destination = models.CharField(max_length=200, blank=True, null=True)
+    destination = models.ForeignKey(
+    'plants.Plant', 
+    on_delete=models.SET_NULL, 
+    blank=True, 
+    null=True,
+    related_name='transfers_as_destination'
+    )
 
     transfer_date = models.DateTimeField(auto_now_add=True)
     arrival_datetime = models.DateTimeField(null=True, blank=True)

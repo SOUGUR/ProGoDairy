@@ -1,24 +1,20 @@
 import strawberry
 from typing import Optional, List
 from strawberry_django import type as strawberry_django_type
-from django.contrib.auth.models import User
-from datetime import date
-from .models import Vehicle, Distributor, Route
+from datetime import datetime
+from plants.schema import PlantType
+from .models import Vehicle, Distributor, Route, MilkTransfer
+from collection_center.schema import BulkCoolerType
+from suppliers.schema import OnFarmTankType, CanCollectionType
+from suppliers.models import OnFarmTank, CanCollection
+from collection_center.models import BulkCooler
+from django.core.exceptions import ValidationError 
+from plants.models import Plant
 from strawberry.types import Info
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Exists, OuterRef
+from accounts.schema import UserType, RouteType
 
-
-@strawberry_django_type(Route)
-class RouteType:
-    id: int
-    name: str
-
-
-@strawberry_django_type(User)
-class UserType:
-    id: int
-    username: str
-    email: str
 
 
 @strawberry_django_type(Distributor)
@@ -47,15 +43,36 @@ class VehicleInput:
     capacity_liters: Optional[float] = None
     route_id: int
 
+@strawberry.input
+class MilkTransferInput:
+    source_type: str
+    source_id: int
+    vehicle_id: Optional[int] = None
+    destination_id: Optional[int] = None
+    status: Optional[str] = "scheduled"
+    transfer_date: Optional[datetime] = None
+    arrival_datetime :Optional[datetime] = None
+    remarks : Optional[str] = None
+
 @strawberry.type
 class MilkTransferType:
     id: int
-    vehicle: Optional[VehicleType] 
-    transfer_date: date
-    route: Optional[RouteType]  
-    status: str
-    total_volume: Optional[float]
-    remarks: Optional[str]
+    source_type: Optional[str]           
+    transfer_date: datetime             
+    arrival_datetime: Optional[datetime] 
+    status: str                          
+    total_volume: Optional[float]      
+    remarks: Optional[str]             
+
+    # ForeignKey relationships
+    vehicle: Optional["VehicleType"]
+    destination: Optional["PlantType"]
+
+    # Sources (since model allows multiple)
+    bulk_cooler: Optional["BulkCoolerType"]
+    on_farm_tank: Optional["OnFarmTankType"]
+    can_collection: Optional["CanCollectionType"]
+
 
 
 @strawberry.type
@@ -71,10 +88,36 @@ class Query:
     @strawberry.field
     def vehicles_by_route(self, route_id: int) -> List[VehicleType]:
         return Vehicle.objects.filter(route_id=route_id)
+    
+    @strawberry.field
+    def available_vehicles_by_route(self, route_id: int) -> List[VehicleType]:
+        has_active_transfer = MilkTransfer.objects.filter(
+            vehicle=OuterRef('pk'),  
+            status__in=['scheduled', 'in_transit']
+        )
+
+        return Vehicle.objects.filter(
+            route_id=route_id
+        ).annotate(
+            is_active_transfer=Exists(has_active_transfer)
+        ).filter(
+            is_active_transfer=False  
+        )
 
     @strawberry.field
     def all_distributors(self) -> List[DistributorType]:
         return Distributor.objects.all()
+    
+    @strawberry.field
+    def milk_transfers(
+        self, info: Info, status: Optional[str] = None
+    ) -> List[MilkTransferType]:
+        milk_transfers = MilkTransfer.objects.all()
+
+        if status:
+            milk_transfers = milk_transfers.filter(status=status)
+
+        return milk_transfers
 
 
 @strawberry.type
@@ -103,6 +146,34 @@ class Mutation:
             vehicle_id=vehicle.vehicle_id,
             capacity_liters=vehicle.capacity_liters,
         )
+    
+    @strawberry.mutation
+    def create_milk_transfer(self, info: Info, input: MilkTransferInput) -> MilkTransferType:
+        vehicle = Vehicle.objects.filter(id=input.vehicle_id).first() if input.vehicle_id else None
+        destination = Plant.objects.filter(id=input.destination_id).first() if input.destination_id else None
+
+        transfer = MilkTransfer(
+            source_type=input.source_type,
+            vehicle=vehicle,
+            destination=destination,
+            status=input.status,
+        )
 
 
-schema = strawberry.Schema(query=Query)
+        if input.source_type == "bulk_cooler":
+            transfer.bulk_cooler = BulkCooler.objects.get(id=input.source_id)
+        elif input.source_type == "on_farm_tank":
+            transfer.on_farm_tank = OnFarmTank.objects.get(id=input.source_id)
+        elif input.source_type == "can_collection":
+            transfer.can_collection = CanCollection.objects.get(id=input.source_id)
+        else:
+            raise ValidationError("Invalid source_type provided.")
+
+        transfer.full_clean()
+        transfer.save()
+        transfer.calculate_total_volume()
+
+        return transfer
+
+
+schema = strawberry.Schema(query=Query, mutation= Mutation)

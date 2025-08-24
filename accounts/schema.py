@@ -2,6 +2,21 @@ import strawberry
 from strawberry.types import Info
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
+from strawberry_django import type as strawberry_django_type
+from distribution.models import Route
+
+
+@strawberry_django_type(User)
+class UserType:
+    id: int
+    username: str
+    email: str
+
+
+@strawberry_django_type(Route)
+class RouteType:
+    id: int
+    name: str
 
 @strawberry.type
 class Query:

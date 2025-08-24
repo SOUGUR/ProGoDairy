@@ -463,7 +463,7 @@
 </div>
 
 <script>
-//===================================================== Load Routes ==============================================//
+//=================================================================== Load Routes ===========================================================//
   async function loadRoutes() {
     const query = `
       query {
@@ -534,7 +534,8 @@
     let query = "";
     let key = "";
 
-    if (sourceType === "1") { // Bulk Cooler
+    // Bulk Cooler
+    if (sourceType === "1") { 
       query = `
         query ($routeId: Int!) {
           bulkCoolersByRoute(routeId: $routeId) {
@@ -545,8 +546,8 @@
             route { name }
           }
         }`;
-      key = "bulkCoolersByRoute";
-    } else if (sourceType === "2") { // On-Farm Tank
+      key = "bulkCoolersByRoute"; // On-Farm Tank
+    } else if (sourceType === "2") { 
       query = `
         query ($routeId: Int!) {
           onfarmTanksByRoute(routeId: $routeId) {
@@ -625,7 +626,6 @@ window.addEventListener("click", function(e) {
 function attachSampleButtonEvents() {
   document.querySelectorAll(".btn-sample").forEach((btn, index) => {
     btn.addEventListener("click", function() {
-      // Get tank row info
       const row = btn.closest("tr");
       const tankId = row.querySelector("td").textContent.trim(); 
       const tankName = row.querySelectorAll("td")[1].textContent.trim(); 
@@ -652,7 +652,7 @@ async function fetchGraphQL(query, variables = {}) {
     throw new Error(result.errors.map(e => e.message).join(", "));
   }
 
-  return result.data;   // ⚠️ this ensures you only return `data`
+  return result.data;  
 }
 
 sampleForm.addEventListener("submit", async function(e) {

@@ -13,9 +13,7 @@ def login(request):
 
         username = request.POST.get('username')
         password = request.POST.get('password')
-        print("====="*34)
         print(username, password)
-        print("====="*34)
         user = authenticate(request, username=username, password=password)
         
         if user is not None:

@@ -1,5 +1,6 @@
 {% load django_browser_reload %}
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -291,6 +292,39 @@
       </button>
     </div>
     <ul class="sidebar-menu">
+
+    <li class="menu-category">
+  <div class="category-header">
+    <span class="menu-icon"><i class="fas fa-tachometer-alt"></i></span>
+    <span class="menu-text">Dashboard</span>
+    <i class="fas fa-chevron-down category-toggle"></i>
+  </div>
+  <ul class="submenu">
+    <li class="menu-item">
+      <a href="{% url 'milk_market_dashboard' %}" class="menu-link">
+        <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+        <span class="menu-text">Latest Prices and Demand</span>
+      </a>
+    </li>
+  </ul>
+</li>
+
+  <li class="menu-category">
+    <div class="category-header">
+      <span class="menu-icon"><i class="fas fa-newspaper"></i></span>
+      <span class="menu-text">News</span>
+      <i class="fas fa-chevron-down category-toggle"></i>
+    </div>
+    <ul class="submenu">
+      <li class="menu-item">
+        <a href="" class="menu-link">
+          <span class="menu-icon"><i class="fas fa-list"></i></span>
+          <span class="menu-text">All News</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
   <!-- Suppliers & Procurement Section -->
     <li class="menu-category">
       <div class="category-header">
@@ -359,8 +393,15 @@
         </li>
 
         <li class="menu-item">
+          <a href="{% url 'distribution:milk_transfer_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-dolly"></i></span>
+            <span class="menu-text"> Milk Lot Transfer List </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
           <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
+            <span class="menu-icon"><i class="fas fa-shipping-fast"></i></span>
             <span class="menu-text">Vehicles</span>
           </a>
         </li>
