@@ -347,7 +347,6 @@ const GET_COMPOSITE_SAMPLES = `
       id
       collectedAt
       sampleVolumeMl
-      passed
       bulkCooler { id name }
       onFarmTank { id name supplier { user { username } } }
       vehicle { 
@@ -440,9 +439,11 @@ function renderSamples(samples) {
             ${(sample.passed || 'Pending').charAt(0).toUpperCase() + (sample.passed || 'Pending').slice(1)}
           </span>
         </td>
-        <td class="actions-cell">
-          <a href="/samples/${sample.id}" class="btn-view">View Results</a>
-        </td>
+       <td class="actions-cell">
+        <a href="/samples/${sample.id}" class="btn-view">
+          <i class="fas fa-eye"></i>
+        </a>
+      </td>
       </tr>
     `;
 
@@ -465,7 +466,7 @@ async function fetchGraphQL(query, variables = {}) {
     throw new Error(result.errors.map(e => e.message).join(", "));
   }
 
-  return result.data;   // ⚠️ this ensures you only return `data`
+  return result.data;  
 }
 
 </script>

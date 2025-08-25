@@ -78,7 +78,7 @@
     
     .floating-btn {
     position: fixed;
-    right: 50px;
+    right: 80px;
     z-index: 999;
     padding: 12px 20px;
     font-size: 16px;
@@ -96,7 +96,8 @@
 
   
   #create-milk-lot-btn {
-    bottom: 460px;             
+    bottom: 530px;   
+    right:50px;          
   }
 
 
@@ -257,29 +258,6 @@
         </tr>
       </thead>
       <tbody>
-        {% for vehicle in vehicles %}
-        <tr>
-          <td>{{ vehicle.vehicle_id }}</td>
-          <td>{{ vehicle.name }}</td>
-          <td>{{ vehicle.distributor.user.username }}</td>
-          <td>{{ vehicle.capacity_liters|default:"-" }}</td>
-          <td>{{ vehicle.distributor.route.name|default:"-" }}</td>
-          <td>
-            <span class="status-indicator status-{% if vehicle.is_available %}available{% else %}unavailable{% endif %}"></span>
-            {% if vehicle.is_available %}Available{% else %}In Use{% endif %}
-          </td>
-          <td>
-            <div class="action-buttons">
-              <a href="{% url 'edit_vehicle' vehicle.id %}" class="btn-action btn-edit">Edit</a>
-              <a href="{% url 'delete_vehicle' vehicle.id %}" class="btn-action btn-delete">Delete</a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="7" class="empty-state">No vehicles found.</td>
-        </tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
@@ -474,10 +452,15 @@ document.addEventListener("DOMContentLoaded", function () {
         </td>
         <td>
           <div class="action-buttons">
-            <a href="/vehicles/edit/${vehicle.id}/" class="btn-action btn-edit">Edit</a>
-            <a href="/vehicles/delete/${vehicle.id}/" class="btn-action btn-delete">Delete</a>
+            <a href="" class="btn-action btn-edit">
+              <i class="fas fa-edit"></i>
+            </a>
+            <a href="" class="btn-action btn-delete">
+              <i class="fas fa-trash"></i>
+            </a>
           </div>
         </td>
+
       `;
       tbody.appendChild(tr);
     });
