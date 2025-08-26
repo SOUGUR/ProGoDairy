@@ -89,7 +89,7 @@
   
   .form-actions {
     position: fixed;
-    bottom: 550px;
+    bottom: 500px;
     right: 20px;  
     z-index: 1000; 
   }
@@ -259,7 +259,7 @@
           </select>
         </div>
         
-        <!-------------- select Vehicle which is availble  ---------->
+        <!------------------------------------- select Vehicle which is availble  --------------------------------------------->
         <div class="form-group">
           <label for="vehicle">Vehicle</label>
           <select id="vehicle" name="vehicle" required>
@@ -267,7 +267,7 @@
           </select>
         </div>
         
-        <!------------ Destination is the plant name that vehicle has to reach ------------>
+        <!------------------------ Destination is the plant name that vehicle has to reach --------------------------->
         <div class="form-group">
           <label for="destination">Destination</label>
           <select id="destination" name="destination" required>
@@ -275,8 +275,7 @@
           </select>
         </div>
 
-        
-        <!-- Status -->
+
         <div class="form-group">
           <label for="status">Status</label>
           <select id="status" name="status" required>
@@ -332,6 +331,7 @@
           <th>Transfer ID</th>
           <th>Source</th>
           <th>Vehicle</th>
+          <th>Cooperative Society</th>
           <th>Destination</th>
           <th>Volume (L)</th>
           <th>Status</th>
@@ -416,7 +416,7 @@ async function loadPlants() {
 
   document.addEventListener("DOMContentLoaded", loadPlants);
 
-//===================================================== show CanCollection date is selected ====================================================//
+//===================================================== show CanCollection if date is selected ====================================================//
 document.getElementById("source_type").addEventListener("change", function () {
     let dateField = document.getElementById("date_field");
     if (this.value === "can_collection") {
@@ -695,7 +695,7 @@ document.querySelector(".transfer-form").addEventListener("submit", async functi
     }
 
     const transfer = result.data.createMilkTransfer;
-    alert(`Milk Transfer #${transfer.id} created successfully with status ${transfer.status}`);
+    alert(`Milk Transfer ${transfer.id} created successfully with status ${transfer.status}`);
     
     e.target.reset();
   } catch (error) {
@@ -718,6 +718,9 @@ const query = `
         id
         name
         vehicleId
+        route {
+          name
+        }
       }
       destination {
         id
@@ -767,6 +770,9 @@ fetch("/graphql/", {
     const vehicle = transfer.vehicle 
                     ? `${transfer.vehicle.name} (${transfer.vehicle.vehicleId})` 
                     : "Not assigned";
+    const milkCooperative = transfer.vehicle 
+                    ? `${transfer.vehicle.route.name}` 
+                    : "-";
 
     const destination = transfer.destination?.name || "-";
     const totalVolume = transfer.totalVolume || 0;
@@ -779,6 +785,7 @@ fetch("/graphql/", {
         <td>${transfer.id}</td>
         <td>${source}</td>
         <td>${vehicle}</td>
+        <td>${milkCooperative}</td>
         <td>${destination}</td>
         <td>${totalVolume}</td>
         <td><span class="status-badge status-${transfer.status}">${status}</span></td>
