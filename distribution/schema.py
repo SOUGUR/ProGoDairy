@@ -54,6 +54,12 @@ class MilkTransferInput:
     arrival_datetime :Optional[datetime] = None
     remarks : Optional[str] = None
 
+@strawberry.input
+class MilkTransferUpdateInput:
+    id: int
+    arrival_datetime: datetime
+    remarks: Optional[str] = None
+
 @strawberry.type
 class MilkTransferType:
     id: int
@@ -185,6 +191,20 @@ class Mutation:
         transfer.calculate_total_volume()
 
         return transfer
+    
+    @strawberry.mutation
+    def update_milktransfer(
+        self, info, input: MilkTransferUpdateInput
+    ) -> Optional["MilkTransferType"]:
+        try:
+            transfer = MilkTransfer.objects.get(id=input.id)
+            transfer.arrival_datetime = input.arrival_datetime
+            transfer.remarks = input.remarks
+            transfer.status = "completed"
+            transfer.save(update_fields=["arrival_datetime", "remarks", "status"])
+            return transfer
+        except MilkTransfer.DoesNotExist:
+            return None
 
 
 schema = strawberry.Schema(query=Query, mutation= Mutation)

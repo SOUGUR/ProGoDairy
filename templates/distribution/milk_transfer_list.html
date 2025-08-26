@@ -106,6 +106,7 @@
     display: flex;
     gap: 10px; 
     align-items: center; 
+    cursor: pointer;
   }
 
 
@@ -319,7 +320,7 @@
 
 .close:hover,
 .close:focus {
-    color: #1e40af;
+    color: #f40f0f;
     transform: scale(1.2);
     opacity: 1;
 }
@@ -370,6 +371,39 @@
         font-size: 13px;
     }
 }
+
+#editForm label {
+  display: block;        
+  margin-top: 15px;        
+  margin-bottom: 5px;    
+  font-weight: bold;
+}
+
+#editForm input {
+  display: block;         
+  width: 100%;          
+  padding: 8px 10px;      
+  margin-bottom: 10px;  
+  box-sizing: border-box;  
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#editForm button[type="submit"] {
+    background-color: #1b10b9;          
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.03s ease;
+    margin-top: 1rem;
+    width: 100%;                       
+}
+
 
 </style>
 <div class="container">
@@ -436,6 +470,7 @@
           <th>Destination</th>
           <th>Volume (L)</th>
           <th>Status</th>
+          <th>Remarks</th>
           <th>Transfer Date</th>
           <th>Arrival Time</th>
           <th>Actions</th>
@@ -453,6 +488,23 @@
     <span id="closeModal" class="close">&times;</span>
     <h2>Milk Transfer Details</h2>
     <div id="transferDetails"></div>
+  </div>
+</div>
+
+<!---------------------------------------------Modal for editing/updating the milk transfer ------------------------------------->>
+<div id="editModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span id="closeUpdateModal" class="close">&times;</span>
+    <h2>Update Milk Transfer</h2>
+    <form id="editForm">
+      <input type="hidden" id="transferId" />
+      <label for="arrivalDatetime">Arrival DateTime:</label>
+      <input type="datetime-local" id="arrivalDatetime" required />
+
+      <label for="updateRemark">Remark</label>
+      <input type="text" id="updateRemark" required />
+      <button type="submit">Update</button>
+    </form>
   </div>
 </div>
 
@@ -489,6 +541,7 @@ async function fetchMilkTransfers(status = "") {
         transferDate
         arrivalDatetime
         totalVolume
+        remarks
         vehicle {
           name
           vehicleId
@@ -557,6 +610,7 @@ function populateTable(transfers) {
         <td>${destination}</td>
         <td>${volume} L</td>
         <td>${status}</td>
+        <td>${t.remarks}</td>
         <td>${transferDate}</td>
         <td>${arrivalTime}</td>
         <td>
@@ -564,7 +618,7 @@ function populateTable(transfers) {
             <a onclick = "loadTransfer(${t.id});" title="View Details" class="btn-view">
               <i class="fas fa-eye"></i>
             </a>
-            <a onclick = "loadTransfer(${t.id});" title="Edit Transfer" class="btn-edit">
+            <a onclick = "editTransfer(${t.id});" title="Edit Transfer" class="btn-edit">
               <i class="fas fa-edit"></i>
             </a>
           </div>
@@ -651,6 +705,67 @@ async function loadTransfer(id) {
     showTransferDetails(transfer);
   });
 }
+
+//======================================================== Update Milk Transfer =====================================================//
+async function updateMilkTransfer(id, arrivalDatetime, remarks) {
+  const mutation = `
+    mutation UpdateMilkTransfer($input: MilkTransferUpdateInput!) {
+      updateMilktransfer(input: $input) {
+        id
+        arrivalDatetime
+        remarks
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      id: id,
+      arrivalDatetime: arrivalDatetime,
+      remarks: remarks
+    },
+  };
+
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query: mutation, variables }),
+  });
+
+  const result = await response.json();
+  console.log(result);
+  return result.data.updateMilktransfer;
+}
+
+function editTransfer(id) {
+  document.getElementById("editModal").style.display = "block";
+  document.getElementById("transferId").value = id;
+}
+
+document.getElementById("closeUpdateModal").onclick = function () {
+  document.getElementById("editModal").style.display = "none";
+};
+
+document.getElementById("editForm").onsubmit = async function (e) {
+  e.preventDefault();
+  const id = parseInt(document.getElementById("transferId").value);
+  const arrivalDatetime = document.getElementById("arrivalDatetime").value;
+  const remarks = document.getElementById("updateRemark").value;
+
+  const updated = await updateMilkTransfer(id, arrivalDatetime, remarks);
+
+  if (updated) {
+    alert(`Milk Transfer ID ${id} updated with arrival time ${arrivalDatetime} successfully!`);
+    document.getElementById("editModal").style.display = "none";
+    const transfers = await fetchMilkTransfers();
+    populateTable(transfers);
+  } else {
+    alert("Failed to update Milk Transfer!");
+  }
+};
+
 </script>
 
 {% endblock %}

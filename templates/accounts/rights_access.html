@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Rights and Access{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <style>
 
     .container {
         max-width: 1000px;
-        margin: 0 auto;
+        margin: auto;
+        margin-top: 30px;
+        margin-bottom: 30px;
         background-color: white;
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -233,8 +239,11 @@
     <h1>User Access Rights Management</h1>
     
     <div class="search-bar">
-        <input type="text" class="search-input" placeholder="Search for user...">
+    <select id="userSelect" style="width: 100%;">
+        <option></option> 
+    </select>
     </div>
+
     
     <div class="user-info">
         <h3>Selected User</h3>
@@ -465,9 +474,171 @@
     </div>
 </div>
     
-<button class="floating-action-btn" title="Save Access Rights">
+<button class="floating-action-btn" id="saveRightsBtn"  title="Save Access Rights">
     <i class="fas fa-save" style="font-size: 24px;"></i>
 </button>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script>
+    async function loadUsers() {
+    const userEmployees = `
+      {
+        employees {
+            user {
+                id
+                username
+                email
+                }
+            role {
+                name
+                }
+        }
+        }
+
+    `;
+
+    const usersRes = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: userEmployees })
+    });
+
+    const usersData = await usersRes.json();
+    const userSelect = document.getElementById("userSelect");
+
+    usersData.data.employees.forEach(employee => {
+    const opt = document.createElement("option");
+    opt.value = employee.user.id;
+    opt.textContent = `${employee.user.id} — ${employee.user.username} (${employee.role.name})`;
+    userSelect.appendChild(opt);
+    opt.setAttribute('data-username', employee.user.username);
+    opt.setAttribute('data-email', employee.user.email || "-");
+    opt.setAttribute('data-role', employee.role?.name || "-");
+    
+});
+}
+
+//====================================== display user details if selected ======================================================//
+$('#userSelect').on('change', function() {
+  let selectedOption = $(this).find('option:selected');
+  let user_id = selectedOption.val()
+  let username = selectedOption.data('username') || "-";
+  let email = selectedOption.data('email') || "-";
+  let role = selectedOption.data('role') || "-";
+
+  document.getElementById("username-display").textContent = username;
+  document.getElementById("email-display").textContent = email;
+  document.getElementById("role-display").textContent = role;
+  loadUserRights(parseInt(user_id))
+});
+
+//====================================== load user name, email, role and make it searchable =====================================//
+$(document).ready(async function() {
+    await loadUsers();  
+    $('#userSelect').select2({
+        placeholder: "-- Select a user --",
+        allowClear: true,
+        width: 'resolve'
+    });
+});
+
+//===================================================== function to auto check rights given to selected user ===========================================//
+async function loadUserRights(userId) {
+    const query = `
+      query GetUser($id: Int!) {
+        getUser(id: $id) {
+          id
+          username
+          email
+          isActive
+          isStaff
+          isSuperuser
+          groups
+        }
+      }
+    `;
+
+    const res = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, variables: { id: userId } })
+    });
+    const data = await res.json();
+    const user = data.data.getUser;
+    document.getElementById("is-active").checked = user.isActive;
+    document.getElementById("is-staff").checked = user.isStaff;
+    document.getElementById("is-superadmin").checked = user.isSuperuser;
+
+    document.querySelectorAll(".rights-section input[type=checkbox]").forEach(cb => {
+        if (!["is-active", "is-staff", "is-superadmin"].includes(cb.id)) {
+            cb.checked = false;
+        }
+    });
+
+    user.groups.forEach(groupName => {
+        const cb = document.getElementById(groupName);
+        if (cb) cb.checked = true;
+    });
+}
+
+
+//============================================== User right updates ==========================================================//
+document.getElementById("saveRightsBtn").addEventListener("click", async function() {
+    const userId = document.getElementById("userSelect").value;
+
+    const isActive = document.getElementById("is-active").checked;
+    const isStaff = document.getElementById("is-staff").checked;
+    const isSuperadmin = document.getElementById("is-superadmin").checked;
+
+    const allCheckboxes = document.querySelectorAll(".rights-section input[type=checkbox]");
+    const selectedGroups = [];
+    allCheckboxes.forEach(cb => {
+        if (cb.checked && !["is-active", "is-staff", "is-superadmin"].includes(cb.id)) {
+            selectedGroups.push(cb.id);
+        }
+    });
+
+    const mutation = `
+      mutation UpdateUserRights($input: UserRightsInput!) {
+        updateUserRights(input: $input) {
+          id
+          username
+          email
+          isActive
+          isStaff
+          isSuperuser
+          groups
+        }
+      }
+    `;
+
+    const variables = {
+        input: {
+            userId: parseInt(userId),
+            isActive: isActive,
+            isStaff: isStaff,
+            isSuperuser: isSuperadmin,
+            groups: selectedGroups
+        }
+    };
+
+    const res = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: mutation, variables })
+    });
+
+    const result = await res.json();
+    if (result.errors) {
+        alert("Error: " + result.errors[0].message);
+    } else {
+        alert("Access rights saved for " + result.data.updateUserRights.username);
+        console.log("Groups:", result.data.updateUserRights.groups);
+    }
+});
+
+</script>
 {% endblock %}
