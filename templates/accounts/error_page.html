@@ -1,95 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error Occurred</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            background-color: #f8f9fa;
-            color: #343a40;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-        .error-container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 90%;
-        }
-        h1 {
-            color: #dc3545;
-            margin-top: 0;
-        }
-        .error-icon {
-            font-size: 3rem;
-            color: #dc3545;
-            margin-bottom: 1rem;
-        }
-        .error-details {
-            background-color: #f8d7da;
-            border-left: 4px solid #dc3545;
-            padding: 1rem;
-            margin: 1.5rem 0;
-            text-align: left;
-        }
-        .contact-admin {
-            margin-top: 1.5rem;
-            font-weight: bold;
-        }
-        .home-link {
-            display: inline-block;
-            margin-top: 1.5rem;
-            padding: 0.5rem 1rem;
-            background-color: #4a6fa5;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        .home-link:hover {
-            background-color: #3a5a80;
-        }
-    </style>
-</head>
-<body>
-    <div class="error-container">
-        <div class="error-icon">
-            <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <h1>Something Went Wrong</h1>
-        
-        <p>We encountered an issue while processing your request.</p>
-        
-        <div class="error-details">
-            <p>Possible reasons:</p>
-            <ul>
-                <li>You don't have permission to access this resource</li>
-                <li>Server is temporarily unavailable</li>
-                <li>Invalid request or missing parameters</li>
-                <li>Internal server error</li>
-            </ul>
-        </div>
-        
-        <div class="contact-admin">
-            Please contact your administrator for assistance.
-        </div>
-        
-        <a href="/" class="home-link">
-            <i class="fas fa-home"></i> Return to Home
-        </a>
-    </div>
 
-    <!-- Font Awesome for icons (if not already loaded) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Rights and Access{% endblock %}
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        background-color: #f8f9fa;
+        color: #343a40;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+    }
+    .error-container {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        width: 90%;
+        margin-left: 400px;
+    }
+    h1 {
+        color: #dc3545;
+        margin-top: 0;
+    }
+    .error-icon {
+        font-size: 3rem;
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+    .error-details {
+        background-color: #f8d7da;
+        border-left: 4px solid #dc3545;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+    .contact-admin {
+        margin-top: 1.5rem;
+        font-weight: bold;
+    }
+    .home-link {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.5rem 1rem;
+        background-color: #4a6fa5;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+    .home-link:hover {
+        background-color: #3a5a80;
+    }
+</style>
+<div class="error-container">
+    <div class="error-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <h1>Something Went Wrong</h1>
+    
+    <p>We encountered an issue while processing your request.</p>
+    
+    <div class="error-details">
+        <p>Possible reasons:</p>
+        <ul>
+            <li>You don't have permission to access this resource</li>
+            <li>Server is temporarily unavailable</li>
+            <li>Invalid request or missing parameters</li>
+            <li>Internal server error</li>
+        </ul>
+    </div>
+    
+    <div class="contact-admin">
+        Please contact your administrator for assistance.
+    </div>
+    
+    <a href="/" class="home-link">
+        <i class="fas fa-home"></i> Return to Home
+    </a>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+{% endblock %}

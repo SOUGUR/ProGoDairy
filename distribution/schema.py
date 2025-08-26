@@ -118,6 +118,17 @@ class Query:
             milk_transfers = milk_transfers.filter(status=status)
 
         return milk_transfers
+    
+    @strawberry.field
+    def milk_transfer_by_id(
+        self, info: Info,
+        id: int
+    ) -> Optional[MilkTransferType]:
+        try:
+            return MilkTransfer.objects.get(id=id)
+        except MilkTransfer.DoesNotExist:
+            return None
+
 
 
 @strawberry.type

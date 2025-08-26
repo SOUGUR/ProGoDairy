@@ -39,6 +39,7 @@ class SupplierType:
     bank_account_number: Optional[str]
     bank_name: Optional[str]
     ifsc_code: Optional[str]
+    route: Optional[RouteType]
 
 
 @strawberry.input

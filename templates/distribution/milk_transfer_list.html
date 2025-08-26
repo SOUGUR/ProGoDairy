@@ -102,6 +102,13 @@
     background-color: #cbd5e0;
   }
 
+  .action-buttons {
+    display: flex;
+    gap: 10px; 
+    align-items: center; 
+  }
+
+
   .samples-section {
     background-color: white;
     border-radius: 12px;
@@ -269,6 +276,101 @@
   .empty-subtext {
     font-size: 0.9rem;
   }
+
+/* -------------------------------------------- modal style for milk transfer view ----------------------------------------- */
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 500px;
+    border-top: 6px solid #1b10b9; 
+    animation: slideIn 0.3s ease-out;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+    line-height: 1;
+    opacity: 0.8;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.close:hover,
+.close:focus {
+    color: #1e40af;
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+
+.modal-content h2 {
+    color: #1e40af;
+    font-size: 1.5rem;
+    margin: 0 0 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eff6ff;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+#transferDetails {
+    font-size: 14px;
+    color: #060606;
+    line-height: 1.7;
+}
+
+#transferDetails p {
+    margin: 0.6rem 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#transferDetails strong {
+    min-width: 120px;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+#transferDetails span {
+    flex: 1;
+}
+
+@media (max-width: 600px) {
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 1.5rem;
+    }
+    .modal-content h2 {
+        font-size: 1.3rem;
+    }
+    #transferDetails {
+        font-size: 13px;
+    }
+}
+
 </style>
 <div class="container">
   <h1>Milk Transfers</h1>
@@ -344,6 +446,17 @@
     </table>
   </div>
 </div>
+
+<!-------------------------------------------- Modal for viewing details of Milk Transfer ----------------------------------------------->
+<div id="transferModal" class="modal hidden">
+  <div class="modal-content">
+    <span id="closeModal" class="close">&times;</span>
+    <h2>Milk Transfer Details</h2>
+    <div id="transferDetails"></div>
+  </div>
+</div>
+
+
 <script>
 
 //================================================= Populate the table based on filters selected ====================================================================//
@@ -446,7 +559,16 @@ function populateTable(transfers) {
         <td>${status}</td>
         <td>${transferDate}</td>
         <td>${arrivalTime}</td>
-        <td><a href="/milk_transfer/${t.id}/" title="View Details"><i class="fas fa-eye"></i></a></td>
+        <td>
+          <div class="action-buttons">
+            <a onclick = "loadTransfer(${t.id});" title="View Details" class="btn-view">
+              <i class="fas fa-eye"></i>
+            </a>
+            <a onclick = "loadTransfer(${t.id});" title="Edit Transfer" class="btn-edit">
+              <i class="fas fa-edit"></i>
+            </a>
+          </div>
+        </td>
       </tr>
     `;
     tableBody.insertAdjacentHTML("beforeend", row);
@@ -458,6 +580,77 @@ document.addEventListener("DOMContentLoaded", async () => {
   populateTable(transfers);
 });
 
+//--------------------------------------------------- function to view Milk Transfer modal ------------------------------------------------ //
+//----------function to fetch Milk Transfer by ID
+async function fetchMilkTransferById(id) {
+  const query = `
+    query($id: Int!) {
+      milkTransferById(id: $id) {
+        id
+        sourceType
+        transferDate
+        arrivalDatetime
+        status
+        totalVolume
+        remarks
+        vehicle { id name vehicleId }
+        destination { id name }
+        bulkCooler { id name }
+        onFarmTank { id supplier { user { username } } }
+        canCollection { id name }
+      }
+    }
+  `;
+
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables: { id } }),
+  });
+
+  const result = await response.json();
+  return result.data.milkTransferById;
+}
+
+function showTransferDetails(t) {
+  let source = "Unknown";
+  if (t.bulkCooler) source = `Bulk Cooler - ${t.bulkCooler.name}`;
+  else if (t.onFarmTank) source = `On-Farm Tank - ${t.onFarmTank.supplier.user.username}`;
+  else if (t.canCollection) source = `Can Collection #${t.canCollection.name}`;
+
+  const detailsHTML = `
+    <p><strong>ID:</strong> ${t.id}</p>
+    <p><strong>Status:</strong> ${t.status}</p>
+    <p><strong>Source:</strong> ${source}</p>
+    <p><strong>Destination:</strong> ${t.destination ? t.destination.name : "-"}</p>
+    <p><strong>Vehicle:</strong> ${t.vehicle ? t.vehicle.name : "Unassigned"}</p>
+    <p><strong>Volume:</strong> ${t.totalVolume || 0} L</p>
+    <p><strong>Transfer Date:</strong> ${new Date(t.transferDate).toLocaleString()}</p>
+    <p><strong>Arrival Time:</strong> ${t.arrivalDatetime ? new Date(t.arrivalDatetime).toLocaleString() : "-"}</p>
+    <p><strong>Remarks:</strong> ${t.remarks || "-"}</p>
+  `;
+
+  document.getElementById("transferDetails").innerHTML = detailsHTML;
+
+  const modal = document.getElementById("transferModal");
+  modal.style.display = "block";
+}
+
+document.getElementById("closeModal").onclick = function () {
+  document.getElementById("transferModal").style.display = "none";
+};
+window.onclick = function (event) {
+  const modal = document.getElementById("transferModal");
+  if (event.target == modal) modal.style.display = "none";
+};
+
+async function loadTransfer(id) {
+  document.querySelector(".btn-view").addEventListener("click", async (e) => {
+    e.preventDefault();
+    const transfer = await fetchMilkTransferById(id);
+    showTransferDetails(transfer);
+  });
+}
 </script>
 
 {% endblock %}
