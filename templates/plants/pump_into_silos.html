@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+{% block title %}Milk Storage Silo Management{% endblock %}
+
+{% block content %}
+    <style>
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #1e40af;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 2rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
+            margin-bottom: 40px;
+            border: 1px solid #dbeafe;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e40af;
+        }
+
+        select, input, button {
+            padding: 12px;
+            border: 1px solid #bfdbfe;
+            border-radius: 3px;
+            font-size: 16px;
+            background: #f8fafc;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            background: #3487d4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            margin-top: 25px;
+            height: 48px;
+            border-radius: 8px;
+        }
+
+        button:hover:not(:disabled) {
+            background: #db0816;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(9, 9, 209, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .visualization {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 60px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        /* Modern Silo Design */
+        .silo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 320px;
+            position: relative;
+        }
+
+        .silo {
+            width: 240px;
+            height: 480px;
+            background: #f1f5f9;
+            border: 12px solid #94a3b8;
+            border-radius: 120px 120px 30px 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, #f8fafc, #f1f5f9);
+        }
+
+        .silo-roof {
+            position: absolute;
+            top: -30px;
+            left: -12px;
+            width: 240px;
+            height: 60px;
+            background: transparent;
+            border-radius: 120px 120px 0 0;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .silo-roof::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 18px;
+            background: #6366f1;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+
+        .milk-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(
+                180deg,
+                rgba(104, 228, 242, 0.9) 0%,
+                rgba(66, 160, 227, 0.849) 40%,
+                rgba(37, 105, 252, 0.6) 70%,
+                rgba(111, 123, 255, 0.5) 100%
+            );
+            transition: height 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 0 0 20px 20px;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .milk-surface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 12px;
+            background: linear-gradient(
+                to right,
+                rgb(50, 6, 226),
+                rgb(3, 132, 245),
+                rgb(0, 217, 255)
+            );
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            z-index: 2;
+            animation: shimmer 3s infinite alternate;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.6; transform: translateY(0); }
+            100% { opacity: 0.9; transform: translateY(-2px); }
+        }
+
+        .volume-display {
+            margin-top: 24px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e40af;
+            background: white;
+            padding: 14px 30px;
+            border-radius: 40px;
+            box-shadow: 0 6px 16px rgba(30, 64, 175, 0.15);
+            border: 2px solid #dbeafe;
+            letter-spacing: 0.5px;
+        }
+
+        .silo-label {
+            margin-top: 16px;
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 18px;
+            text-align: center;
+            padding: 10px 22px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
+            width: 80%;
+            max-width: 280px;
+            border:#3b82f6
+        }
+
+        .input-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
+            border: 1px solid #dbeafe;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .input-control h3 {
+            margin-bottom: 20px;
+            color: #1e40af;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .slider-container {
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 20px 0;
+            height: 14px;
+            border-radius: 7px;
+            background: linear-gradient(to right, #ef4444, #f97316, #f59e0b, #84cc16, #10b981);
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 3px solid white;
+        }
+
+        #slider-value {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #1e40af;
+            margin-top: 12px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #64748b;
+            font-size: 14px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .visualization {
+                flex-direction: column;
+                align-items: center;
+                gap: 40px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .silo {
+                width: 200px;
+                height: 400px;
+            }
+
+            .silo-roof {
+                width: 200px;
+            }
+
+            .silo-label, .volume-display {
+                font-size: 16px;
+                padding: 10px 18px;
+            }
+        }
+    </style>
+
+<div class="container">
+    <header>
+        <h1>Milk Storage Silo Management</h1>
+        <div class="controls">
+            <div class="control-group">
+                <label for="plant-select">Select Plant</label>
+                <select id="plant-select">
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="milk-transfer">Milk Transfers</label>
+                <select id="milk-transfer">
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="silo-select">Select Silo</label>
+                <select id="silo-select">
+                </select>
+            </div>
+
+            <div class="control-group">
+                <button id="pump-button">Pump into Selected Silo</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="visualization">
+            <div class="silo-container">
+                <div class="silo-label">Silo 1 - Milk Storage</div>
+                <div class="silo">
+                    <div class="silo-roof"></div>
+                    <div class="milk-fill" id="milk-fill" style="height: 45%;">
+                        <div class="milk-surface"></div>
+                    </div>
+                </div>
+                <div class="volume-display" id="volume-display">4,500 L</div>
+            </div>
+        </div>
+
+        <div class="input-control">
+            <h3>Adjust Milk Volume</h3>
+            <div class="slider-container">
+                <input type="range" id="volume-slider" min="0" max="10000" value="4500" step="100">
+                <span id="slider-value">4,500 L</span>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Milk Storage Silo Visualization System | © 2025 GoProDairy - A Smart Milk Logistics</p>
+    </footer>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const volumeSlider = document.getElementById('volume-slider');
+        const milkFill = document.getElementById('milk-fill');
+        const volumeDisplay = document.getElementById('volume-display');
+        const sliderValue = document.getElementById('slider-value');
+        const pumpButton = document.getElementById('pump-button');
+        const siloSelect = document.getElementById('silo-select');
+
+        // Update silo fill level based on slider input
+        volumeSlider.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            const max = parseInt(this.max);
+            const percentage = (value / max) * 100;
+
+            milkFill.style.height = `${percentage}%`;
+
+            const formattedValue = new Intl.NumberFormat().format(value);
+            volumeDisplay.textContent = `${formattedValue} L`;
+            sliderValue.textContent = `${formattedValue} L`;
+        });
+
+        // Simulate pumping action
+        pumpButton.addEventListener('click', function() {
+            const selectedSilo = siloSelect.value;
+            const capacity = {
+                'silo1': 10000,
+                'silo2': 15000,
+                'silo3': 20000
+            }[selectedSilo];
+
+            // Update max capacity
+            volumeSlider.max = capacity;
+
+            pumpButton.textContent = "Pumping...";
+            pumpButton.disabled = true;
+
+            let currentVolume = parseInt(volumeSlider.value);
+            const targetVolume = Math.min(currentVolume + 1000, capacity);
+
+            const interval = setInterval(() => {
+                if (currentVolume >= targetVolume) {
+                    clearInterval(interval);
+                    pumpButton.textContent = "Pump into Selected Silo";
+                    pumpButton.disabled = false;
+                    return;
+                }
+
+                currentVolume += 100;
+                volumeSlider.value = currentVolume;
+                volumeSlider.dispatchEvent(new Event('input'));
+            }, 80);
+        });
+
+        // Change silo capacity on selection
+        siloSelect.addEventListener('change', function() {
+            const capacity = {
+                'silo1': 10000,
+                'silo2': 15000,
+                'silo3': 20000
+            }[this.value];
+
+            volumeSlider.max = capacity;
+            if (parseInt(volumeSlider.value) > capacity) {
+                volumeSlider.value = capacity;
+                volumeSlider.dispatchEvent(new Event('input'));
+            }
+
+            document.querySelector('.silo-label').textContent = 
+                `${this.selectedOptions[0].text.split(' ')[0]} - Milk Storage`;
+        });
+    });
+</script>
+
+{% endblock %}

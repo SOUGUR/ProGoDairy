@@ -1,4 +1,5 @@
 import strawberry
+import strawberry_django
 from strawberry_django import type as strawberry_django_type, field
 from suppliers.models import Supplier, MilkLot, PaymentBill, OnFarmTank, CanCollection
 from django.contrib.auth.models import User
@@ -70,7 +71,7 @@ class PaymentBillType:
 class MilkLotType:
     id: int
     supplier: SupplierType
-    tester: Optional[EmployeeType]
+    tester: Optional[EmployeeType] = strawberry_django.field(field_name="employee")
     volume_l: float
     fat_percent: float
     protein_percent: float

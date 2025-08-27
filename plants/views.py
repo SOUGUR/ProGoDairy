@@ -1,3 +1,5 @@
 from django.shortcuts import render
 
-# Create your views here.
+def pump_into_silos(request):
+    return render(request, "plants/pump_into_silos.html")
+
