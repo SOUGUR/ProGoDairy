@@ -278,7 +278,139 @@
   .submenu.active {
     max-height: 1000px; 
   }
-  </style>
+
+  /* ===================================================  Notification styles  ================================================================ */
+  .notification-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    font-size: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .notification-panel {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 350px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+  }
+
+  .notification-panel.show {
+    display: flex;
+  }
+
+  .notification-header {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #4a6fa5;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    height: 40px;
+  }
+
+  .notification-header h3 {
+    margin: 15px;
+    font-size: 1.1rem;
+  }
+
+  .mark-all-read {
+    background: none;
+    border: none;
+    color: #ecf0f1;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .mark-all-read:hover {
+    text-decoration: underline;
+  }
+
+  .notification-list {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f1f1;
+    transition: background-color 0.2s;
+    height:65px
+  }
+
+  .notification-item:hover {
+    background-color: #f9f9f9;
+  }
+
+  .notification-item.unread {
+    background-color: #f0f7ff;
+  }
+
+  .notification-item.unread:hover {
+    background-color: #e6f2ff;
+  }
+
+  .notification-content p {
+    margin: 0 0 5px 0;
+    font-size: 0.95rem;
+    color: #2c3e50;
+  }
+
+  .notification-time {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+  }
+
+  .notification-footer {
+    padding: 12px 15px;
+    text-align: center;
+    border-top: 1px solid #eee;
+  }
+
+  .notification-footer a {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .notification-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
 </head>
 {% django_browser_reload_script %}
 <body>
@@ -527,11 +659,54 @@
     </div>
   </div>
 
+<!--------------------------------------- Floating Notification Button ---------------------------------------------------->
+  <button id="notification-button" class="notification-button">
+    <i class="fas fa-bell"></i>
+    <span class="notification-badge">3</span>
+  </button>
 
+<!------------------------------------------ Notification Panel --------------------------------------------------------------->
+  <div id="notification-panel" class="notification-panel">
+    <div class="notification-header">
+      <h3>Notifications</h3>
+      <button class="mark-all-read">Mark all as read</button>
+    </div>
+    <div class="notification-list">
+      <div class="notification-item unread">
+        <div class="notification-content">
+          <p>New milk quality test results available</p>
+          <span class="notification-time">2 hours ago</span>
+        </div>
+      </div>
+      <div class="notification-item unread">
+        <div class="notification-content">
+          <p>Payment processed for Supplier #2847</p>
+          <span class="notification-time">5 hours ago</span>
+        </div>
+      </div>
+      <div class="notification-item">
+        <div class="notification-content">
+          <p>Milk collection scheduled for tomorrow</p>
+          <span class="notification-time">1 day ago</span>
+        </div>
+      </div>
+      <div class="notification-item">
+        <div class="notification-content">
+          <p>New supplier registration request</p>
+          <span class="notification-time">2 days ago</span>
+        </div>
+      </div>
+    </div>
+    <div class="notification-footer">
+      <a href="#">View all notifications</a>
+    </div>
+  </div>
+<!------------------------------------------------------------------ Chat Bot Floating --------------------------------------------------->
   <button id="chatbot-button" class="chatbot-button">
     <i class="fas fa-robot"></i>
   </button>
 
+  <!-------------------------------------------------------------Chat Bot window -------------------------------------------------------->
   <div id="chatbot-window" class="chatbot-window">
     <div class="chatbot-header">
       <h3>Chat Assistant</h3>
@@ -540,10 +715,10 @@
       </button>
     </div>
     <div id="chatbot-messages" class="chatbot-messages">
-      <!-- Messages will appear here -->
+      <!-- Messages will be seen here -->
     </div>
     <div class="chatbot-input">
-      <input type="text" id="chatbot-user-input" placeholder="Type your message...">
+      <input type="text" id="chatbot-user-input" placeholder="Ask me anything...">
       <button id="chatbot-send"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
@@ -726,6 +901,74 @@ document.addEventListener('mousemove', (e) => {
   button.style.bottom = 'auto';
   button.style.right = 'auto';
   button.style.position = 'fixed';
+});
+
+ //==================================================== Notification panel toggle ===========================================//
+    document.addEventListener('DOMContentLoaded', function() {
+      const notificationButton = document.getElementById('notification-button');
+      const notificationPanel = document.getElementById('notification-panel');
+      
+      if (notificationButton && notificationPanel) {
+        notificationButton.addEventListener('click', function(e) {
+          e.stopPropagation();
+          notificationPanel.classList.toggle('show');
+        });
+      
+        document.addEventListener('click', function(e) {
+          if (!notificationButton.contains(e.target) && !notificationPanel.contains(e.target)) {
+            notificationPanel.classList.remove('show');
+          }
+        });
+      }
+      
+      const markAllReadBtn = document.querySelector('.mark-all-read');
+      if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function() {
+          const unreadItems = document.querySelectorAll('.notification-item.unread');
+          unreadItems.forEach(item => {
+            item.classList.remove('unread');
+          });
+          
+          const badge = document.querySelector('.notification-badge');
+          if (badge) {
+            badge.style.display = 'none';
+          }
+        });
+      }
+    });
+
+//============================================== make the notifications icon draggable =======================================================//
+const btn = document.querySelector('.notification-button');
+
+let isDragged = false;
+let startX, startY, initialTop, initialRight;
+
+btn.addEventListener('mousedown', e => {
+  isDragged = true;
+  startX = e.clientX;
+  startY = e.clientY;
+
+  const styles = window.getComputedStyle(btn);
+  initialTop = parseInt(styles.top, 10);
+  initialRight = parseInt(styles.right, 10);
+
+  e.preventDefault();
+});
+
+document.addEventListener('mouseup', e => {
+  isDragged = false;
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isDragged) return;
+
+  let dx = e.clientX - startX;
+  let dy = e.clientY - startY;
+
+  btn.style.top = (initialTop + dy) + 'px';
+  btn.style.right = (initialRight - dx) + 'px';
+
+  e.preventDefault();
 });
 
 </script>

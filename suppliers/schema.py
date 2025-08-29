@@ -335,21 +335,35 @@ class Mutation:
     ) -> CreatePaymentBillPayload:
         try:
             supplier = Supplier.objects.get(id=input.supplier_id)
-            payment_date = input.payment_date
             bill_date = input.date
+            payment_date = input.payment_date
+
+            approved_lots = MilkLot.objects.filter(
+                supplier=supplier, status="approved", date_created=bill_date
+            )
+
+            total_volume = sum(lot.volume_l for lot in approved_lots)
+            total_value = sum(lot.total_price for lot in approved_lots if lot.total_price)
+
+            if total_volume == 0 or total_value == 0:
+                return CreatePaymentBillPayload(
+                    success=False,
+                    error="No approved milk lots found for this supplier on this date",
+                )
 
             bill, _ = PaymentBill.objects.update_or_create(
                 supplier=supplier,
                 date=bill_date,
                 defaults={
-                    "total_volume_l": 0,
-                    "total_value": 0,
+                    "total_volume_l": total_volume,
+                    "total_value": total_value,
                     "is_paid": input.is_paid,
                     "payment_date": payment_date,
                 },
             )
 
-            bill.calculate_totals()
+            approved_lots.update(bill=bill)
+
             return CreatePaymentBillPayload(
                 success=True,
                 bill=PaymentBillType(
@@ -359,10 +373,13 @@ class Mutation:
                     is_paid=bill.is_paid,
                 ),
             )
+
         except Supplier.DoesNotExist:
             return CreatePaymentBillPayload(success=False, error="Supplier not found")
         except Exception as e:
             return CreatePaymentBillPayload(success=False, error=str(e))
+
+
 
     
     @strawberry.mutation

@@ -40,6 +40,7 @@ class Query:
     @strawberry.field
     def plants(self) -> List[PlantType]:
         return Plant.objects.all()
+    
 
 
 schema = strawberry.Schema(query=Query)

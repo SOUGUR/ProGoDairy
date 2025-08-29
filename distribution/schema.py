@@ -124,7 +124,17 @@ class Query:
             milk_transfers = milk_transfers.filter(status=status)
 
         return milk_transfers
-    
+        
+    @strawberry.field
+    def get_completed_milk_transfers_by_plant(
+        self, 
+        info: Info, 
+        plant_id: int, 
+    ) -> List[MilkTransferType]:
+        milk_transfers = MilkTransfer.objects.filter(status="completed", destination_id=plant_id)
+        return milk_transfers
+
+
     @strawberry.field
     def milk_transfer_by_id(
         self, info: Info,

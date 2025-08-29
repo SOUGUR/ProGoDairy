@@ -1,324 +1,293 @@
 {% extends "base.html" %}
 {% block title %}Milk Storage Silo Management{% endblock %}
-
 {% block content %}
-    <style>
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+<style>
+    
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        height: 100vh; 
+        box-sizing: border-box; 
+    }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+    header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
 
-        h1 {
-            color: #1e40af;
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 2rem;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    h1 {
+        color: #1e40af;
+        margin-bottom: 20px;
+        font-weight: 700;
+        font-size: 2rem;
+    }
+
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
+        margin-bottom: 40px;
+        border: 1px solid #dbeafe;
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+    }
+
+    label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #1e40af;
+    }
+
+    select, input, button {
+        padding: 12px;
+        border: 1px solid #bfdbfe;
+        border-radius: 3px;
+        font-size: 16px;
+        background: #f8fafc;
+        transition: border-color 0.3s;
+    }
+
+    select:focus, input:focus {
+        outline: none;
+        border-color: #3b82f6;
+    }
+
+    #pump-button {
+        background: #3487d4;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 600;
+        margin-top: 25px;
+        height: 48px;
+        border-radius: 8px;
+    }
+
+    #pump-button:hover:not(:disabled) {
+        background: #db0816;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(9, 9, 209, 0.4);
+    }
+
+    #pump-button:active {
+        transform: translateY(0);
+    }
+
+    #pump-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .visualization {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 60px;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+    }
+
+    /* Modern Silo Design */
+    .silo-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 320px;
+        position: relative;
+    }
+
+    .silo {
+        width: 240px;
+        height: 480px;
+        background: #f1f5f9;
+        border: 12px solid #94a3b8;
+        border-radius: 120px 120px 30px 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(to right, #f8fafc, #f1f5f9);
+    }
+
+    .silo-roof {
+        position: absolute;
+        top: -30px;
+        left: -12px;
+        width: 240px;
+        height: 60px;
+        background: transparent;
+        border-radius: 120px 120px 0 0;
+        z-index: 2;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .silo-roof::after {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 18px;
+        background: #6366f1;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+
+    .milk-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(
+            180deg,
+            rgba(104, 228, 242, 0.9) 0%,
+            rgba(66, 160, 227, 0.849) 40%,
+            rgba(37, 105, 252, 0.6) 70%,
+            rgba(111, 123, 255, 0.5) 100%
+        );
+        transition: height 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        border-radius: 0 0 20px 20px;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .milk-surface {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 12px;
+        background: linear-gradient(
+            to right,
+            rgb(50, 6, 226),
+            rgb(3, 132, 245),
+            rgb(0, 217, 255)
+        );
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+        z-index: 2;
+        animation: shimmer 3s infinite alternate;
+    }
+
+    @keyframes shimmer {
+        0% { opacity: 0.6; transform: translateY(0); }
+        100% { opacity: 0.9; transform: translateY(-2px); }
+    }
+
+    .volume-display {
+        margin-top: 24px;
+        font-size: 28px;
+        font-weight: 700;
+        color: #1e40af;
+        background: white;
+        padding: 14px 30px;
+        border-radius: 40px;
+        box-shadow: 0 6px 16px rgba(30, 64, 175, 0.15);
+        border: 2px solid #dbeafe;
+        letter-spacing: 0.5px;
+    }
+
+    .silo-label {
+        margin-top: 16px;
+        font-weight: 600;
+        color: #1e40af;
+        font-size: 18px;
+        text-align: center;
+        padding: 10px 22px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
+        width: 80%;
+        max-width: 280px;
+        border:#3b82f6
+    }
+
+    .input-control h3 {
+        margin-bottom: 20px;
+        color: #1e40af;
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+
+    .slider-container {
+        width: 90%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    input[type="range"] {
+        width: 100%;
+        margin: 20px 0;
+        height: 14px;
+        border-radius: 7px;
+        background: linear-gradient(to right, #ef4444, #f97316, #f59e0b, #84cc16, #10b981);
+        outline: none;
+        cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #3b82f6;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        border: 3px solid white;
+    }
+
+    #slider-value {
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: #1e40af;
+        margin-top: 5px;
+    }
+
+    @media (max-width: 768px) {
+        .visualization {
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
         }
 
         .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
-            margin-bottom: 40px;
-            border: 1px solid #dbeafe;
-        }
-
-        .control-group {
-            display: flex;
             flex-direction: column;
-            min-width: 200px;
         }
 
-        label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1e40af;
-        }
-
-        select, input, button {
-            padding: 12px;
-            border: 1px solid #bfdbfe;
-            border-radius: 3px;
-            font-size: 16px;
-            background: #f8fafc;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-            transition: border-color 0.3s;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        button {
-            background: #3487d4;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            margin-top: 25px;
-            height: 48px;
-            border-radius: 8px;
-        }
-
-        button:hover:not(:disabled) {
-            background: #db0816;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(9, 9, 209, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .visualization {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            gap: 60px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-
-        /* Modern Silo Design */
-        .silo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 320px;
-            position: relative;
+        h1 {
+            font-size: 1.6rem;
         }
 
         .silo {
-            width: 240px;
-            height: 480px;
-            background: #f1f5f9;
-            border: 12px solid #94a3b8;
-            border-radius: 120px 120px 30px 30px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            background: linear-gradient(to right, #f8fafc, #f1f5f9);
+            width: 200px;
+            height: 400px;
         }
 
         .silo-roof {
-            position: absolute;
-            top: -30px;
-            left: -12px;
-            width: 240px;
-            height: 60px;
-            background: transparent;
-            border-radius: 120px 120px 0 0;
-            z-index: 2;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 200px;
         }
 
-        .silo-roof::after {
-            content: '';
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 18px;
-            background: #6366f1;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        .silo-label, .volume-display {
+            font-size: 16px;
+            padding: 10px 18px;
         }
-
-
-        .milk-fill {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(
-                180deg,
-                rgba(104, 228, 242, 0.9) 0%,
-                rgba(66, 160, 227, 0.849) 40%,
-                rgba(37, 105, 252, 0.6) 70%,
-                rgba(111, 123, 255, 0.5) 100%
-            );
-            transition: height 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-radius: 0 0 20px 20px;
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        .milk-surface {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 12px;
-            background: linear-gradient(
-                to right,
-                rgb(50, 6, 226),
-                rgb(3, 132, 245),
-                rgb(0, 217, 255)
-            );
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-            z-index: 2;
-            animation: shimmer 3s infinite alternate;
-        }
-
-        @keyframes shimmer {
-            0% { opacity: 0.6; transform: translateY(0); }
-            100% { opacity: 0.9; transform: translateY(-2px); }
-        }
-
-        .volume-display {
-            margin-top: 24px;
-            font-size: 28px;
-            font-weight: 700;
-            color: #1e40af;
-            background: white;
-            padding: 14px 30px;
-            border-radius: 40px;
-            box-shadow: 0 6px 16px rgba(30, 64, 175, 0.15);
-            border: 2px solid #dbeafe;
-            letter-spacing: 0.5px;
-        }
-
-        .silo-label {
-            margin-top: 16px;
-            font-weight: 600;
-            color: #1e40af;
-            font-size: 18px;
-            text-align: center;
-            padding: 10px 22px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
-            width: 80%;
-            max-width: 280px;
-            border:#3b82f6
-        }
-
-        .input-control {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 30px;
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
-            border: 1px solid #dbeafe;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .input-control h3 {
-            margin-bottom: 20px;
-            color: #1e40af;
-            font-weight: 700;
-            font-size: 1.4rem;
-        }
-
-        .slider-container {
-            width: 90%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            margin: 20px 0;
-            height: 14px;
-            border-radius: 7px;
-            background: linear-gradient(to right, #ef4444, #f97316, #f59e0b, #84cc16, #10b981);
-            outline: none;
-            cursor: pointer;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border: 3px solid white;
-        }
-
-        #slider-value {
-            font-weight: 600;
-            font-size: 1.2rem;
-            color: #1e40af;
-            margin-top: 12px;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            color: #64748b;
-            font-size: 14px;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .visualization {
-                flex-direction: column;
-                align-items: center;
-                gap: 40px;
-            }
-
-            .controls {
-                flex-direction: column;
-            }
-
-            h1 {
-                font-size: 1.6rem;
-            }
-
-            .silo {
-                width: 200px;
-                height: 400px;
-            }
-
-            .silo-roof {
-                width: 200px;
-            }
-
-            .silo-label, .volume-display {
-                font-size: 16px;
-                padding: 10px 18px;
-            }
-        }
-    </style>
+    }
+</style>
 
 <div class="container">
     <header>
@@ -362,21 +331,126 @@
             </div>
         </div>
 
-        <div class="input-control">
-            <h3>Adjust Milk Volume</h3>
-            <div class="slider-container">
-                <input type="range" id="volume-slider" min="0" max="10000" value="4500" step="100">
-                <span id="slider-value">4,500 L</span>
-            </div>
+        <h3>Adjust Milk Volume</h3>
+        <div class="slider-container">
+            <input type="range" id="volume-slider" min="0" max="10000" value="4500" step="100">
         </div>
     </main>
-
-    <footer>
-        <p>Milk Storage Silo Visualization System | © 2025 GoProDairy - A Smart Milk Logistics</p>
-    </footer>
 </div>
 
 <script>
+//======================================================= load plants and plant details =====================================================//
+async function loadPlants() {
+  const query = `
+    query {
+      plants {
+        id
+        name
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    const result = await response.json();
+    const plants = result.data.plants;
+
+    const select = document.getElementById("plant-select");
+    select.innerHTML = '<option value="">-- Select Plant --</option>'; 
+
+    plants.forEach(plant => {
+      const option = document.createElement("option");
+      option.value = plant.id;
+      option.textContent = plant.name;
+      select.appendChild(option);
+    });
+
+  } catch (err) {
+    console.error("Error loading plants:", err);
+  }
+}
+
+//======================================================= load Milk Transfers after plant selection ==========================================//
+async function loadMilkTransfers(plantId) {
+  const query = `
+    query($plantId: Int!) {
+      getCompletedMilkTransfersByPlant(plantId: $plantId) {
+        id
+        sourceType
+        arrivalDatetime
+        vehicle { id name }
+        canCollection { id name }
+        bulkCooler { id name }
+        onFarmTank { id name }
+      }
+    }
+  `;
+
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query,
+      variables: { plantId: parseInt(plantId) }
+    })
+  });
+
+  const result = await response.json();
+  const milkTransfers = result.data.getCompletedMilkTransfersByPlant;
+  const milkTransferSelect = document.getElementById("milk-transfer");
+  milkTransferSelect.innerHTML = '<option value="">-- Select Transfer --</option>';
+
+  milkTransfers.forEach(mt => {
+    let sourceName = "";
+
+    switch (mt.sourceType) {
+      case "can_collection":
+        sourceName = mt.canCollection?.name || "Unknown Collection";
+        break;
+      case "bulk_cooler":
+        sourceName = mt.bulkCooler?.name || "Unknown Cooler";
+        break;
+      case "on_farm_tank":
+        sourceName = mt.onFarmTank?.name || "Unknown Tank";
+        break;
+      default:
+        sourceName = "Unknown Source";
+    }
+
+    const label = `${sourceName} | ${mt.sourceType} | ${new Date(mt.arrivalDatetime).toLocaleString()}`;
+
+    const option = document.createElement("option");
+    option.value = mt.id;
+    option.textContent = label;
+    milkTransferSelect.appendChild(option);
+  });
+}
+
+
+  document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("plant-select").addEventListener("change", (e) => {
+    const plantId = e.target.value;
+    if (plantId) {
+      loadMilkTransfers(plantId);
+    } else {
+      document.getElementById("milk-transfer").innerHTML = '<option value="">-- Select Transfer --</option>';
+    }
+  });
+});
+
+
+
+loadPlants();
+  
+
+//========================================================= = ==================================================================/
     document.addEventListener('DOMContentLoaded', function() {
         const volumeSlider = document.getElementById('volume-slider');
         const milkFill = document.getElementById('milk-fill');

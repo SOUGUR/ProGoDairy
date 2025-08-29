@@ -442,6 +442,7 @@ document.addEventListener("click", async function (e) {
         id
         supplier { id email user { username } }
         tester { id user { username } }
+        status
         volumeL fatPercent proteinPercent lactosePercent totalSolids snf pricePerLitre totalPrice ureaNitrogen bacterialCount addedWaterPercent dateCreated
       }
     }
@@ -486,6 +487,10 @@ document.addEventListener("click", async function (e) {
     document.getElementById("modal-lactosePercent").textContent = lactose + "%";
     document.getElementById("modal-lactoseStandard").textContent = lactoseStd + "%";
     document.getElementById("modal-lactoseAnomaly").textContent = lactoseAnomaly;
+
+    // status
+    const testStatus = lot.status;
+    document.getElementById("modal-status").textContent = testStatus;
 
     // Total Solids
     const ts = lot.totalSolids;
@@ -553,7 +558,7 @@ window.addEventListener("click", function(e){
 });
 
 
-//=========================================== get and move to Milk Lot by ID =======================================================//
+//=========================================== get and move to Milk Lot by ID url =======================================================//
 document.addEventListener("click", function (e) {
     const editBtn = e.target.closest(".btn-edit");
     if (!editBtn) return;
