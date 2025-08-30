@@ -15,6 +15,9 @@ from distribution.models import Route
 from collection_center.schema import BulkCoolerType, AssignLotsPayload
 from plants.schema import EmployeeType
 from django.core.exceptions import ValidationError
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 
 from accounts.schema import RouteType
 
@@ -327,6 +330,14 @@ class Mutation:
         milk_lot.evaluate_and_price()
         milk_lot.save()
 
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "notifications",  
+        {
+            "type": "send_notification",   
+            "message": f"Milk lot {milk_lot.id} was updated successfully!"
+        }
+        )
         return milk_lot
 
     @strawberry.mutation

@@ -1,4 +1,4 @@
-{% load django_browser_reload %}
+
 {% load static %}
 
 <!DOCTYPE html>
@@ -279,140 +279,209 @@
     max-height: 1000px; 
   }
 
-  /* ===================================================  Notification styles  ================================================================ */
-  .notification-button {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #4a6fa5;
-    color: white;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    font-size: 20px;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+/* ===================================================  Notification styles  ================================================================ */
+.notification-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #4a6fa5;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-size: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
 
-  .notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #e74c3c;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 0.7rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.notification-button:hover {
+  background-color: #3a5a80;
+  transform: scale(1.05);
+}
 
-  .notification-panel {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    width: 350px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    display: none;
-    flex-direction: column;
-  }
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid white;
+}
 
-  .notification-panel.show {
-    display: flex;
-  }
+.notification-panel {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 380px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  .notification-header {
-    padding: 5px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #4a6fa5;
-    color: white;
-    border-radius: 8px 8px 0 0;
-    height: 40px;
-  }
+.notification-panel.show {
+  display: flex;
+  animation: slideIn 0.3s ease;
+}
 
-  .notification-header h3 {
-    margin: 15px;
-    font-size: 1.1rem;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  .mark-all-read {
-    background: none;
-    border: none;
-    color: #ecf0f1;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
+.notification-header {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #4a6fa5;
+  color: white;
+}
 
-  .mark-all-read:hover {
-    text-decoration: underline;
-  }
+.notification-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
 
-  .notification-list {
-    max-height: 400px;
-    overflow-y: auto;
-  }
+.mark-all-read {
+  background: none;
+  border: none;
+  color: #ecf0f1;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
 
-  .notification-item {
-    padding: 12px 15px;
-    border-bottom: 1px solid #f1f1f1;
-    transition: background-color 0.2s;
-    height:65px
-  }
+.mark-all-read:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
 
-  .notification-item:hover {
-    background-color: #f9f9f9;
-  }
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
 
-  .notification-item.unread {
-    background-color: #f0f7ff;
-  }
+.notification-item {
+  padding: 15px;
+  border-bottom: 1px solid #f1f1f1;
+  transition: background-color 0.2s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-  .notification-item.unread:hover {
-    background-color: #e6f2ff;
-  }
+.notification-item:last-child {
+  border-bottom: none;
+}
 
-  .notification-content p {
-    margin: 0 0 5px 0;
-    font-size: 0.95rem;
-    color: #2c3e50;
-  }
+.notification-item:hover {
+  background-color: #f9f9f9;
+}
 
-  .notification-time {
-    font-size: 0.8rem;
-    color: #7f8c8d;
-  }
+.notification-item.unread {
+  background-color: #f0f7ff;
+  border-left: 4px solid #4a6fa5;
+}
 
-  .notification-footer {
-    padding: 12px 15px;
-    text-align: center;
-    border-top: 1px solid #eee;
-  }
+.notification-item.unread:hover {
+  background-color: #e6f2ff;
+}
 
-  .notification-footer a {
-    color: #3498db;
-    text-decoration: none;
-    font-size: 0.9rem;
-  }
+.notification-item p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  line-height: 1.4;
+}
 
-  .notification-footer a:hover {
-    text-decoration: underline;
-  }
+.notification-item small {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.mark-read {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  color: #3498db;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.mark-read:hover {
+  background-color: rgba(52, 152, 219, 0.1);
+}
+
+.notification-footer {
+  padding: 12px 15px;
+  text-align: center;
+  border-top: 1px solid #eee;
+  background-color: #f8f9fa;
+}
+
+.notification-footer a {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.notification-footer a:hover {
+  text-decoration: underline;
+}
+
+
+.notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+  border-radius: 3px;
+}
+
+.notification-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 </style>
 </head>
-{% django_browser_reload_script %}
 <body>
 
 <div id="sidebar-hotzone"></div>
@@ -667,40 +736,18 @@
 
 <!------------------------------------------ Notification Panel --------------------------------------------------------------->
   <div id="notification-panel" class="notification-panel">
-    <div class="notification-header">
-      <h3>Notifications</h3>
-      <button class="mark-all-read">Mark all as read</button>
-    </div>
-    <div class="notification-list">
-      <div class="notification-item unread">
-        <div class="notification-content">
-          <p>New milk quality test results available</p>
-          <span class="notification-time">2 hours ago</span>
-        </div>
-      </div>
-      <div class="notification-item unread">
-        <div class="notification-content">
-          <p>Payment processed for Supplier #2847</p>
-          <span class="notification-time">5 hours ago</span>
-        </div>
-      </div>
-      <div class="notification-item">
-        <div class="notification-content">
-          <p>Milk collection scheduled for tomorrow</p>
-          <span class="notification-time">1 day ago</span>
-        </div>
-      </div>
-      <div class="notification-item">
-        <div class="notification-content">
-          <p>New supplier registration request</p>
-          <span class="notification-time">2 days ago</span>
-        </div>
-      </div>
-    </div>
-    <div class="notification-footer">
-      <a href="#">View all notifications</a>
-    </div>
+  <div class="notification-header">
+    <h3>Notifications</h3>
+    <button class="mark-all-read">Mark all as read</button>
   </div>
+  <div class="notification-list" id="notification-list">
+    <!-- Notifications will be injected here dynamically -->
+  </div>
+  <div class="notification-footer">
+    <a href="#">View all notifications</a>
+  </div>
+</div>
+
 <!------------------------------------------------------------------ Chat Bot Floating --------------------------------------------------->
   <button id="chatbot-button" class="chatbot-button">
     <i class="fas fa-robot"></i>
@@ -971,6 +1018,33 @@ document.addEventListener('mousemove', e => {
   e.preventDefault();
 });
 
+//==================================== Web Socket ===============================================//
+const socket = new WebSocket(
+        "ws://" + window.location.host + "/ws/notifications/"
+    );
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const notificationList = document.getElementById("notification-list");
+
+        const notificationItem = document.createElement("div");
+        notificationItem.className = "notification-item unread";
+        notificationItem.innerHTML = `
+            <p>${data.message}</p>
+            <small>${new Date().toLocaleTimeString()}</small>
+            <button class="mark-read">Mark as read</button>
+        `;
+        notificationList.insertBefore(notificationItem, notificationList.firstChild);
+        alert("New Notification: " + data.message);  
+        };
+
+    socket.onopen = function(e) {
+        console.log("WebSocket connected");
+    };
+
+    socket.onclose = function(e) {
+        console.log("WebSocket disconnected");
+    };
 </script>
 </body>
 </html>

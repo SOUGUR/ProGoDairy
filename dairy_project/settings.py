@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_browser_reload",
     "accounts",
     "suppliers",
     "plants",
@@ -50,6 +49,7 @@ INSTALLED_APPS = [
     "distribution",
     "collection_center",
     "strawberry.django",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -60,7 +60,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = "dairy_project.urls"
@@ -82,6 +81,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "dairy_project.wsgi.application"
 
+ASGI_APPLICATION = "dairy_project.asgi.application"
+
+
 GRAPHQL_URL = "/graphql"
 
 # Database
@@ -92,6 +94,15 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  
+        },
+    },
 }
 
 
