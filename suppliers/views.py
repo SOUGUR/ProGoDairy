@@ -35,3 +35,6 @@ def canCollection(request):
 def create_payment_bill(request):
     return render(request, "suppliers/payment_bill_list.html")
 
+def view_payment_bill(request,bill_id):
+    return render(request, "suppliers/payment_invoice.html",{"bill_id": bill_id})
+

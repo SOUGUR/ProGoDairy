@@ -79,7 +79,6 @@ class CompositeSample(models.Model):
 
         MilkLot.objects.filter(query).update(
             status='rejected',
-            price_per_litre=0.00,
             total_price=0.00
         )
 
