@@ -2,6 +2,7 @@ import strawberry
 import strawberry_django
 from strawberry_django import type as strawberry_django_type, field
 from suppliers.models import Supplier, MilkLot, PaymentBill, OnFarmTank, CanCollection
+from notifications.models import Notification
 from django.contrib.auth.models import User
 from typing import List
 from strawberry.types import Info
@@ -315,6 +316,9 @@ class Mutation:
         else:
             milk_lot = MilkLot()
 
+        user = info.context.request.user
+        user_name = user.get_full_name()  
+
         milk_lot.supplier_id = input.supplier_id
         milk_lot.tester_id = input.tester_id
         milk_lot.volume_l = input.volume_l
@@ -329,6 +333,11 @@ class Mutation:
 
         milk_lot.evaluate_and_price()
         milk_lot.save()
+        
+        _ = Notification.objects.create(
+            message=f"Milk lot {milk_lot.id} updated by {user_name}."
+        )
+
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(

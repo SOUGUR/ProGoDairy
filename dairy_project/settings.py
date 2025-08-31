@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "collection_center",
     "strawberry.django",
     "channels",
+    "notifications"
 ]
 
 MIDDLEWARE = [

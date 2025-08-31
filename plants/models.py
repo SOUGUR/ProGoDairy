@@ -44,3 +44,40 @@ class Plant(models.Model):
     def __str__(self):
         return f"{self.name} ({self.location})"
 
+class Silo(models.Model):
+    MILK_TYPES = [
+        ('raw', 'Raw Milk'),
+        ('pasteurized', 'Pasteurized'),
+        ('standardized', 'Standardized'),
+        ('skim', 'Skim Milk'),
+        ('cream', 'Cream'),
+    ]
+
+    STATUS_CHOICES = [
+        ('empty', 'Empty'),
+        ('filling', 'Filling'),
+        ('full', 'Full'),
+        ('draining', 'Draining'),
+        ('cleaning', 'Cleaning'),
+        ('offline', 'Offline'),
+    ]
+
+    plant = models.ForeignKey(Plant, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    code = models.CharField(max_length=20, unique=True)
+    capacity_liters = models.DecimalField(max_digits=10, decimal_places=2)
+    current_volume = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    
+    milk_type = models.CharField(max_length=20, choices=MILK_TYPES, default='raw')
+    temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)  # °C
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='empty')
+    
+    is_clean = models.BooleanField(default=True)
+    last_cleaned_at = models.DateTimeField(null=True, blank=True)
+    last_cleaned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.code} - {self.name} - {self.current_volume}/{self.capacity_liters} L"

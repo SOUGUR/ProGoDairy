@@ -20,6 +20,19 @@ class CompositeSampleInput:
     sample_volume_ml: Optional[int] = 50
     temperature_c: Optional[float] = 4.0
 
+@strawberry.input
+class UpdateCompositeSampleInput:
+    id: int
+    received_at_lab: str | None = None
+    remark: str | None = None
+    fat_percent: float | None = None
+    snf_percent: float | None = None
+    protein_percent: float | None = None
+    bacterial_count: int | None = None
+    antibiotic_residue: bool | None = None
+    added_water_percent: float | None = None
+    passed: str | None = None   
+
 
 @strawberry.type
 class CompositeSampleType:
@@ -36,7 +49,7 @@ class CompositeSampleType:
     bacterial_count: Optional[int]
     antibiotic_residue: bool
     added_water_percent: float
-    passed: Optional[bool]
+    passed: Optional[str]
 
     bulk_cooler: Optional["BulkCoolerType"]
     on_farm_tank: Optional["OnFarmTankType"]
@@ -91,6 +104,40 @@ class Mutation:
             sample_volume_ml=input.sample_volume_ml or 50,
             temperature_c=input.temperature_c or 4.0,
         )
+
+        return CompositeSampleType(
+            id=sample.id,
+            sample_volume_ml=sample.sample_volume_ml,
+            collected_at=sample.collected_at,
+            temperature_c=sample.temperature_c,
+            received_at_lab=sample.received_at_lab,
+            remark=sample.remark,
+
+            fat_percent=sample.fat_percent,
+            snf_percent=sample.snf_percent,
+            protein_percent=sample.protein_percent,
+            bacterial_count=sample.bacterial_count,
+            antibiotic_residue=sample.antibiotic_residue,
+            added_water_percent=sample.added_water_percent,
+            passed=sample.passed,
+
+            bulk_cooler=sample.bulk_cooler,
+            on_farm_tank=sample.on_farm_tank,
+            vehicle=sample.vehicle,
+        )
+    
+    @strawberry.mutation
+    def update_composite_sample(self, input: UpdateCompositeSampleInput) -> CompositeSampleType:
+        try:
+            sample = CompositeSample.objects.get(id=input.id)
+        except CompositeSample.DoesNotExist:
+            raise ValueError("Sample not found")
+        print("==================", input.passed, "===========================================")
+        for field, value in input.__dict__.items():
+            if value is not None and field != "id":
+                setattr(sample, field, value)
+
+        sample.save()
 
         return CompositeSampleType(
             id=sample.id,

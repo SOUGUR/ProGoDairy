@@ -198,6 +198,7 @@
         box-shadow: 0 6px 16px rgba(30, 64, 175, 0.15);
         border: 2px solid #dbeafe;
         letter-spacing: 0.5px;
+        width: 100%
     }
 
     .silo-label {
@@ -327,7 +328,8 @@
                         <div class="milk-surface"></div>
                     </div>
                 </div>
-                <div class="volume-display" id="volume-display">4,500 L</div>
+                <div class="volume-display" id="volume-display">Current Volume : 0 L</div>
+                <div class="volume-display" id="capacity-display">Current capacity: 0 L</div>
             </div>
         </div>
 
@@ -448,80 +450,147 @@ async function loadMilkTransfers(plantId) {
 
 
 loadPlants();
-  
+//========================================================Load Silos based on plant selected ===============================================//
+async function fetchSilos(plantId) {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCSRFToken(),
+    },
+    body: JSON.stringify({
+      query: `
+        query GetSilos($plantId: Int!) {
+          silosByPlant(plantId: $plantId) {
+            id
+            name
+            currentVolume
+            capacityLiters
+          }
+        }
+      `,
+      variables: { plantId: plantId }
+    }),
+    credentials: "include"
+  });
+
+  const result = await response.json();
+  return result.data.silosByPlant;
+}
+
+async function populateSiloDropdown(plantId) {
+  const silos = await fetchSilos(plantId);
+  const siloSelect = document.getElementById("silo-select");
+  siloSelect.innerHTML = ""; 
+
+  silos.forEach(silo => {
+    const option = document.createElement("option");
+    option.value = silo.id;
+    option.textContent = silo.name;
+    option.dataset.volume = silo.currentVolume;
+    option.dataset.capacity = silo.capacityLiters;
+    siloSelect.appendChild(option);
+  });
+
+  if (silos.length > 0) {
+    updateVolumeDisplay(silos[0].currentVolume, silos[0].capacityLiters);
+  }
+}
+
+
+function updateVolumeDisplay(volume, capacity) {
+  document.getElementById("volume-display").textContent =
+    `Current Volume: ${volume} L`;
+  document.getElementById("capacity-display").textContent =
+    `Current Capacity: ${capacity} L`;
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const plantSelect = document.getElementById("plant-select");
+  const siloSelect = document.getElementById("silo-select");
+
+  // When plant changes → load silos
+  plantSelect.addEventListener("change", e => {
+    const plantId = parseInt(e.target.value);
+    populateSiloDropdown(plantId);
+  });
+
+  siloSelect.addEventListener("change", e => {
+    const selected = e.target.options[e.target.selectedIndex];
+    updateVolumeDisplay(selected.dataset.volume, selected.dataset.capacity);
+  });
+
+ 
+  loadPlants();
+});
 
 //========================================================= = ==================================================================/
-    document.addEventListener('DOMContentLoaded', function() {
-        const volumeSlider = document.getElementById('volume-slider');
-        const milkFill = document.getElementById('milk-fill');
-        const volumeDisplay = document.getElementById('volume-display');
-        const sliderValue = document.getElementById('slider-value');
-        const pumpButton = document.getElementById('pump-button');
-        const siloSelect = document.getElementById('silo-select');
+document.addEventListener('DOMContentLoaded', function() {
+    const volumeSlider = document.getElementById('volume-slider');
+    const milkFill = document.getElementById('milk-fill');
+    const volumeDisplay = document.getElementById('volume-display');
+    const sliderValue = document.getElementById('slider-value');
+    const pumpButton = document.getElementById('pump-button');
+    const siloSelect = document.getElementById('silo-select');
 
-        // Update silo fill level based on slider input
-        volumeSlider.addEventListener('input', function() {
-            const value = parseInt(this.value);
-            const max = parseInt(this.max);
-            const percentage = (value / max) * 100;
+    // Update silo fill level based on slider input
+    volumeSlider.addEventListener('input', function() {
+        const value = parseInt(this.value);
+        const max = parseInt(this.max);
+        const percentage = (value / max) * 100;
 
-            milkFill.style.height = `${percentage}%`;
+        milkFill.style.height = `${percentage}%`;
 
-            const formattedValue = new Intl.NumberFormat().format(value);
-            volumeDisplay.textContent = `${formattedValue} L`;
-            sliderValue.textContent = `${formattedValue} L`;
-        });
+        const formattedValue = new Intl.NumberFormat().format(value);
+        volumeDisplay.textContent = `Current Volume: ${formattedValue} L`;
+        sliderValue.textContent = `${formattedValue} L`;
+    });
 
-        // Simulate pumping action
-        pumpButton.addEventListener('click', function() {
-            const selectedSilo = siloSelect.value;
-            const capacity = {
-                'silo1': 10000,
-                'silo2': 15000,
-                'silo3': 20000
-            }[selectedSilo];
+    // Simulate pumping action
+    pumpButton.addEventListener('click', function() {
+        const selected = siloSelect.options[siloSelect.selectedIndex];
+        const capacity = parseInt(selected.dataset.capacity);
+        let currentVolume = parseInt(volumeSlider.value);
 
-            // Update max capacity
-            volumeSlider.max = capacity;
+        // Ensure slider max matches silo capacity
+        volumeSlider.max = capacity;
 
-            pumpButton.textContent = "Pumping...";
-            pumpButton.disabled = true;
+        pumpButton.textContent = "Pumping...";
+        pumpButton.disabled = true;
 
-            let currentVolume = parseInt(volumeSlider.value);
-            const targetVolume = Math.min(currentVolume + 1000, capacity);
+        const targetVolume = Math.min(currentVolume + 1000, capacity);
 
-            const interval = setInterval(() => {
-                if (currentVolume >= targetVolume) {
-                    clearInterval(interval);
-                    pumpButton.textContent = "Pump into Selected Silo";
-                    pumpButton.disabled = false;
-                    return;
-                }
-
-                currentVolume += 100;
-                volumeSlider.value = currentVolume;
-                volumeSlider.dispatchEvent(new Event('input'));
-            }, 80);
-        });
-
-        // Change silo capacity on selection
-        siloSelect.addEventListener('change', function() {
-            const capacity = {
-                'silo1': 10000,
-                'silo2': 15000,
-                'silo3': 20000
-            }[this.value];
-
-            volumeSlider.max = capacity;
-            if (parseInt(volumeSlider.value) > capacity) {
-                volumeSlider.value = capacity;
-                volumeSlider.dispatchEvent(new Event('input'));
+        const interval = setInterval(() => {
+            if (currentVolume >= targetVolume) {
+                clearInterval(interval);
+                pumpButton.textContent = "Pump into Selected Silo";
+                pumpButton.disabled = false;
+                return;
             }
 
-            document.querySelector('.silo-label').textContent = 
-                `${this.selectedOptions[0].text.split(' ')[0]} - Milk Storage`;
-        });
+            currentVolume += 100;
+            volumeSlider.value = currentVolume;
+            volumeSlider.dispatchEvent(new Event('input'));
+        }, 80);
     });
+
+    // Change silo capacity & current volume on selection
+    siloSelect.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const capacity = parseInt(selected.dataset.capacity);
+        const volume = parseInt(selected.dataset.volume);
+
+        volumeSlider.max = capacity;
+        volumeSlider.value = volume;
+
+        volumeSlider.dispatchEvent(new Event('input'));
+
+        document.querySelector('.silo-label').textContent =
+            `${selected.text} - Milk Storage`;
+    });
+});
+
 </script>
 
 {% endblock %}

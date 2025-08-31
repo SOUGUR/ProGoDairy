@@ -265,6 +265,102 @@
   .empty-subtext {
     font-size: 0.9rem;
   }
+
+/* ===================================================== Composite sample Modal Update ======================================================*/
+
+#edit-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+}
+
+#edit-modal {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#edit-modal > div {
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+    width: 500px;
+    max-width: 90%;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 25px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin-left:400px
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e6ed;
+}
+
+.modal-header h2 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #7f8c8d;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: #e74c3c;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e6ed;
+}
+
+
+
+
+
+@media (max-width: 600px) {
+    #edit-modal > div {
+        width: 95%;
+        padding: 20px 15px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
 </style>
 <div class="container">
   <h1>Composite Samples</h1>
@@ -327,6 +423,7 @@
           <th>Sample ID</th>
           <th>Source of Pooled Milk</th>
           <th>Sample Volume (ml)</th>
+          <th>Collected At</th>
           <th>Received At</th>
           <th>Result Status</th>
           <th>Actions</th>
@@ -337,25 +434,103 @@
     </table>
   </div>
 </div>
+
+<!-- ================================================================== Composite sample update Modal =====================================-->
+<div id="edit-modal" style="display:none;">
+  <div>
+    <div class="modal-header">
+      <h2>Edit Sample Details</h2>
+      <button class="close-modal" onclick="document.getElementById('edit-modal').style.display='none'">×</button>
+    </div>
+    
+    <div class="modal-form">
+      <input type="hidden" id="edit-sample-id">
+      
+      <div class="form-group">
+        <label for="edit-remark">Remark</label>
+        <textarea id="edit-remark"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-received-at-lab">Received at Lab</label>
+        <input type="datetime-local" id="edit-received-at-lab">
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-fat-percent">Fat %</label>
+        <input type="number" step="0.01" id="edit-fat-percent">
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-snf-percent">SNF %</label>
+        <input type="number" step="0.01" id="edit-snf-percent">
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-protein-percent">Protein %</label>
+        <input type="number" step="0.01" id="edit-protein-percent">
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-bacterial-count">Bacterial Count</label>
+        <input type="number" id="edit-bacterial-count">
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-antibiotic-residue">Antibiotic Residue</label>
+        <select id="edit-antibiotic-residue">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-added-water-percent">Added Water %</label>
+        <input type="number" step="0.01" id="edit-added-water-percent">
+      </div>
+      
+      <div class="form-group">
+        <label for="edit-passed">Status</label>
+        <select id="edit-passed">
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="document.getElementById('edit-modal').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSampleUpdate()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
 const samplesTableBody = document.querySelector(".samples-table tbody");
 const resultsCount = document.querySelector(".results-count strong");
 
 const GET_COMPOSITE_SAMPLES = `
-  query GetCompositeSamples($startDate: DateTime, $endDate: DateTime, $sourceType: String, $status: String) {
-    compositeSamples(startDate: $startDate, endDate: $endDate, sourceType: $sourceType, status: $status) {
-      id
-      collectedAt
-      sampleVolumeMl
-      bulkCooler { id name }
-      onFarmTank { id name supplier { user { username } } }
-      vehicle { 
-        id
-        name
-        capacityLiters
-       }
-    }
+  query GetCompositeSamples {
+  compositeSamples {
+    id
+    collectedAt
+    sampleVolumeMl
+    bulkCooler { id name } 
+    onFarmTank { id name supplier { user { username } } } 
+    vehicle { id name capacityLiters }
+    remark
+    receivedAtLab
+    fatPercent
+    snfPercent
+    proteinPercent
+    bacterialCount
+    antibioticResidue
+    addedWaterPercent
+    passed
   }
+}
 `;
 
 document.querySelector(".filter-form").addEventListener("submit", async function (e) {
@@ -410,6 +585,10 @@ function renderSamples(samples) {
     const dateStr = collectedDate.toLocaleDateString();
     const timeStr = collectedDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
 
+    const receivedDate = new Date(sample.receivedAtLab);
+    const receiveddateStr = receivedDate.toLocaleDateString();
+    const receivedtimeStr = receivedDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
     let sourceType = "", sourceName = "";
     if (sample.bulkCooler) {
       sourceType = "Bulk Cooler";
@@ -434,16 +613,31 @@ function renderSamples(samples) {
           <div class="date">${dateStr}</div>
           <div class="time">${timeStr}</div>
         </td>
+        <td class="received-date">
+          <div class="date">${receiveddateStr}</div>
+          <div class="time">${receivedtimeStr}</div>
+        </td>
         <td class="status-cell">
           <span class="status-badge status-${sample.passed || 'pending'}">
             ${(sample.passed || 'Pending').charAt(0).toUpperCase() + (sample.passed || 'Pending').slice(1)}
           </span>
         </td>
-       <td class="actions-cell">
-        <a href="/samples/${sample.id}" class="btn-view">
-          <i class="fas fa-eye"></i>
-        </a>
-      </td>
+        <td class="actions-cell">
+        <button class="btn-view"
+          data-id="${sample.id}"
+          data-remark="${sample.remark || ''}"
+          data-received="${sample.receivedAtLab || ''}"
+          data-fat="${sample.fatPercent || ''}"
+          data-snf="${sample.snfPercent || ''}"
+          data-protein="${sample.proteinPercent || ''}"
+          data-bacterial="${sample.bacterialCount || ''}"
+          data-antibiotic="${sample.antibioticResidue}"
+          data-water="${sample.addedWaterPercent || ''}"
+          data-passed="${sample.passed || 'pending'}">
+          <i class="fas fa-edit"></i>
+        </button>
+    </td>
+
       </tr>
     `;
 
@@ -468,6 +662,69 @@ async function fetchGraphQL(query, variables = {}) {
 
   return result.data;  
 }
+
+//============================================================== Composite sample Modal Update =====================================================//
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".btn-view");
+  if (btn) {
+    openEditModal(btn.dataset.id, btn);
+  }
+});
+
+
+function openEditModal(id, button) {
+  document.getElementById("edit-sample-id").value = id;
+  document.getElementById("edit-remark").value = button.dataset.remark;
+  document.getElementById("edit-received-at-lab").value = button.dataset.received || "";
+  document.getElementById("edit-fat-percent").value = button.dataset.fat;
+  document.getElementById("edit-snf-percent").value = button.dataset.snf;
+  document.getElementById("edit-protein-percent").value = button.dataset.protein;
+  document.getElementById("edit-bacterial-count").value = button.dataset.bacterial;
+  document.getElementById("edit-antibiotic-residue").value = button.dataset.antibiotic === "true" ? "true" : "false";
+  document.getElementById("edit-added-water-percent").value = button.dataset.water;
+  document.getElementById("edit-passed").value = button.dataset.passed;
+
+  document.getElementById("edit-modal").style.display = "block";
+}
+
+
+async function saveSampleUpdate() {
+  const input = {
+    id: parseInt(document.getElementById("edit-sample-id").value),
+    remark: document.getElementById("edit-remark").value,
+    receivedAtLab: document.getElementById("edit-received-at-lab").value || null,
+    fatPercent: parseFloat(document.getElementById("edit-fat-percent").value) || null,
+    snfPercent: parseFloat(document.getElementById("edit-snf-percent").value) || null,
+    proteinPercent: parseFloat(document.getElementById("edit-protein-percent").value) || null,
+    bacterialCount: parseInt(document.getElementById("edit-bacterial-count").value) || null,
+    antibioticResidue: document.getElementById("edit-antibiotic-residue").value === "true",
+    addedWaterPercent: parseFloat(document.getElementById("edit-added-water-percent").value) || null,
+    passed: document.getElementById("edit-passed").value
+  };
+
+  const query = `
+    mutation UpdateSample($input: UpdateCompositeSampleInput!) {
+      updateCompositeSample(input: $input) {
+        id
+        remark
+        receivedAtLab
+        fatPercent
+        snfPercent
+        proteinPercent
+        bacterialCount
+        antibioticResidue
+        addedWaterPercent
+        passed
+      }
+    }
+  `;
+
+  await fetchGraphQL(query, { input });
+
+  alert("Sample updated!");
+  document.getElementById("edit-modal").style.display = "none";
+}
+
 
 </script>
 
