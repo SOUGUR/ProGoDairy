@@ -330,15 +330,15 @@
   background-color: white;
   border-radius: 10px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-  z-index: 999;
+  z-index: 1001;
   display: none;
   flex-direction: column;
   overflow: hidden;
 }
 
 .notification-panel.show {
-  display: block;
-  animation: slideIn 0.3s ease;
+  display: flex;
+  animation: slideIn 0.1s ease;
 }
 
 @keyframes slideIn {
@@ -353,7 +353,7 @@
 }
 
 .notification-header {
-  padding: 15px;
+  padding: 10px;
   border-bottom: 1px solid #eee;
   display: flex;
   justify-content: space-between;
@@ -389,13 +389,13 @@
 }
 
 .notification-item {
-  padding: 15px;
+  padding: 8px;
   border-bottom: 1px solid #f1f1f1;
   transition: background-color 0.2s;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .notification-item:last-child {
@@ -417,7 +417,7 @@
 
 .notification-item p {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   color: #2c3e50;
   line-height: 1.4;
 }
@@ -750,13 +750,13 @@
     </div>
   </div>
 
-<!--------------------------------------- Floating Notification Button ---------------------------------------------------->
+<!------------------------------------------------------ Floating Notification Button ---------------------------------------------------->
   <button id="notification-button" class="notification-button">
     <i class="fas fa-bell"></i>
-    <span id="notification-badge" class="notification-badge">3</span>
+    <span id="notification-badge" class="notification-badge">0</span>
   </button>
 
-<!------------------------------------------ Notification Panel --------------------------------------------------------------->
+<!------------------------------------------------------- Notification Panel --------------------------------------------------------------->
 <div id="notification-panel" class="notification-panel">
   <div class="notification-header">
     <h3>Notifications</h3>
@@ -977,7 +977,7 @@ document.addEventListener('mousemove', (e) => {
   button.style.position = 'fixed';
 });
 
- //==================================================== Notification panel toggle ===========================================//
+ //=================================================================== Notification panel toggle ==================================================//
     document.addEventListener('DOMContentLoaded', function() {
       const notificationButton = document.getElementById('notification-button');
       const notificationPanel = document.getElementById('notification-panel');
@@ -1045,35 +1045,50 @@ document.addEventListener('mousemove', e => {
   e.preventDefault();
 });
 
-//=================================================== Web Socket ======================================================//
-// --- Fetch Notifications via GraphQL ---
-async function fetchNotifications() {
-  const response = await fetch("/graphql/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": getCSRFToken(), // ensure CSRF token setup
-    },
-    body: JSON.stringify({
-      query: `
-        query {
-          myNotifications {
-            id
-            message
-            createdAt
-          }
-        }
-      `
-    }),
-    credentials: "include"
-  });
 
-  const result = await response.json();
-  return result.data.myNotifications;
+// =================================================================== IndexedDB Setup ================================================================= //
+const DB_NAME = "notificationsDB";
+const STORE_NAME = "notifications";
+const DB_VERSION = 1;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+
+    request.onsuccess = (event) => resolve(event.target.result);
+    request.onerror = (event) => reject(event.target.error);
+  });
 }
 
-// --- Render notification in panel ---
-function renderNotification(notif) {
+async function saveNotification(notif) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  store.put(notif); 
+  return tx.complete;
+}
+
+async function getAllNotifications() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// ================================================================ Render Notification ======================================================== //
+function renderNotification(notif, prepend = true) {
   const list = document.getElementById("notification-list");
 
   const div = document.createElement("div");
@@ -1085,15 +1100,18 @@ function renderNotification(notif) {
     ${notif.isRead ? "" : '<button class="mark-read">Mark as read</button>'}
   `;
 
-  list.insertBefore(div, list.firstChild);
+  if (prepend) {
+    list.insertBefore(div, list.firstChild);
+  } else {
+    list.appendChild(div);
+  }
 
-  // update badge if unread
   if (!notif.isRead) {
-   updateBadge(1);
+    updateBadge(1);
   }
 }
 
-// --- Update Badge Count ---
+// ========================================================================== Update Badge ===================================================== //
 function updateBadge(change) {
   const badge = document.getElementById("notification-badge");
   let count = parseInt(badge.textContent || "0");
@@ -1107,38 +1125,60 @@ function updateBadge(change) {
   }
 }
 
-
-// --- WebSocket for new notifications ---
+// ===================== WebSocket =====================
 const socket = new WebSocket("ws://" + window.location.host + "/ws/notifications/");
 
-socket.onmessage = function(e) {
+socket.onmessage = async function (e) {
   const data = JSON.parse(e.data);
-  renderNotification({
-    id: Date.now(), // temporary fake ID for live push
+  const notif = {
+    id: Date.now(), 
     message: data.message,
     createdAt: new Date().toISOString(),
-  });
+    isRead: false
+  };
+
+
+  await saveNotification(notif);
+
+  renderNotification(notif, true);
 };
 
 socket.onopen = () => console.log("WebSocket connected");
 socket.onclose = () => console.log("WebSocket disconnected");
 
-// --- Event Listeners ---
+// ===================== Mark as Read =====================
+async function markAsRead(id, item) {
+  item.classList.remove("unread");
+  const button = item.querySelector(".mark-read");
+  if (button) button.remove();
+  updateBadge(-1);
+
+  // update IndexedDB
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+  const request = store.get(Number(id));
+  request.onsuccess = () => {
+    const notif = request.result;
+    notif.isRead = true;
+    store.put(notif);
+  };
+
+  await tx.complete;
+}
+
+// ===================== DOMContentLoaded =====================
 document.addEventListener("DOMContentLoaded", async () => {
-  // Load past notifications
-  const notifications = await fetchNotifications();
-  notifications.forEach(notif => {
-  console.log("Rendering notification:", notif);
-  renderNotification(notif);
-});
+  // Load stored notifications from IndexedDB
+  const notifications = await getAllNotifications();
+  notifications
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .forEach(notif => renderNotification(notif, false));
 
-
-  // Toggle panel on bell click
+  // Toggle panel
   const button = document.getElementById("notification-button");
   const panel = document.getElementById("notification-panel");
-  button.addEventListener("click", () => {
-    panel.classList.toggle("show");
-  });
+  
 
   // Handle "mark as read"
   document.getElementById("notification-list").addEventListener("click", (e) => {
@@ -1149,23 +1189,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Mark all read
-  document.getElementById("mark-all-read").addEventListener("click", () => {
-    document.querySelectorAll(".notification-item.unread").forEach(item => {
+  // Mark all as read
+  document.getElementById("mark-all-read").addEventListener("click", async () => {
+    const unreadItems = document.querySelectorAll(".notification-item.unread");
+    for (const item of unreadItems) {
       const id = item.dataset.id;
-      markAsRead(id, item);
-    });
+      await markAsRead(id, item);
+    }
   });
 });
-
-// Dummy CSRF getter (replace with your own if using Django’s CSRF)
-function getCSRFToken() {
-  const name = "csrftoken";
-  const cookieValue = document.cookie.split("; ")
-    .find(row => row.startsWith(name + "="))
-    ?.split("=")[1];
-  return cookieValue || "";
-}
 
 </script>
 </body>
