@@ -14,6 +14,8 @@ from strawberry.types import Info
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Exists, OuterRef
 from accounts.schema import UserType, RouteType
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils import timezone
 
 
 
@@ -118,7 +120,7 @@ class Query:
     def milk_transfers(
         self, info: Info, status: Optional[str] = None
     ) -> List[MilkTransferType]:
-        milk_transfers = MilkTransfer.objects.all()
+        milk_transfers = MilkTransfer.objects.all().order_by('-transfer_date')
 
         if status:
             milk_transfers = milk_transfers.filter(status=status)
@@ -176,31 +178,54 @@ class Mutation:
     
     @strawberry.mutation
     def create_milk_transfer(self, info: Info, input: MilkTransferInput) -> MilkTransferType:
-        vehicle = Vehicle.objects.filter(id=input.vehicle_id).first() if input.vehicle_id else None
-        destination = Plant.objects.filter(id=input.destination_id).first() if input.destination_id else None
+        try:
+            vehicle = None
+            if input.vehicle_id:
+                vehicle = Vehicle.objects.get(id=input.vehicle_id)
 
-        transfer = MilkTransfer(
-            source_type=input.source_type,
-            vehicle=vehicle,
-            destination=destination,
-            status=input.status,
-        )
+            destination = None
+            if input.destination_id:
+                destination = Plant.objects.get(id=input.destination_id)
 
+            transfer = MilkTransfer(
+                source_type=input.source_type,
+                vehicle=vehicle,
+                destination=destination,
+                status=input.status or 'scheduled',
+            )
 
-        if input.source_type == "bulk_cooler":
-            transfer.bulk_cooler = BulkCooler.objects.get(id=input.source_id)
-        elif input.source_type == "on_farm_tank":
-            transfer.on_farm_tank = OnFarmTank.objects.get(id=input.source_id)
-        elif input.source_type == "can_collection":
-            transfer.can_collection = CanCollection.objects.get(id=input.source_id)
-        else:
-            raise ValidationError("Invalid source_type provided.")
+            now = timezone.now()
+            if input.source_type == "bulk_cooler":
+                source = BulkCooler.objects.get(id=input.source_id)
+                transfer.bulk_cooler = source
+                source.emptied_at = now
+                source.save(update_fields=["emptied_at"])
+            elif input.source_type == "on_farm_tank":
+                source = OnFarmTank.objects.get(id=input.source_id)
+                transfer.on_farm_tank = source
+                source.emptied_at = now
+                source.save(update_fields=["emptied_at"])
+            elif input.source_type == "can_collection":
+                source = CanCollection.objects.get(id=input.source_id)
+                transfer.can_collection = source
+                source.emptied_at = now
+                source.save(update_fields=["emptied_at"])
+            else:
+                raise ValidationError("Invalid source_type provided. Must be one of: bulk_cooler, on_farm_tank, can_collection.")
 
-        transfer.full_clean()
-        transfer.save()
-        transfer.calculate_total_volume()
+            transfer.full_clean()
+            transfer.save()
+            transfer.calculate_total_volume()
+        except DjangoValidationError:
+            return ValidationError(
+                "Milk Transfer for the selected tanker already created"
+            )
+    
+        except Exception:
+            return DjangoValidationError(
+                "Error in creating the Milk Transfer, check the inputs again"
+            )
 
-        return transfer
     
     @strawberry.mutation
     def update_milktransfer(

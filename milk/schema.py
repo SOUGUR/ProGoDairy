@@ -132,7 +132,6 @@ class Mutation:
             sample = CompositeSample.objects.get(id=input.id)
         except CompositeSample.DoesNotExist:
             raise ValueError("Sample not found")
-        print("==================", input.passed, "===========================================")
         for field, value in input.__dict__.items():
             if value is not None and field != "id":
                 setattr(sample, field, value)

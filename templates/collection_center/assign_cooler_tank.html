@@ -175,6 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         query GetCoolers($routeId: Int!) {
           bulkCoolersByRoute(routeId: $routeId) {
             id
+            createdAt
             name
             capacityLiters
             currentVolumeLiters
@@ -197,9 +198,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       coolersCache = coolerData.data.bulkCoolersByRoute || [];
 
       coolersCache.forEach(cooler => {
+        const createdDate = new Date(cooler.createdAt).toISOString().split('T')[0];
         const option = document.createElement("option");
         option.value = cooler.id;
-        option.textContent = `${cooler.name} (${cooler.route.name})`;
+        option.textContent = `${cooler.name} (${cooler.route.name}) (${createdDate})`;
         coolerSelect.appendChild(option);
       });
     } catch (error) {
@@ -236,7 +238,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // GraphQL query to fetch approved Milk Lots
   const query = `
     query {
-      approvedMilkLotList {
+      pendingMilkLotList {
         id
         dateCreated
         supplier {
@@ -276,7 +278,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     const data = await res.json();
-    const lots = data.data?.approvedMilkLotList || [];
+    const lots = data.data?.pendingMilkLotList || [];
 
     tableBody.innerHTML = "";
 

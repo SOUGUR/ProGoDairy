@@ -10,7 +10,7 @@ from strawberry.permission import BasePermission
 from typing import Optional
 from decimal import Decimal
 from graphql import GraphQLError
-from datetime import date, datetime
+from datetime import date, datetime,timedelta, timezone
 from accounts.schema import UserType
 from distribution.models import Route
 from collection_center.schema import BulkCoolerType, AssignLotsPayload
@@ -18,6 +18,8 @@ from plants.schema import EmployeeType
 from django.core.exceptions import ValidationError
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.db.models import Max
+
 
 
 from accounts.schema import RouteType
@@ -199,11 +201,11 @@ class Query:
             raise GraphQLError(f"Milk Lot with ID {id} not found or not authorized.")
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def approved_milk_lot_list(self) -> List[MilkLotType]:
+    def pending_milk_lot_list(self) -> List[MilkLotType]:
         try:
             milk_lots = (
                 MilkLot.objects.select_related("supplier", "bill")
-                .filter(status="approved")
+                .filter(status="pending")
                 .order_by("-date_created")
             )
             return milk_lots
@@ -211,16 +213,16 @@ class Query:
             raise GraphQLError("Supplier profile not found.")
         
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def approved_milk_lot_list_by_supplier(self, supplier_id: int) -> List[MilkLotType]:
+    def pending_milk_lot_list_by_supplier(self, supplier_id: int) -> List[MilkLotType]:
         milk_lots = (
         MilkLot.objects.select_related("supplier", "bill")
-        .filter(supplier_id=supplier_id, status="approved")
+        .filter(supplier_id=supplier_id, status="pending")
         .order_by("-date_created")
     )
 
         if not milk_lots.exists():
-            raise GraphQLError("No approved milk lots found for this supplier.")
-
+            raise GraphQLError("N" \
+            "no approved milk lots found for this supplier.")
         return milk_lots
         
     @strawberry.field
@@ -229,7 +231,23 @@ class Query:
     
     @strawberry.field
     def onfarm_tanks_by_route(self, route_id: int) -> List[OnFarmTankType]:
-        return OnFarmTank.objects.filter(supplier__route_id=route_id)
+        latest_datetime = (
+        OnFarmTank.objects
+        .filter(supplier__route_id=route_id)
+        .aggregate(latest=Max('created_at'))['latest']
+    )
+
+        if not latest_datetime:
+            return []  
+
+        latest_date = latest_datetime.date()  
+
+        tanks = OnFarmTank.objects.filter(
+            supplier__route_id=route_id,
+            created_at__date=latest_date  
+        ).order_by('-created_at')
+
+        return tanks
     
     @strawberry.field
     def can_collections_by_date(
@@ -494,5 +512,57 @@ class Mutation:
             raise GraphQLError("Route not found")
         except Exception as e:
             raise GraphQLError(f"Error creating can collection: {e}")
+        
+    @strawberry.mutation
+    def create_onfarm_tank(self, info, tank_id: int, confirm: bool = False) -> Optional[OnFarmTankType]:
+        try:
+            processed_tank = OnFarmTank.objects.get(id=tank_id)
+        except OnFarmTank.DoesNotExist:
+            raise Exception("OnFarmTank not found")
+        
+        today = date.today()
+        already_exists = OnFarmTank.objects.filter(
+            supplier=processed_tank.supplier,
+            name=processed_tank.name,
+            created_at__date=today,
+        ).exists()
+
+        if already_exists:
+            raise Exception(
+                f"An On-Farm Tank for {processed_tank.name} has already been created today {today}."
+            )
+
+        MAX_AGE_HOURS = 96 
+
+        if processed_tank.last_sanitized_at is None:
+            raise Exception(f"Bulk Cooler {processed_tank.name} has no sanitization record.")
+
+        age = datetime.now(timezone.utc) - processed_tank.last_sanitized_at
+        if age > timedelta(hours=MAX_AGE_HOURS):
+            if not confirm:
+                raise Exception(
+                    f"Bulk Cooler {processed_tank.name} was last sanitized {age.days} day(s) ago. "
+                    f"Sanitation must be within {MAX_AGE_HOURS} hours. "
+                    f"Please re-sanitize before use or confirm override."
+                )
+
+        new_tank = OnFarmTank.objects.create(
+            supplier=processed_tank.supplier,
+            name=processed_tank.name,
+            capacity_liters=processed_tank.capacity_liters,
+            current_volume_liters=0.0, 
+            temperature_celsius=processed_tank.temperature_celsius,
+
+            filled_at=None,
+            emptied_at=None,
+
+            last_cleaned_at=processed_tank.last_cleaned_at,
+            last_sanitized_at=processed_tank.last_sanitized_at,
+            last_serviced_at=processed_tank.last_serviced_at,
+            last_calibration_date=processed_tank.last_calibration_date,
+            service_interval_days=processed_tank.service_interval_days,
+        )
+
+        return new_tank
         
 schema = strawberry.Schema(query=Query, mutation=Mutation)

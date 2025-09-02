@@ -10,6 +10,7 @@
     padding: 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
+    font-size: 14px; 
   }
 
   h1 {
@@ -550,9 +551,11 @@ async function fetchMilkTransfers(status = "") {
           name
         }
         bulkCooler {
+        createdAt
           name
         }
         onFarmTank {
+          createdAt
           supplier {
             user {
               username
@@ -560,7 +563,8 @@ async function fetchMilkTransfers(status = "") {
           }
         }
         canCollection {
-          id
+          createdAt
+          name
         }
       }
     }
@@ -578,6 +582,12 @@ async function fetchMilkTransfers(status = "") {
   return result.data.milkTransfers;
 }
 
+//================= Helper function to convert dateTime to date ===================//
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toISOString().split('T')[0];  
+};
+
 function populateTable(transfers) {
   tableBody.innerHTML = "";
 
@@ -591,9 +601,18 @@ function populateTable(transfers) {
   }
 
   transfers.forEach(t => {
-    const source = t.bulkCooler?.name
-      || t.onFarmTank?.supplier?.user?.username + "'s Tank"
-      || (t.canCollection ? `Can Collection #${t.canCollection.id}` : "Unknown");
+    const bulkCoolerName = t.bulkCooler?.name;
+    const bulkCoolerDate = t.bulkCooler ? formatDate(t.bulkCooler.createdAt) : "";
+    const onFarmTankName = t.onFarmTank?.supplier?.user?.username ? t.onFarmTank.supplier.user.username + "'s Tank" : "";
+    const onFarmTankDate = t.onFarmTank ? formatDate(t.onFarmTank.createdAt) : "";
+    const canCollectionName = t.canCollection ? `Can Collection #${t.canCollection.name}` : "";
+    const canCollectionDate = t.canCollection ? formatDate(t.canCollection.createdAt) : "";
+
+    const source =
+      (bulkCoolerName ? `${bulkCoolerName}<br><small style="color: red;">(${bulkCoolerDate})</small>` : null)
+      || (onFarmTankName ? `${onFarmTankName}<br><small style="color: red;">(${onFarmTankDate})</small>` : null)
+      || (canCollectionName ? `${canCollectionName}<br><small style="color: red;">(${canCollectionDate})</small>` : "Unknown");
+
 
     const vehicle = t.vehicle ? `${t.vehicle.name} (${t.vehicle.vehicleId})` : "Unassigned";
     const destination = t.destination?.name || "-";

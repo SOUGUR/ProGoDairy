@@ -10,6 +10,7 @@
     padding: 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
+    font-size: 14px; 
   }
   
   h1 {
@@ -441,6 +442,7 @@ const GET_ONFARM_TANKS = `
       name
       currentVolumeLiters
       supplier { user { username } }
+      createdAt
     }
   }
 `;
@@ -452,6 +454,7 @@ const GET_BULK_COOLERS = `
       name
       currentVolumeLiters
       capacityLiters
+      createdAt
     }
   }
 `;
@@ -516,26 +519,28 @@ collectionDateInput.addEventListener("change", async function () {
 
 function populateSources(sourceType, data) {
   pooledSourceSelect.innerHTML = `<option value="">Select Pooled MilkLot Source</option>`;
-  estimatedVolumeSpan.textContent = "0.00"; // reset volume
+  estimatedVolumeSpan.textContent = "0.00"; 
 
   let items = [];
   if (sourceType === "on_farm_tank") {
     items = data.onfarmTanksByRoute || [];
     items.forEach(tank => {
+      let createdDate = new Date(tank.createdAt).toISOString().split('T')[0];
       pooledSourceSelect.insertAdjacentHTML(
         "beforeend",
         `<option value="${tank.id}" data-volume="${tank.currentVolumeLiters || 0}">
-          ${tank.name} (${tank.supplier?.user?.username || "Unknown"})
+          ${tank.name} (${tank.supplier?.user?.username || "Unknown"}) <small>(dateLog: ${createdDate})</small>
         </option>`
       );
     });
   } else if (sourceType === "bulk_cooler") {
     items = data.bulkCoolersByRoute || [];
     items.forEach(cooler => {
+      let createdDate = new Date(cooler.createdAt).toISOString().split('T')[0];
       pooledSourceSelect.insertAdjacentHTML(
         "beforeend",
         `<option value="${cooler.id}" data-volume="${cooler.currentVolumeLiters || 0}">
-          ${cooler.name} (Cap: ${cooler.capacityLiters}L)
+          ${cooler.name} (Cap: ${cooler.capacityLiters}L) <small>(dateLog: ${createdDate})</small>
         </option>`
       );
     });
@@ -640,7 +645,7 @@ async function fetchGraphQL(query, variables = {}) {
   return result.data;
 }
 
-//================================================= Create a Milk Transfer instance =========================================//
+//=============================================================== Create a Milk Transfer instance ==========================================//
 document.querySelector(".transfer-form").addEventListener("submit", async function(e) {
   e.preventDefault();
   const routeId = document.getElementById("route").value;
@@ -704,7 +709,7 @@ document.querySelector(".transfer-form").addEventListener("submit", async functi
   }
 });
 
-//============================================== Populate the table with Scheduled Milk Transfers ==========================================//
+//============================================== Populate the table with Scheduled or In-transit Milk Transfers ==========================================//
 const tableBody = document.querySelector(".data-table tbody");
 const query = `
   query {
@@ -728,8 +733,10 @@ const query = `
       }
       bulkCooler {
         name
+        createdAt
       }
       onFarmTank {
+        createdAt
         supplier {
           user {
             username
@@ -742,6 +749,12 @@ const query = `
     }
   }
 `;
+
+//======== helper function to get date from dateTime object ================//
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toISOString().split('T')[0];  
+};
 
 fetch("/graphql/", {
   method: "POST",
@@ -763,9 +776,18 @@ fetch("/graphql/", {
   }
 
   transfers.forEach(transfer => {
-    const source = transfer.bulkCooler?.name 
-                   || (transfer.onFarmTank?.supplier?.user?.username + "'s Tank")
-                   || (transfer.canCollection ? `Can Collection #${transfer.canCollection.id}` : "Unknown");
+    const bulkCoolerName = transfer.bulkCooler?.name;
+    const bulkCoolerDate = transfer.bulkCooler ? formatDate(transfer.bulkCooler.createdAt) : "";
+    const onFarmTankName = transfer.onFarmTank?.supplier?.user?.username ? transfer.onFarmTank.supplier.user.username + "'s Tank" : "";
+    const onFarmTankDate = transfer.onFarmTank ? formatDate(transfer.onFarmTank.createdAt) : "";
+    const canCollectionName = transfer.canCollection ? `Can Collection #${transfer.canCollection.id}` : "";
+    const canCollectionDate = transfer.canCollection ? formatDate(transfer.canCollection.createdAt) : "";
+
+    const source =
+      (bulkCoolerName ? `${bulkCoolerName}<br><small style="font-size: smaller; color: red;">(${bulkCoolerDate})</small>` : null)
+      || (onFarmTankName ? `${onFarmTankName}<br><small style="font-size: smaller; color: red;">(${onFarmTankDate})</small>` : null)
+      || (canCollectionName ? `${canCollectionName}<br><small style="font-size: smaller; color: red;">(${canCollectionDate})</small>` : "Unknown");
+
 
     const vehicle = transfer.vehicle 
                     ? `${transfer.vehicle.name} (${transfer.vehicle.vehicleId})` 

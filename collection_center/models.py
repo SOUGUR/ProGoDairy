@@ -70,7 +70,7 @@ class BulkCooler(models.Model):
 
         candidates = [
             lot for lot in milk_lots
-            if lot.status == 'approved'
+            if lot.status == 'pending'
             and lot.bulk_cooler_id is None  
         ]
 
@@ -104,6 +104,6 @@ class BulkCooler(models.Model):
         return self.bulkcooler_set.exists()
 
     def __str__(self):
-        return f"{self.route.name} – {self.name} ({self.capacity_liters} L)"
+        return f"{self.route.name} – {self.name} - {self.created_at} ({self.capacity_liters} L)"
 
 

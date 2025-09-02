@@ -13,6 +13,9 @@ def supplier_list(request):
 def create_supplier(request):
     return render(request, "suppliers/create_supplier.html")
 
+def tanker_usage(request):
+    return render(request, "suppliers/tanker_usage.html")
+
 
 def milk_lot_result_list_view(request):
     return render(request, "suppliers/milk_lot_list.html")

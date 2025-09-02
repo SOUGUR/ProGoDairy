@@ -304,6 +304,8 @@ class CanCollection(models.Model):
         auto_now_add=True, help_text="When this can collection record was created."
     )
 
+    emptied_at = models.DateTimeField(null=True, blank=True)
+
     def add_lots(self, *milk_lots):
         already_in_this_collection = [
             lot for lot in milk_lots if lot.can_collection_id == self.id

@@ -136,4 +136,23 @@ class MilkTransfer(models.Model):
 
     def __str__(self):
         source = self.bulk_cooler or self.on_farm_tank or self.can_collection or "Unknown Source"
-        return f"Transfer #{self.id} from {source} → {self.destination or 'Unknown Destination'} on {self.transfer_date}"
+        return f"Transfer {self.id} {source.name} → {self.transfer_date}"
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['on_farm_tank'],
+                name='unique_transfer_per_on_farm_tank',
+                condition=models.Q(on_farm_tank__isnull=False)
+            ),
+            models.UniqueConstraint(
+                fields=['bulk_cooler'],
+                name='unique_transfer_per_bulk_cooler',
+                condition=models.Q(bulk_cooler__isnull=False)
+            ),
+            models.UniqueConstraint(
+                fields=['can_collection'],
+                name='unique_transfer_per_can_collection',
+                condition=models.Q(can_collection__isnull=False)
+            ),
+        ]

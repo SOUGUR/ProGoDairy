@@ -10,6 +10,7 @@
     padding: 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
+    font-size: 14px; 
   }
   
   h1 {
@@ -346,6 +347,7 @@
       <thead>
         <tr>
           <th>MilkLot ID</th>
+          <th>date collected</th>
           <th>Supplier</th>
           <th>Volume (L)</th>
           <th>Fat %</th>
@@ -436,8 +438,9 @@ document.addEventListener("DOMContentLoaded", fetchRoutesmain);
  async function fetchApprovedMilkLots() {
     const query = `
       query {
-        approvedMilkLotList {
+        pendingMilkLotList {
           id
+          dateCreated
           volumeL
           fatPercent
           proteinPercent
@@ -473,7 +476,7 @@ document.addEventListener("DOMContentLoaded", fetchRoutesmain);
       });
 
       const result = await response.json();
-      const milkLots = result.data.approvedMilkLotList;
+      const milkLots = result.data.pendingMilkLotList;
 
       const tbody = document.getElementById("milk-lot-body");
     
@@ -494,6 +497,7 @@ document.addEventListener("DOMContentLoaded", fetchRoutesmain);
 
         row.innerHTML = `
           <td>${lot.id}</td>
+          <td>${lot.dateCreated}</td>
           <td>${lot.supplier.user.username}</td>
           <td>${lot.volumeL}</td>
           <td>${lot.fatPercent}</td>

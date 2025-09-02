@@ -469,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadMilkLotsForSupplier(supplierId) {
   const query = `
     query ($supplierId: Int!) {
-      approvedMilkLotListBySupplier(supplierId: $supplierId) {
+      pendingMilkLotListBySupplier(supplierId: $supplierId) {
         id
         dateCreated
         volumeL
@@ -513,7 +513,7 @@ async function loadMilkLotsForSupplier(supplierId) {
       return;
     }
 
-    const milkLots = result.data.approvedMilkLotListBySupplier;
+    const milkLots = result.data.pendingMilkLotListBySupplier;
     renderMilkLotsTable(milkLots);
     
   } catch (error) {
