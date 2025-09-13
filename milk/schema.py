@@ -19,6 +19,7 @@ class CompositeSampleInput:
     remark: Optional[str] = None
     sample_volume_ml: Optional[int] = 50
     temperature_c: Optional[float] = 4.0
+    is_stirred:Optional[bool] = False
 
 @strawberry.input
 class UpdateCompositeSampleInput:
@@ -92,9 +93,16 @@ class Mutation:
         bulk_cooler = BulkCooler.objects.filter(id=input.bulk_cooler_id).first() if input.bulk_cooler_id else None
         on_farm_tank = OnFarmTank.objects.filter(id=input.on_farm_tank_id).first() if input.on_farm_tank_id else None
         vehicle = Vehicle.objects.filter(id=input.vehicle_id).first() if input.vehicle_id else None
-
         if not (bulk_cooler or on_farm_tank or vehicle):
             raise ValueError("At least one of bulk_cooler_id, on_farm_tank_id, or vehicle_id must be provided.")
+        
+        if bulk_cooler is not None:
+            bulk_cooler.is_stirred = input.is_stirred
+            bulk_cooler.save(update_fields=["is_stirred"])
+
+        if on_farm_tank is not None:
+            on_farm_tank.is_stirred = input.is_stirred
+            on_farm_tank.save(update_fields=["is_stirred"])
 
         sample = CompositeSample.objects.create(
             bulk_cooler=bulk_cooler,

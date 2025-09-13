@@ -52,6 +52,7 @@ class BulkCooler(models.Model):
     emptied_at = models.DateTimeField(null=True, blank=True)
     last_cleaned_at = models.DateTimeField(null=True, blank=True)
     last_sanitized_at = models.DateTimeField(null=True, blank=True)
+    is_stirred = models.BooleanField(default=False)
 
     service_interval_days = models.PositiveSmallIntegerField(default=90) 
     last_serviced_at = models.DateTimeField(null=True, blank=True)
@@ -86,20 +87,7 @@ class BulkCooler(models.Model):
         self.save(update_fields=['current_volume_liters'])
         return len(candidates) 
     
-    def create_daily_log(self):
-        BulkCoolerLog.objects.create(
-            bulk_cooler=self,
-            log_date=self.created_at,
-            volume_liters=self.current_volume_liters,
-            temperature_celsius=self.temperature_celsius,
-            filled_at=self.filled_at,
-            emptied_at=self.emptied_at,
-            last_cleaned_at=self.last_cleaned_at,
-            last_sanitized_at=self.last_sanitized_at,
-            last_calibration_date=self.last_calibration_date,
-            last_serviced_at=self.last_serviced_at
-        )
-        
+    
     def is_in_use(self):
         return self.bulkcooler_set.exists()
 

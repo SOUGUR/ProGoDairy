@@ -222,6 +222,8 @@ class OnFarmTank(models.Model):
         null=True, blank=True, help_text="Current milk temperature in Celsius."
     )
 
+    is_stirred = models.BooleanField(default=False)
+
     filled_at = models.DateTimeField(null=True, blank=True)
     emptied_at = models.DateTimeField(null=True, blank=True)
     last_cleaned_at = models.DateTimeField(null=True, blank=True)

@@ -9,9 +9,8 @@ from typing import List
 from suppliers.models import MilkLot
 from accounts.schema import RouteType
 from django.db.models import Max
-
-
-
+from django.utils.timezone import make_aware
+from django.db.models import Q
 
 
 class IsAuthenticated(BasePermission):
@@ -36,6 +35,7 @@ class BulkCoolerType:
     last_serviced_at: Optional[datetime]
     last_calibration_date: Optional[datetime]
     created_at: datetime
+    is_stirred: Optional[bool] = False
 
 @strawberry.type
 class AssignLotsPayload:
@@ -78,6 +78,45 @@ class Query:
                 last_sanitized_at=c.last_sanitized_at,
                 service_interval_days=c.service_interval_days,
                 last_serviced_at=c.last_serviced_at,
+                is_stirred = c.is_stirred
+            )
+            for c in coolers
+        ]
+    
+    @strawberry.field
+    def all_bulk_coolers_by_route(
+        self,
+        route_id: int,
+        from_date: date,
+        to_date: date
+    ) -> List[BulkCoolerType]:
+        
+        
+        from_dt = make_aware(datetime.combine(from_date, datetime.min.time()))
+        to_dt = make_aware(datetime.combine(to_date, datetime.max.time()))
+
+        coolers = BulkCooler.objects.filter(
+            route_id=route_id,
+            created_at__range=(from_dt, to_dt)
+        ).order_by("-created_at")
+
+        return [
+            BulkCoolerType(
+                id=c.id,
+                name=c.name,
+                capacity_liters=c.capacity_liters,
+                current_volume_liters=c.current_volume_liters,
+                temperature_celsius=c.temperature_celsius,
+                last_calibration_date=c.last_calibration_date,
+                created_at=c.created_at,
+                route=c.route,
+                filled_at=c.filled_at,
+                emptied_at=c.emptied_at,
+                last_cleaned_at=c.last_cleaned_at,
+                last_sanitized_at=c.last_sanitized_at,
+                service_interval_days=c.service_interval_days,
+                last_serviced_at=c.last_serviced_at,
+                is_stirred=c.is_stirred,
             )
             for c in coolers
         ]

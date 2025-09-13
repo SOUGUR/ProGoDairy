@@ -234,7 +234,7 @@
             <th>Status</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="milk-lots-table-body">
         </tbody>
       </table>
     </div>
@@ -425,6 +425,165 @@ const tankerContainerSelect = document.getElementById("tanker-containor-select")
 
   useTankerBtn.addEventListener("click", useTanker);
 
+//================================================= Populate the table based on selected route and tanker type =======================================//
+const milkLotsTableBody = document.getElementById("milk-lots-table-body");
+
+// Reusable GraphQL fetcher
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+  const result = await response.json();
+  if (result.errors) {
+    console.error("GraphQL Errors:", result.errors);
+    alert(result.errors.map(e => e.message).join("\n"));
+    return null;
+  }
+  return result.data;
+}
+
+async function loadTankerHistory() {
+  const routeId = routeSelect.value;
+  const tankerType = tankerTypeSelect.value;
+
+  if (!routeId || !tankerType) {
+    milkLotsTableBody.innerHTML = `
+      <tr>
+        <td colspan="10" class="empty-message">Select a route and tanker type to load data</td>
+      </tr>`;
+    return;
+  }
+
+  let query;
+  let field;
+  let typeName;
+
+  if (tankerType === "on_farm_tank") {
+    query = `
+      query ($routeId: Int!) {
+        onfarmTanksByRoute(routeId: $routeId) {
+          id
+          name
+          capacityLiters
+          currentVolumeLiters
+          temperatureCelsius
+          createdAt
+          lastSanitizedAt
+          lastCleanedAt
+          lastServicedAt
+          supplier {
+            user {
+              username
+            }
+          }
+        }
+      }
+    `;
+    field = "onfarmTanksByRoute";
+    typeName = "On-Farm Tank";
+  } else if (tankerType === "bulk_cooler") {
+    query = `
+      query ($routeId: Int!) {
+        bulkCoolersByRoute(routeId: $routeId) {
+          id
+          name
+          capacityLiters
+          currentVolumeLiters
+          temperatureCelsius
+          createdAt
+          lastSanitizedAt
+          lastCleanedAt
+          lastServicedAt
+          isStirred
+          filledAt
+          emptiedAt
+        }
+      }
+    `;
+    field = "bulkCoolersByRoute";
+    typeName = "Bulk Cooler";
+  } else {
+    milkLotsTableBody.innerHTML = `
+      <tr>
+        <td colspan="10" class="empty-message">Invalid tanker type selected.</td>
+      </tr>`;
+    return;
+  }
+
+  const data = await fetchGraphQL(query, { routeId: parseInt(routeId) });
+  if (!data || !data[field] || data[field].length === 0) {
+    milkLotsTableBody.innerHTML = `
+      <tr>
+        <td colspan="10" class="empty-message">No tanker records found for today.</td>
+      </tr>`;
+    return;
+  }
+
+  // Format date helper
+  const formatDate = (isoString) => {
+    if (!isoString) return "-";
+    const d = new Date(isoString);
+    return `${d.toLocaleDateString('en-GB')}<br><small>${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</small>`;
+  };
+
+  milkLotsTableBody.innerHTML = data[field].map(tanker => {
+    const status = (() => {
+      if (tankerType === "bulk_cooler") {
+        if (tanker.filledAt && !tanker.emptiedAt) return "In Use";
+        if (tanker.filledAt && tanker.emptiedAt) return "Used & Empty";
+        return "Available";
+      }
+      return "Active"; 
+    })();
+
+    return `
+      <tr>
+        <td>${formatDate(tanker.createdAt)}</td>
+        <td>${typeName}</td>
+        <td>${tanker.name}</td>
+        <td>${tanker.capacityLiters}</td>
+        <td>${tanker.currentVolumeLiters}</td>
+        <td>${formatDate(tanker.lastSanitizedAt)}</td>
+        <td>${formatDate(tanker.lastCleanedAt)}</td>
+        <td>${formatDate(tanker.lastServicedAt)}</td>
+        <td>${tanker.temperatureCelsius ?? "-"}</td>
+        <td>
+          <span class="status-badge ${
+            status === 'In Use' ? 'badge-success' :
+            status === 'Used & Empty' ? 'badge-warning' :
+            status === 'Available' ? 'badge-info' : 'badge-primary'
+          }">${status}</span>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  // Optional: Add CSS classes for status badges
+  const style = document.createElement('style');
+  style.textContent = `
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      color: white;
+      display: inline-block;
+    }
+    .badge-success { background-color: #28a745; }
+    .badge-warning { background-color: #ffc107; color: #212529; }
+    .badge-info { background-color: #17a2b8; }
+    .badge-primary { background-color: #6c757d; }
+  `;
+  document.head.appendChild(style);
+}
+
+// Trigger when route or tanker type changes
+routeSelect.addEventListener("change", loadTankerHistory);
+tankerTypeSelect.addEventListener("change", loadTankerHistory);
+
+// Initial load (optional)
+loadTankerHistory();
 </script>
 
 {% endblock %}

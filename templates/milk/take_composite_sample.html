@@ -404,6 +404,7 @@
       <thead>
         <tr>
           <th>Tank ID</th>
+          <th>Tank usage date</th>
           <th>Tank Name</th>
           <th>Supplier/Farm</th>
           <th>Current Volume (L)</th>
@@ -540,7 +541,9 @@
         query ($routeId: Int!) {
           bulkCoolersByRoute(routeId: $routeId) {
             id
+            createdAt
             name
+            isStirred
             currentVolumeLiters
             temperatureCelsius
             route { name }
@@ -552,7 +555,9 @@
         query ($routeId: Int!) {
           onfarmTanksByRoute(routeId: $routeId) {
             id
+            createdAt
             name
+            isStirred
             currentVolumeLiters
             temperatureCelsius
             supplier { 
@@ -568,6 +573,7 @@
     const data = await fetchGraphQL(query, { routeId: parseInt(routeId) });
     const tanks = data[key];
 
+
     if (!tanks || tanks.length === 0) {
       tableBody.innerHTML = `
         <tr class="empty-row">
@@ -578,14 +584,28 @@
       return;
     }
 
-    tableBody.innerHTML = tanks.map(tank => `
+    tableBody.innerHTML = tanks.map(tank => 
+    
+    `
       <tr>
         <td>${tank.id}</td>
+        <td>
+          ${new Date(tank.createdAt).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })}<br>
+          <small>${new Date(tank.createdAt).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          })}</small>
+        </td>
         <td>${tank.name}</td>
         <td>${tank.supplier ? tank.supplier.user.username : (tank.route ? tank.route.name : "-")}</td>
         <td>${tank.currentVolumeLiters}</td>
         <td>${tank.temperatureCelsius ?? "-"}</td>
-        <td><input type="checkbox"></td>
+        <td><input type="checkbox" data-tank-id="${tank.id}" ${tank.isStirred === true ? 'checked' : ''}></td>
         <td><button class="btn-sample">Take Sample</button></td>
         <td><span class="samples-count">0</span></td>
       </tr>
@@ -663,11 +683,16 @@ sampleForm.addEventListener("submit", async function(e) {
   const sampleVolume = parseInt(document.getElementById("sample_volume").value);
   const temperature = parseFloat(document.getElementById("sample_temperature").value);
   const remark = document.getElementById("sample_notes").value;
+  const stirredCheckbox = tableBody.querySelector(
+  `input[type="checkbox"][data-tank-id="${tankId}"]`
+  );
+  const isStirred = stirredCheckbox ? stirredCheckbox.checked : false;
 
   let input = {
     remark: remark,
     sampleVolumeMl: sampleVolume,
-    temperatureC: temperature
+    temperatureC: temperature,
+    isStirred: isStirred
   };
 
   if (tankType === "1") {

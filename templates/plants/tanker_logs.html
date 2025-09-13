@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container">
-  <h1><i class="fas fa-warehouse"></i> Can Collection Management</h1>
+  <h1><i class="fas fa-warehouse"></i> Tanker Usage Logs</h1>
   
   <!-- Filters Card -->
   <div class="filters-card">
@@ -15,33 +15,19 @@
         <label for="route-select">Routes</label>
         <select id="route-select" name="route">
           <option value="">-- All Routes --</option>
-          <option value="route1">Route 1 - Northern Collection</option>
-          <option value="route2">Route 2 - Southern Collection</option>
-          <option value="route3">Route 3 - Eastern Collection</option>
-          <option value="route4">Route 4 - Western Collection</option>
         </select>
       </div>
       
       <div class="filter-group">
         <label for="source-select">Select Source</label>
         <select id="source-select" name="source">
-          <option value="">-- All Sources --</option>
-          <option value="farm">Farm Collection</option>
-          <option value="center">Collection Center</option>
-          <option value="direct">Direct Supplier</option>
+          <option value="">-- Select Tanker Type --</option>
+          <option value="bulk_cooler">Bulk Cooler</option>
+          <option value="on_farm_tank">On-Farm Tank</option>
         </select>
       </div>
       
-      <div class="filter-group">
-        <label for="tanker-select">Select Tanker</label>
-        <select id="tanker-select" name="tanker">
-          <option value="">-- All Tankers --</option>
-          <option value="tanker1">Tanker-1 (5000L)</option>
-          <option value="tanker2">Tanker-2 (3000L)</option>
-          <option value="tanker3">Tanker-3 (7000L)</option>
-        </select>
-      </div>
-      
+            
       <div class="filter-group">
         <label for="from-date">From Date</label>
         <input type="date" id="from-date" name="from_date">
@@ -57,13 +43,12 @@
         <input type="text" id="search" name="search" placeholder="Enter ID or name...">
       </div>
       
+      
       <div class="filter-group action-buttons">
         <button type="button" class="btn btn-primary">
           <i class="fas fa-filter"></i> Apply Filters
         </button>
-        <button type="button" class="btn btn-secondary">
-          <i class="fas fa-redo"></i> Reset
-        </button>
+        
       </div>
     </div>
   </div>
@@ -93,71 +78,6 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>CC-001</td>
-            <td>2023-10-15 08:30</td>
-            <td>Farm Collection</td>
-            <td>Farm A - Can Set 1</td>
-            <td>2023-10-15 07:15</td>
-            <td>180</td>
-            <td>200</td>
-            <td>3</td>
-            <td>2023-10-15 14:20</td>
-            <td>TRK-102</td>
-            <td>2023-10-15 09:45</td>
-          </tr>
-          <tr>
-            <td>CC-002</td>
-            <td>2023-10-15 09:15</td>
-            <td>Collection Center</td>
-            <td>Center North - Can Set 2</td>
-            <td>2023-10-15 08:30</td>
-            <td>190</td>
-            <td>200</td>
-            <td>4</td>
-            <td>2023-10-15 15:30</td>
-            <td>TRK-104</td>
-            <td>2023-10-15 10:20</td>
-          </tr>
-          <tr>
-            <td>CC-003</td>
-            <td>2023-10-14 10:45</td>
-            <td>Direct Supplier</td>
-            <td>Supplier John - Can Set 3</td>
-            <td>2023-10-14 09:30</td>
-            <td>195</td>
-            <td>200</td>
-            <td>5</td>
-            <td>2023-10-14 16:15</td>
-            <td>TRK-101</td>
-            <td>2023-10-14 11:30</td>
-          </tr>
-          <tr>
-            <td>CC-004</td>
-            <td>2023-10-14 11:20</td>
-            <td>Farm Collection</td>
-            <td>Farm B - Can Set 4</td>
-            <td>2023-10-14 10:15</td>
-            <td>185</td>
-            <td>200</td>
-            <td>3</td>
-            <td>2023-10-14 17:05</td>
-            <td>TRK-103</td>
-            <td>2023-10-14 12:10</td>
-          </tr>
-          <tr>
-            <td>CC-005</td>
-            <td>2023-10-13 08:50</td>
-            <td>Collection Center</td>
-            <td>Center South - Can Set 5</td>
-            <td>2023-10-13 07:45</td>
-            <td>200</td>
-            <td>200</td>
-            <td>6</td>
-            <td>2023-10-13 15:40</td>
-            <td>TRK-105</td>
-            <td>2023-10-13 09:55</td>
-          </tr>
         </tbody>
       </table>
     </div>
@@ -176,6 +96,131 @@
     </div>
   </div>
 </div>
+<script>
+const GRAPHQL_ENDPOINT = "/graphql/";  
+
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+  const result = await response.json();
+  return result.data;
+}
+
+async function loadRoutes() {
+  const query = `
+    query {
+      allRoutes {
+        id
+        name
+      }
+    }
+  `;
+  const data = await fetchGraphQL(query);
+  const routes = data.allRoutes;
+
+  const routeSelect = document.getElementById("route-select");
+  routes.forEach(route => {
+    const option = document.createElement("option");
+    option.value = route.id;
+    option.textContent = route.name;
+    routeSelect.appendChild(option);
+  });
+}
+
+
+async function applyFilters() {
+  const routeId = document.getElementById("route-select").value;
+  const sourceType = document.getElementById("source-select").value;
+  const fromDate = document.getElementById("from-date").value;
+  const toDate = document.getElementById("to-date").value;
+  const search = document.getElementById("search").value.toLowerCase();
+
+  if (!routeId || !sourceType || !fromDate || !toDate) {
+    alert("Please select route, tanker type, and date range.");
+    return;
+  }
+
+  let query;
+  let fieldName;
+
+  if (sourceType === "bulk_cooler") {
+    query = `
+      query ($routeId: Int!, $fromDate: Date!, $toDate: Date!) {
+        allBulkCoolersByRoute(routeId: $routeId, fromDate: $fromDate, toDate: $toDate) {
+          id
+          name
+          createdAt
+          lastSanitizedAt
+          currentVolumeLiters
+          capacityLiters
+          emptiedAt
+          filledAt
+        }
+      }
+    `;
+    fieldName = "allBulkCoolersByRoute";
+  } else if (sourceType === "on_farm_tank") {
+    query = `
+      query ($routeId: Int!, $fromDate: Date!, $toDate: Date!) {
+        allOnfarmTanksByRoute(routeId: $routeId, fromDate: $fromDate, toDate: $toDate) {
+          id
+          name
+          createdAt
+          lastSanitizedAt
+          currentVolumeLiters
+          capacityLiters
+          emptiedAt
+          filledAt
+        }
+      }
+    `;
+    fieldName = "allOnfarmTanksByRoute";
+  }
+
+  const data = await fetchGraphQL(query, {
+    routeId: parseInt(routeId),
+    fromDate,
+    toDate,
+  });
+
+  const results = data[fieldName];
+
+  const tbody = document.querySelector(".data-table tbody");
+  tbody.innerHTML = ""; 
+  results
+    .filter(r =>
+      !search || r.name.toLowerCase().includes(search) || String(r.id).includes(search)
+    )
+    .forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.id}</td>
+        <td>${new Date(r.createdAt).toLocaleString()}</td>
+        <td>${sourceType}</td>
+        <td>${r.name}</td>
+        <td>${r.lastSanitizedAt ? new Date(r.lastSanitizedAt).toLocaleString() : "-"}</td>
+        <td>${r.currentVolumeLiters}</td>
+        <td>${r.capacityLiters}</td>
+        <td>${r.filledAt || "-"}</td>
+        <td>${r.emptiedAt || "-"}</td>
+        <td>-</td>
+        <td>-</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  document.querySelector(".results-count span").textContent = results.length;
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadRoutes();
+  document.querySelector(".btn.btn-primary").addEventListener("click", applyFilters);
+});
+</script>
 
 <style>
   .container {
@@ -244,9 +289,9 @@
   
   .action-buttons {
     display: flex;
-    gap: 15px;
+    margin-top: 30px;
+    gap: 5px;
     justify-content: flex-start;
-    align-items: flex-end;
   }
   
   .btn {

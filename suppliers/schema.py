@@ -19,9 +19,7 @@ from django.core.exceptions import ValidationError
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.db.models import Max
-
-
-
+from django.utils.timezone import make_aware
 from accounts.schema import RouteType
 
 class IsAuthenticated(BasePermission):
@@ -140,6 +138,7 @@ class OnFarmTankType:
     last_serviced_at: Optional[datetime]
     last_calibration_date: Optional[datetime]
     created_at: datetime
+    is_stirred: Optional[bool] = False
 
 
 @strawberry.type
@@ -248,6 +247,44 @@ class Query:
         ).order_by('-created_at')
 
         return tanks
+    
+    @strawberry.field
+    def all_onfarm_tanks_by_route(
+        self,
+        route_id: int,
+        from_date: date,
+        to_date: date
+    ) -> List[OnFarmTankType]:
+
+        from_dt = make_aware(datetime.combine(from_date, datetime.min.time()))
+        to_dt = make_aware(datetime.combine(to_date, datetime.max.time()))
+
+        tanks = OnFarmTank.objects.filter(
+            supplier__route_id=route_id,
+            created_at__range=(from_dt, to_dt)
+        ).order_by("-created_at")
+
+        return [
+            OnFarmTankType(
+                id=t.id,
+                name=t.name,
+                capacity_liters=t.capacity_liters,
+                current_volume_liters=t.current_volume_liters,
+                temperature_celsius=t.temperature_celsius,
+                last_calibration_date=t.last_calibration_date,
+                created_at=t.created_at,
+                supplier=t.supplier,
+                filled_at=t.filled_at,
+                emptied_at=t.emptied_at,
+                last_cleaned_at=t.last_cleaned_at,
+                last_sanitized_at=t.last_sanitized_at,
+                service_interval_days=t.service_interval_days,
+                last_serviced_at=t.last_serviced_at,
+                is_stirred=t.is_stirred,
+            )
+            for t in tanks
+        ]
+
     
     @strawberry.field
     def can_collections_by_date(
