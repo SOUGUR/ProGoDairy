@@ -1,6 +1,7 @@
 from django.db import models
 from distribution.models import Route
 from django.contrib.auth.models import User
+from distribution.models import MilkTransfer
 
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -79,5 +80,18 @@ class Silo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def update_current_volume(self):
+        total = MilkTransfer.objects.filter(
+            silo=self,
+            status='completed'
+        ).aggregate(
+            total_volume=models.Sum('total_volume')
+        )['total_volume'] or 0
+
+        if float(self.current_volume) != float(total):
+            self.current_volume = total
+            self.save(update_fields=['current_volume'])
+            print(f"Silo {self.name}: Updated volume to {self.current_volume}L")
+            
     def __str__(self):
         return f"{self.code} - {self.name} - {self.current_volume}/{self.capacity_liters} L"

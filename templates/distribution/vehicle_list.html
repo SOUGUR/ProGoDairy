@@ -411,6 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
             name
             vehicleId
             capacityLiters
+            isOccupied
             distributor {
               user {
                 username
@@ -448,8 +449,8 @@ document.addEventListener("DOMContentLoaded", function () {
         <td>${vehicle.capacityLiters || '-'}</td>
         <td>${vehicle.route?.name || '-'}</td>
         <td>
-          <span class="status-indicator status-${vehicle.isAvailable ? "available" : "unavailable"}"></span>
-          ${vehicle.isAvailable ? "Available" : "In Use"}
+          <span class="status-indicator status-${vehicle.isOccupied ? "available" : "unavailable"}"></span>
+          ${vehicle.isOccupied ? "Available" : "In Use"}
         </td>
         <td>
           <div class="action-buttons">

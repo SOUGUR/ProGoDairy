@@ -1,8 +1,6 @@
 import strawberry
-import strawberry_django
-from strawberry_django import type as strawberry_django_type, field
+from strawberry_django import field
 from suppliers.models import Supplier, MilkLot, PaymentBill, OnFarmTank, CanCollection
-from notifications.models import Notification
 from django.contrib.auth.models import User
 from typing import List
 from strawberry.types import Info
@@ -13,14 +11,13 @@ from graphql import GraphQLError
 from datetime import date, datetime,timedelta, timezone
 from accounts.schema import UserType
 from distribution.models import Route
-from collection_center.schema import BulkCoolerType, AssignLotsPayload
-from plants.schema import EmployeeType
+from collection_center.schema import AssignLotsPayload
 from django.core.exceptions import ValidationError
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.db.models import Max
 from django.utils.timezone import make_aware
-from accounts.schema import RouteType
+from dairy_project.graphql_types import MilkLotType,PaymentBillType, SupplierType,OnFarmTankType, CanCollectionType,AssignCanCollectionPayload
 
 class IsAuthenticated(BasePermission):
     message = "User is not authenticated"
@@ -28,23 +25,6 @@ class IsAuthenticated(BasePermission):
     def has_permission(self, source, info: Info, **kwargs):
         return info.context.request.user.is_authenticated
 
-
-@strawberry_django_type(Supplier)
-class SupplierType:
-    id: int
-    user: "UserType"
-    address: Optional[str]
-    phone_number: Optional[str]
-    email: Optional[str]
-    daily_capacity: Optional[int]
-    total_dairy_cows: Optional[int]
-    annual_output: Optional[float]
-    distance_from_plant: Optional[float]
-    aadhar_number: Optional[str]
-    bank_account_number: Optional[str]
-    bank_name: Optional[str]
-    ifsc_code: Optional[str]
-    route: Optional[RouteType]
 
 
 @strawberry.input
@@ -62,37 +42,7 @@ class MilkLotInput:
     added_water_percent: Optional[float] = 0.0
 
 
-@strawberry.type
-class PaymentBillType:
-    id: int
-    total_volume_l: float
-    total_value: float
-    is_paid: bool
-    payment_date: Optional[date] = None
 
-
-@strawberry.type
-class MilkLotType:
-    id: int
-    supplier: SupplierType
-    tester: Optional[EmployeeType] = strawberry_django.field(field_name="employee")
-    volume_l: float
-    fat_percent: float
-    protein_percent: float
-    lactose_percent: float
-    total_solids: float
-    snf: float
-    urea_nitrogen: float
-    bacterial_count: int
-    added_water_percent: Optional[float]
-    price_per_litre: Optional[Decimal]
-    total_price: Optional[Decimal]
-    status: str
-    date_created: Optional[date]
-    bill: Optional[PaymentBillType]
-    bulk_cooler: Optional["BulkCoolerType"]
-    on_farm_tank: Optional["OnFarmTankType"]
-    can_collection: Optional["CanCollectionType"]
 
 
 @strawberry.input
@@ -122,37 +72,9 @@ class PaymentBillTypeList:
     supplier: SupplierType
 
 
-@strawberry.type
-class OnFarmTankType:
-    id: int
-    supplier: SupplierType
-    name: str
-    capacity_liters: int
-    current_volume_liters: float
-    temperature_celsius: Optional[float]
-    filled_at: Optional[datetime]
-    emptied_at: Optional[datetime]
-    last_cleaned_at: Optional[datetime]
-    last_sanitized_at: Optional[datetime]
-    service_interval_days: int
-    last_serviced_at: Optional[datetime]
-    last_calibration_date: Optional[datetime]
-    created_at: datetime
-    is_stirred: Optional[bool] = False
 
 
-@strawberry.type
-class CanCollectionType:
-    id: int
-    route: RouteType
-    name: str
-    total_volume_liters: float
-    created_at: datetime
 
-@strawberry.type
-class AssignCanCollectionPayload:
-    success: bool
-    message: str
 
 
 @strawberry.type
@@ -371,9 +293,6 @@ class Mutation:
         else:
             milk_lot = MilkLot()
 
-        user = info.context.request.user
-        user_name = user.get_full_name()  
-
         milk_lot.supplier_id = input.supplier_id
         milk_lot.tester_id = input.tester_id
         milk_lot.volume_l = input.volume_l
@@ -389,11 +308,6 @@ class Mutation:
         milk_lot.evaluate_and_price()
         milk_lot.save()
         
-        _ = Notification.objects.create(
-            message=f"Milk lot {milk_lot.id} updated by {user_name}."
-        )
-
-
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
         "notifications",  
@@ -537,7 +451,14 @@ class Mutation:
                 name=name,
                 total_volume_liters=0.0, 
             )
-
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+            "notifications",  
+            {
+                "type": "send_notification",   
+                "message": f"Can Collection {name} was created successfully!"
+            }
+            )
             return CanCollectionType(
                 id=collection.id,
                 route=collection.route,
@@ -599,7 +520,14 @@ class Mutation:
             last_calibration_date=processed_tank.last_calibration_date,
             service_interval_days=processed_tank.service_interval_days,
         )
-
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "notifications",  
+        {
+            "type": "send_notification",   
+            "message": f"A new OnFarm Tank {today} was created successfully!"
+        }
+        )
         return new_tank
         
 schema = strawberry.Schema(query=Query, mutation=Mutation)

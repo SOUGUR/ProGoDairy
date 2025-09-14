@@ -547,6 +547,7 @@
             currentVolumeLiters
             temperatureCelsius
             route { name }
+            sampleCount
           }
         }`;
       key = "bulkCoolersByRoute"; // On-Farm Tank
@@ -560,6 +561,7 @@
             isStirred
             currentVolumeLiters
             temperatureCelsius
+            sampleCount
             supplier { 
                 user {
                     username
@@ -607,7 +609,7 @@
         <td>${tank.temperatureCelsius ?? "-"}</td>
         <td><input type="checkbox" data-tank-id="${tank.id}" ${tank.isStirred === true ? 'checked' : ''}></td>
         <td><button class="btn-sample">Take Sample</button></td>
-        <td><span class="samples-count">0</span></td>
+        <td><span class="samples-count">${tank.sampleCount}</span></td>
       </tr>
     `).join("");
     attachSampleButtonEvents();

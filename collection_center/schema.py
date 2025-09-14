@@ -7,10 +7,9 @@ from strawberry.types import Info
 from graphql import GraphQLError
 from typing import List
 from suppliers.models import MilkLot
-from accounts.schema import RouteType
+from dairy_project.graphql_types import BulkCoolerType
 from django.db.models import Max
 from django.utils.timezone import make_aware
-from django.db.models import Q
 
 
 class IsAuthenticated(BasePermission):
@@ -19,23 +18,7 @@ class IsAuthenticated(BasePermission):
     def has_permission(self, source, info: Info, **kwargs):
         return info.context.request.user.is_authenticated
 
-@strawberry.type
-class BulkCoolerType:
-    id: int
-    name: str
-    capacity_liters: int
-    current_volume_liters: float
-    temperature_celsius: float
-    route: RouteType  
-    filled_at: Optional[datetime]
-    emptied_at: Optional[datetime]
-    last_cleaned_at: Optional[datetime]
-    last_sanitized_at: Optional[datetime]
-    service_interval_days: int
-    last_serviced_at: Optional[datetime]
-    last_calibration_date: Optional[datetime]
-    created_at: datetime
-    is_stirred: Optional[bool] = False
+
 
 @strawberry.type
 class AssignLotsPayload:

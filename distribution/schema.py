@@ -1,49 +1,21 @@
 import strawberry
 from typing import Optional, List
-from strawberry_django import type as strawberry_django_type
 from datetime import datetime
-from plants.schema import PlantType
 from .models import Vehicle, Distributor, Route, MilkTransfer
-from collection_center.schema import BulkCoolerType
-from suppliers.schema import OnFarmTankType, CanCollectionType
 from suppliers.models import OnFarmTank, CanCollection
 from collection_center.models import BulkCooler
 from django.core.exceptions import ValidationError 
 from plants.models import Plant
 from strawberry.types import Info
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Exists, OuterRef
-from accounts.schema import UserType, RouteType
+from accounts.schema import RouteType
 from django.core.exceptions import ValidationError as DjangoValidationError
+from dairy_project.graphql_types import MilkTransferType, VehicleInput, VehicleType, DistributorType
 from django.utils import timezone
 
 
 
-@strawberry_django_type(Distributor)
-class DistributorType:
-    id: int
-    address: str
-    license_number: Optional[str]
-    user: "UserType"
 
-
-@strawberry_django_type(Vehicle)
-class VehicleType:
-    id: int
-    name: str
-    vehicle_id: str
-    capacity_liters: Optional[float]
-    distributor: Optional["DistributorType"] = None
-    route: Optional["RouteType"] = None
-
-
-@strawberry.input
-class VehicleInput:
-    distributor_id: int
-    name: str
-    vehicle_id: str
-    capacity_liters: Optional[float] = None
-    route_id: int
 
 @strawberry.input
 class MilkTransferInput:
@@ -61,25 +33,6 @@ class MilkTransferUpdateInput:
     id: int
     arrival_datetime: datetime
     remarks: Optional[str] = None
-
-@strawberry.type
-class MilkTransferType:
-    id: int
-    source_type: Optional[str]           
-    transfer_date: datetime             
-    arrival_datetime: Optional[datetime] 
-    status: str                          
-    total_volume: Optional[float]      
-    remarks: Optional[str]             
-
-    # ForeignKey relationships
-    vehicle: Optional["VehicleType"]
-    destination: Optional["PlantType"]
-
-    # Sources (since model allows multiple)
-    bulk_cooler: Optional["BulkCoolerType"]
-    on_farm_tank: Optional["OnFarmTankType"]
-    can_collection: Optional["CanCollectionType"]
 
 
 
@@ -99,18 +52,8 @@ class Query:
     
     @strawberry.field
     def available_vehicles_by_route(self, route_id: int) -> List[VehicleType]:
-        has_active_transfer = MilkTransfer.objects.filter(
-            vehicle=OuterRef('pk'),  
-            status__in=['scheduled', 'in_transit']
-        )
-
-        return Vehicle.objects.filter(
-            route_id=route_id
-        ).annotate(
-            is_active_transfer=Exists(has_active_transfer)
-        ).filter(
-            is_active_transfer=False  
-        )
+        vehicles = Vehicle.objects.filter(route_id=route_id)
+        return [v for v in vehicles if v.is_available]
 
     @strawberry.field
     def all_distributors(self) -> List[DistributorType]:
@@ -133,7 +76,7 @@ class Query:
         info: Info, 
         plant_id: int, 
     ) -> List[MilkTransferType]:
-        milk_transfers = MilkTransfer.objects.filter(status="completed", destination_id=plant_id)
+        milk_transfers = MilkTransfer.objects.filter(status="completed", destination_id=plant_id, silo__isnull=True)
         return milk_transfers
 
 

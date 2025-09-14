@@ -1,7 +1,7 @@
 import strawberry
 from typing import Optional
 from datetime import datetime
-from collection_center.schema import BulkCoolerType
+from dairy_project.graphql_types import BulkCoolerType
 from distribution.schema import VehicleType
 from suppliers.schema import OnFarmTankType
 from suppliers.models import OnFarmTank
@@ -9,6 +9,8 @@ from collection_center.models import BulkCooler
 from distribution.models import Vehicle
 from .models import CompositeSample
 from typing import List
+from dairy_project.graphql_types import UpdateTankerInput, UpdateTankerResponse
+from django.core.exceptions import ObjectDoesNotExist
 
 
 @strawberry.input
@@ -166,6 +168,45 @@ class Mutation:
             on_farm_tank=sample.on_farm_tank,
             vehicle=sample.vehicle,
         )
+    
+    @strawberry.mutation
+    def update_tanker(self, input: UpdateTankerInput) -> UpdateTankerResponse:
+        model = None
+        if input.type == "bulk_cooler":
+            model = BulkCooler
+        elif input.type == "on_farm_tank":
+            model = OnFarmTank
+            print("===="*35)
+        else:
+            return UpdateTankerResponse(success=False, message="Invalid type. Must be 'bulk_cooler' or 'on_farm_tank'.")
+
+        try:
+            tanker = model.objects.get(id=input.id)
+        except ObjectDoesNotExist:
+            return UpdateTankerResponse(success=False, message=f"{input.type.replace('_',' ').title()} with ID {input.id} not found.")
+
+        updated = False
+        if input.last_cleaned_at is not None:
+            tanker.last_cleaned_at = input.last_cleaned_at
+            updated = True
+        if input.last_sanitized_at is not None:
+            tanker.last_sanitized_at = input.last_sanitized_at
+            updated = True
+        if input.service_interval_days is not None:
+            tanker.service_interval_days = input.service_interval_days
+            updated = True
+        if input.last_serviced_at is not None:
+            tanker.last_serviced_at = input.last_serviced_at
+            updated = True
+        if input.last_calibration_date is not None:
+            tanker.last_calibration_date = input.last_calibration_date
+            updated = True
+
+        if not updated:
+            return UpdateTankerResponse(success=False, message="No fields provided to update.")
+
+        tanker.save()
+        return UpdateTankerResponse(success=True, message=f"{input.type.replace('_',' ').title()} with ID {input.id} updated successfully.")
     
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

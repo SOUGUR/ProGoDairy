@@ -158,6 +158,18 @@ async function applyFilters() {
           capacityLiters
           emptiedAt
           filledAt
+          milkLots{
+            id
+          }
+          relatedMilkTransfers{
+            vehicle{
+              name
+              capacityLiters
+              route{
+                name
+              }
+            }
+          }
         }
       }
     `;
@@ -174,6 +186,18 @@ async function applyFilters() {
           capacityLiters
           emptiedAt
           filledAt
+          milkLots{
+            id
+          }
+          relatedMilkTransfers{
+            vehicle{
+              name
+              capacityLiters
+              route{
+                name
+              }
+            }
+          }
         }
       }
     `;
@@ -204,10 +228,20 @@ async function applyFilters() {
         <td>${r.lastSanitizedAt ? new Date(r.lastSanitizedAt).toLocaleString() : "-"}</td>
         <td>${r.currentVolumeLiters}</td>
         <td>${r.capacityLiters}</td>
+        <td>${r.milkLots.length}</td>
         <td>${r.filledAt || "-"}</td>
+        <td>
+          ${
+            r.relatedMilkTransfers.length
+              ? `${r.relatedMilkTransfers[0].vehicle.name}<br>
+                <sub>
+                  (${r.relatedMilkTransfers[0].vehicle.capacityLiters} L,
+                    ${r.relatedMilkTransfers[0].vehicle.route.name})
+                </sub>`
+              : "-"
+          }
+        </td>
         <td>${r.emptiedAt || "-"}</td>
-        <td>-</td>
-        <td>-</td>
       `;
       tbody.appendChild(tr);
     });

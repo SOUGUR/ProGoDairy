@@ -110,6 +110,18 @@ class MilkTransfer(models.Model):
     total_volume = models.FloatField(blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
 
+    emptied_at = models.DateTimeField(null=True, blank=True)
+
+    silo = models.ForeignKey(
+        'plants.Silo',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='incoming_transfers',
+        help_text="The silo this milk is being transferred into."
+    )
+
+
     def clean(self):
         sources = [self.bulk_cooler, self.on_farm_tank, self.can_collection]
         if sum(1 for s in sources if s is not None) > 1:
@@ -121,6 +133,34 @@ class MilkTransfer(models.Model):
             raise ValidationError("Source type is On-Farm Tank but no On-Farm Tank is set.")
         if self.source_type == 'can_collection' and not self.can_collection:
             raise ValidationError("Source type is Can Collection but no Can Collection is set.")
+        
+        if self.silo and self.total_volume is not None:
+            available_space = self.silo.capacity_liters - self.silo.current_volume
+
+        if self.total_volume is not None and self.total_volume <= 0:
+            raise ValidationError("Transfer volume must be greater than zero.")
+
+        if self.silo and self.total_volume is not None:
+            available_space = self.silo.capacity_liters - self.silo.current_volume
+            if self.total_volume > available_space:
+                raise ValidationError(
+                    f"Cannot transfer {self.total_volume}L into silo '{self.silo.name}'. "
+                    f"Available space: {available_space}L. "
+                    f"Current volume: {self.silo.current_volume}L / {self.silo.capacity_liters}L."
+                )
+
+    
+    def save(self, *args, **kwargs):
+        if self.total_volume is None:
+            self.calculate_total_volume()
+
+        self.full_clean()  
+
+        super().save(*args, **kwargs)
+
+        if self.status == 'completed':
+            if self.silo:
+                self.silo.update_current_volume()
 
     def calculate_total_volume(self):
         if self.bulk_cooler:
