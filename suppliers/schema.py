@@ -72,11 +72,6 @@ class PaymentBillTypeList:
     supplier: SupplierType
 
 
-
-
-
-
-
 @strawberry.type
 class Query:
     @strawberry.field(permission_classes=[IsAuthenticated])
@@ -95,7 +90,7 @@ class Query:
         except Supplier.DoesNotExist:
             return None
 
-    @strawberry.field(permission_classes=[IsAuthenticated])
+    @strawberry.field()
     def milk_lots_by_bill(self, info: Info, bill_id: int) -> List[MilkLotType]:
         return MilkLot.objects.filter(bill_id=bill_id).select_related(
             "supplier", "bill"

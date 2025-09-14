@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+import qrcode
+import base64
+from io import BytesIO
 
 @login_required
 def supplier_list(request):
@@ -39,5 +42,13 @@ def create_payment_bill(request):
     return render(request, "suppliers/payment_bill_list.html")
 
 def view_payment_bill(request,bill_id):
-    return render(request, "suppliers/payment_invoice.html",{"bill_id": bill_id})
+    url = request.build_absolute_uri(f"/bill/{bill_id}/details/")
+    qr = qrcode.make(url)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
 
+    return render(request, "suppliers/payment_invoice.html",{"bill_id": bill_id, "qr_code": qr_base64})
+
+def bill_details_view(request, bill_id):
+    return render(request, "suppliers/bill_details.html", {"bill_id": bill_id})

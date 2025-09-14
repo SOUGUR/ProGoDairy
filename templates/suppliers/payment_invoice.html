@@ -342,6 +342,10 @@
     </div>
     
     <div class="invoice-footer">
+      <div class="qr-section">
+        <h4>Scan to View Bill Details</h4>
+        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+      </div>
       <div class="actions">
         <button class="btn-print" onclick="window.print()">
           <i class="fas fa-print"></i> Print Bill

@@ -378,6 +378,7 @@
               status
               completedTransfers{
                 id 
+                arrivalDatetime
               }
             }
           }
@@ -449,12 +450,26 @@
             <div class="progress-fill" style="width: ${utilization}%"></div>
           </div>
         </td>
-        <td>${silo.completedTransfers.length || 0}</td>
-        <td>${silo.lastTransferDate ? new Date(silo.lastTransferDate).toLocaleDateString() : 'Never'}</td>
+        <td style="text-align: center;">${silo.completedTransfers.length || 0}</td>
         <td>
-          <span class="status-indicator ${silo.status === 'active' ? 'status-active' : 'status-inactive'}"></span>
-          ${silo.status || 'inactive'}
+          ${
+            silo.completedTransfers && silo.completedTransfers.length > 0
+              ? (() => {
+                  const latestArrival = silo.completedTransfers.reduce((latest, current) => {
+                    const latestDate = new Date(latest.arrivalDatetime);
+                    const currentDate = new Date(current.arrivalDatetime);
+                    return currentDate > latestDate ? current : latest;
+                  });
+                  return new Date(latestArrival.arrivalDatetime).toLocaleDateString();
+                })()
+              : '-'
+          }
         </td>
+        <td>
+          <span class="status-indicator ${silo.currentVolume > 0 ? 'status-active' : 'status-inactive'}"></span>
+          ${silo.currentVolume > 0 ? 'active' : 'inactive'}
+        </td>
+
       `;
       
       tableBody.appendChild(row);
