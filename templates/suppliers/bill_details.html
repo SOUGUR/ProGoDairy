@@ -4,298 +4,489 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Milk Test Results Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #2c5aa0;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --background: #f5f7fa;
+            --card-bg: #ffffff;
+            --border: #dee2e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            background-color: var(--background);
             color: #333;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
+            line-height: 1.6;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #4a90e2;
-            padding-bottom: 20px;
-        }
-        .header h1 {
-            color: #2c3e50;
-            margin: 0;
-        }
-        .header p {
-            color: #7f8c8d;
-            margin: 5px 0;
-        }
-        .bill-info {
+            background: linear-gradient(135deg, var(--primary), #1a3a75);
+            color: white;
+            padding: 25px 30px;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 5px;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        .bill-details {
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .logo {
+            font-size: 36px;
+            opacity: 0.9;
+        }
+        
+        .bill-info {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            background-color: var(--light);
+            border-bottom: 1px solid var(--border);
         }
-        .detail-item {
-            margin-bottom: 10px;
+        
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
         }
-        .detail-label {
-            font-weight: bold;
-            color: #7f8c8d;
+        
+        .info-card h3 {
+            color: var(--primary);
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
         }
-        .results-table {
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .info-label {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .results-section {
+            padding: 25px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            color: var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            min-width: 1000px;
         }
-        .results-table th, .results-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        .results-table th {
-            background-color: #4a90e2;
+        
+        thead {
+            background-color: var(--primary);
             color: white;
         }
-        .results-table tr:nth-child(even) {
-            background-color: #f2f2f2;
+        
+        th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
         }
-        .results-table tr:hover {
-            background-color: #e9f7fe;
+        
+        th i {
+            margin-right: 8px;
         }
-        .quality-indicator {
+        
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+        
+        tbody tr:hover {
+            background-color: rgba(44, 90, 160, 0.03);
+        }
+        
+        td {
+            padding: 16px 20px;
+            color: var(--dark);
+        }
+        
+        .status {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .quality-good {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .quality-average {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .quality-poor {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .summary {
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-        }
-        .summary h3 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #7f8c8d;
+            padding: 6px 12px;
+            border-radius: 50px;
             font-size: 14px;
+            font-weight: 500;
         }
-        .no-results {
+        
+        .status-approved {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: var(--success);
+        }
+        
+        .status-pending {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: var(--warning);
+        }
+        
+        .status-rejected {
+            background-color: rgba(220, 53, 69, 0.15);
+            color: var(--danger);
+        }
+        
+        .footer {
+            padding: 20px 25px;
             text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-            font-style: italic;
+            background-color: var(--light);
+            color: var(--secondary);
+            border-top: 1px solid var(--border);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo {
+                margin-top: 15px;
+            }
+            
+            .bill-info {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .quality-badge {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .quality-high {
+            background-color: var(--success);
+        }
+        
+        .quality-medium {
+            background-color: var(--warning);
+        }
+        
+        .quality-low {
+            background-color: var(--danger);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Milk Test Results Report</h1>
-            <p>Quality Analysis for Milk Lots</p>
+            <div>
+                <h1>Milk Test Results Report</h1>
+                <p>Comprehensive quality analysis for milk lots</p>
+            </div>
+            <div class="logo">
+                <i class="fas fa-cow"></i>
+            </div>
         </div>
-
+        
         <div class="bill-info">
-            <div>
-                <div class="detail-item">
-                    <span class="detail-label">Bill ID:</span>
-                    <span id="bill-id">{{ bill_id }}</span>
+            <div class="info-card">
+                <h3><i class="fas fa-file-invoice"></i> Bill Information</h3>
+                <div class="info-item">
+                    <span class="info-label">Bill ID:</span>
+                    <span class="info-value" id="billId"></span>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Report Date:</span>
-                    <span id="report-date">Loading...</span>
+                <div class="info-item">
+                    <span class="info-label">Date Paid:</span>
+                    <span class="info-value" id="datePaid"></span>
                 </div>
-            </div>
-            <div>
-                <div class="detail-item">
-                    <span class="detail-label">Total Lots:</span>
-                    <span id="total-lots">Loading...</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Total Volume:</span>
-                    <span id="total-volume">Loading...</span>
+                <div class="info-item">
+                    <span class="info-label">Total Lots:</span>
+                    <span class="info-value" id="totalLots"></span>
                 </div>
             </div>
+            
+            <div class="info-card">
+                <h3><i class="fas fa-user-tie"></i> Supplier Information</h3>
+                <div class="info-item">
+                    <span class="info-label">Supplier Name:</span>
+                    <span class="info-value" id="supplierName"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Total Volume:</span>
+                    <span class="info-value" id="totalVolume"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date Tested:</span>
+                    <span class="info-value" id="dateTested"></span>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> Summary</h3>
+                <div class="info-item">
+                    <span class="info-label">Average Fat:</span>
+                    <span class="info-value" id="avgFat">-%</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Average Protein:</span>
+                    <span class="info-value" id="avgProtein">-%</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Average Lactose:</span>
+                    <span class="info-value" id="avgLactose">-%</span>
+                </div>
+            </div>
         </div>
-
-        <div id="results-container">
-            <div class="no-results">Loading test results...</div>
+        
+        <div class="results-section">
+            <h2 class="section-title"><i class="fas fa-vial"></i> Milk Test Results</h2>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> Milk Lot ID</th>
+                            <th><i class="fas fa-user-md"></i> Tester</th>
+                            <th><i class="fas fa-weight"></i> Volume (L)</th>
+                            <th><i class="fas fa-percentage"></i> Fat %</th>
+                            <th><i class="fas fa-percentage"></i> Protein %</th>
+                            <th><i class="fas fa-percentage"></i> Lactose %</th>
+                            <th><i class="fas fa-percentage"></i> Total Solids</th>
+                            <th><i class="fas fa-percentage"></i> SNF</th>
+                            <th><i class="fas fa-flask"></i> Urea Nitrogen</th>
+                            <th><i class="fas fa-bacteria"></i> Bacterial Count</th>
+                            <th><i class="fas fa-tint"></i> Added Water %</th>
+                            <th><i class="fas fa-calendar"></i> Date Tested</th>
+                            <th><i class="fas fa-money-bill-wave"></i> Price/Litre</th>
+                            <th><i class="fas fa-calculator"></i> Total Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="milkLotsBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        <div class="summary">
-            <h3>Quality Summary</h3>
-            <p>This report provides detailed analysis of milk composition and quality parameters for each lot associated with the bill.</p>
-            <div id="quality-summary">Loading quality summary...</div>
-        </div>
-
+        
         <div class="footer">
-            <p>Generated by Milk Logistics System | Confidential Report</p>
+            <p>Generated on <span id="footerDate">-</span> by Milk Logistics System | Confidential Report</p>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const billId = {{ bill_id }}; // Injected by Django
-            const apiUrl = `/api/milk-lots/bill/${billId}/`;
-
-            document.getElementById('report-date').textContent = new Date().toLocaleDateString();
-
-            fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    displayResults(data);
-                    updateSummary(data);
-                })
-                .catch(error => {
-                    console.error('Error fetching milk lots:', error);
-                    document.getElementById('results-container').innerHTML = 
-                        '<div class="no-results">Error loading test results. Please try again later.</div>';
-                    document.getElementById('quality-summary').innerHTML = 
-                        '<p>Error loading quality summary.</p>';
-                });
-
-            function displayResults(data) {
-                const milkLots = data.milkLotsByBill || [];
-                const container = document.getElementById('results-container');
-                
-                if (!milkLots.length) {
-                    container.innerHTML = '<div class="no-results">No milk lots found for this bill.</div>';
-                    return;
-                }
-                
-                // Update summary info
-                document.getElementById('total-lots').textContent = milkLots.length;
-                const totalVolume = milkLots.reduce((sum, lot) => sum + lot.volumeL, 0);
-                document.getElementById('total-volume').textContent = `${totalVolume.toLocaleString()} L`;
-                
-                // Create results table
-                let tableHTML = `
-                    <table class="results-table">
-                        <thead>
-                            <tr>
-                                <th>Lot ID</th>
-                                <th>Supplier</th>
-                                <th>Volume (L)</th>
-                                <th>Fat %</th>
-                                <th>Protein %</th>
-                                <th>Lactose %</th>
-                                <th>Total Solids</th>
-                                <th>SNF</th>
-                                <th>Bacterial Count</th>
-                                <th>Added Water %</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                milkLots.forEach(lot => {
-                    const qualityClass = getQualityClass(lot);
-                    
-                    tableHTML += `
-                        <tr>
-                            <td>${lot.id}</td>
-                            <td>${lot.supplier?.name || 'N/A'}</td>
-                            <td>${lot.volumeL.toLocaleString()}</td>
-                            <td><span class="quality-indicator ${qualityClass.fat}">${lot.fatPercent}</span></td>
-                            <td><span class="quality-indicator ${qualityClass.protein}">${lot.proteinPercent}</span></td>
-                            <td><span class="quality-indicator ${qualityClass.lactose}">${lot.lactosePercent}</span></td>
-                            <td>${lot.totalSolids}</td>
-                            <td>${lot.snf}</td>
-                            <td><span class="quality-indicator ${qualityClass.bacteria}">${lot.bacterialCount.toLocaleString()}</span></td>
-                            <td>${lot.addedWaterPercent || '0.0'}</td>
-                            <td><span class="quality-indicator ${getStatusClass(lot.status)}">${lot.status}</span></td>
-                        </tr>
-                    `;
-                });
-                
-                tableHTML += `
-                        </tbody>
-                    </table>
-                `;
-                
-                container.innerHTML = tableHTML;
-            }
-            
-            function getQualityClass(lot) {
-                return {
-                    fat: lot.fatPercent >= 3.8 ? 'quality-good' : (lot.fatPercent >= 3.5 ? 'quality-average' : 'quality-poor'),
-                    protein: lot.proteinPercent >= 3.2 ? 'quality-good' : (lot.proteinPercent >= 3.0 ? 'quality-average' : 'quality-poor'),
-                    lactose: lot.lactosePercent >= 4.6 ? 'quality-good' : (lot.lactosePercent >= 4.4 ? 'quality-average' : 'quality-poor'),
-                    bacteria: lot.bacterialCount <= 15000 ? 'quality-good' : (lot.bacterialCount <= 30000 ? 'quality-average' : 'quality-poor')
-                };
-            }
-            
-            function getStatusClass(status) {
-                switch(status) {
-                    case 'APPROVED': return 'quality-good';
-                    case 'PENDING_REVIEW': return 'quality-average';
-                    default: return 'quality-poor';
-                }
-            }
-            
-            function updateSummary(data) {
-                const milkLots = data.milkLotsByBill || [];
-                let summaryHTML = '';
-                
-                if (milkLots.length > 0) {
-                    const avgFat = milkLots.reduce((sum, lot) => sum + lot.fatPercent, 0) / milkLots.length;
-                    const avgProtein = milkLots.reduce((sum, lot) => sum + lot.proteinPercent, 0) / milkLots.length;
-                    const avgLactose = milkLots.reduce((sum, lot) => sum + lot.lactosePercent, 0) / milkLots.length;
-                    const avgBacteria = milkLots.reduce((sum, lot) => sum + lot.bacterialCount, 0) / milkLots.length;
-                    
-                    const statusCounts = {};
-                    milkLots.forEach(lot => {
-                        statusCounts[lot.status] = (statusCounts[lot.status] || 0) + 1;
-                    });
-                    
-                    summaryHTML = `
-                        <p><strong>Average Fat Content:</strong> ${avgFat.toFixed(2)}%</p>
-                        <p><strong>Average Protein Content:</strong> ${avgProtein.toFixed(2)}%</p>
-                        <p><strong>Average Lactose Content:</strong> ${avgLactose.toFixed(2)}%</p>
-                        <p><strong>Average Bacterial Count:</strong> ${avgBacteria.toLocaleString('en-US', {maximumFractionDigits: 0})}</p>
-                        <p><strong>Quality Status:</strong> ${Object.keys(statusCounts).map(status => `${status}: ${statusCounts[status]}`).join(', ')}</p>
-                    `;
-                } else {
-                    summaryHTML = '<p>No data available for quality summary.</p>';
-                }
-                
-                document.getElementById('quality-summary').innerHTML = summaryHTML;
-            }
-        });
-    </script>
 </body>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const billId = {{ bill_id }};  
+
+    const query = `
+        query MilkLotsByBill($billId: Int!) {
+            milkLotsByBill(billId: $billId) {
+                id
+                supplier {
+                    user {
+                        username
+                    }
+                }
+                tester { 
+                    user {
+                        username
+                    }
+                 }
+                volumeL
+                fatPercent
+                proteinPercent
+                lactosePercent
+                totalSolids
+                snf
+                ureaNitrogen
+                bacterialCount
+                addedWaterPercent
+                pricePerLitre
+                totalPrice
+                dateCreated
+            }
+        }
+    `;
+
+    fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, variables: { billId } })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.errors) {
+            console.error("GraphQL errors:", result.errors);
+            document.getElementById("milkLotsBody").innerHTML =
+                `<tr><td colspan="14" style="text-align:center;color:red;">Error loading data</td></tr>`;
+            return;
+        }
+
+        const lots = result.data.milkLotsByBill;
+        const tbody = document.getElementById("milkLotsBody");
+
+        if (!lots || lots.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;">No milk lots found</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = lots.map(lot => `
+            <tr>
+                <td>#${lot.id}</td>
+                <td>${lot.tester ? lot.tester.user.username : "-"}</td>
+                <td>${lot.volumeL || "-"}</td>
+                <td>${lot.fatPercent || "-"}</td>
+                <td>${lot.proteinPercent || "-"}</td>
+                <td>${lot.lactosePercent || "-"}</td>
+                <td>${lot.totalSolids || "-"}</td>
+                <td>${lot.snf || "-"}</td>
+                <td>${lot.ureaNitrogen || "-"}</td>
+                <td>${lot.bacterialCount || "-"}</td>
+                <td>${lot.addedWaterPercent || "-"}</td>
+                <td>${lot.dateCreated ? new Date(lot.dateCreated).toLocaleDateString() : "-"}</td>
+                <td>${lot.pricePerLitre ? "₹" + lot.pricePerLitre : "-"}</td>
+                <td>${lot.totalPrice ? "₹" + lot.totalPrice : "-"}</td>
+            </tr>
+        `).join("");
+        const fatValues = lots.map(l => l.fatPercent).filter(v => v != null);
+        const proteinValues = lots.map(l => l.proteinPercent).filter(v => v != null);
+        const lactoseValues = lots.map(l => l.lactosePercent).filter(v => v != null);
+
+        const avg = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : "-";
+
+        document.getElementById("avgFat").innerText = avg(fatValues);
+        document.getElementById("avgProtein").innerText = avg(proteinValues);
+        document.getElementById("avgLactose").innerText = avg(lactoseValues);
+
+        const supplierName = lots[0]?.supplier?.user?.username || "-";
+        const totalVolume = lots.map(l => l.volumeL || 0).reduce((a, b) => a + b, 0).toFixed(2);
+        const latestDate = lots
+            .map(l => l.dateCreated ? new Date(l.dateCreated) : null)
+            .filter(d => d !== null)
+            .sort((a, b) => b - a)[0];
+        
+        document.getElementById("totalLots").innerText = lots.length
+        document.getElementById("supplierName").innerText = supplierName;
+        document.getElementById("totalVolume").innerText = totalVolume;
+        document.getElementById("dateTested").innerText = latestDate ? latestDate.toLocaleDateString() : "-";
+    })
+    .catch(err => {
+        console.error("Fetch error:", err);
+        document.getElementById("milkLotsBody").innerHTML =
+            `<tr><td colspan="14" style="text-align:center;color:red;">Failed to load data</td></tr>`;
+    });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const billId = {{ bill_id }};
+    const billQuery = `
+        query PaymentBillById($id: Int!) {
+            paymentBillById(id: $id) {
+                id
+                paymentDate
+                date
+                totalVolumeL
+                totalValue
+                isPaid
+                pdfUrl
+                supplier {
+                    user {
+                        username
+                    }
+                }
+            }
+        }
+    `;
+
+    fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: billQuery, variables: { id: billId } })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.errors) {
+            console.error("GraphQL errors (bill):", result.errors);
+            return;
+        }
+
+        const bill = result.data.paymentBillById;
+        if (!bill) {
+            console.warn("No bill found");
+            return;
+        }
+
+        document.getElementById("billId").innerText = "#" + bill.id;
+        document.getElementById("datePaid").innerText = bill.paymentDate 
+            ? new Date(bill.paymentDate).toLocaleDateString() 
+            : "Not Paid";
+
+        document.getElementById("footerDate").innerText = bill.paymentDate 
+            ? new Date(bill.paymentDate).toLocaleDateString()
+            : "Not Paid";
+
+    })
+    .catch(err => {
+        console.error("Fetch error (bill):", err);
+    });
+});
+
+</script>
 </html>
