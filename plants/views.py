@@ -10,3 +10,5 @@ def tanker_logs(request):
 def calibration_sanitation_records(request):
     return render(request, "plants/calibration_sanitation_records.html")
 
+def dashboard(request):
+    return render(request,"plants/dashboard.html" )

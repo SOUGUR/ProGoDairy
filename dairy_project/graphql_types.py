@@ -11,6 +11,18 @@ from distribution.models import Vehicle, Distributor
 from plants.models import Employee, Role, Silo
 from collection_center.models import BulkCooler
 
+@strawberry.type
+class RouteVolumeStats:
+    route_name: str
+    total_volume: Decimal
+    
+@strawberry.type
+class MilkLotVolumeStatType:
+    date: date
+    status: str
+    total_volume: float
+
+
 @strawberry_django_type(Supplier)
 class SupplierType:
     id: int

@@ -4,15 +4,63 @@ from strawberry_django import field
 from plants.models import Employee, Plant, Silo
 from django.db.models import Max
 from distribution.models import MilkTransfer
+from suppliers.models import MilkLot
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from strawberry.types import Info
 from graphql import GraphQLError
 from django.utils import timezone
-from dairy_project.graphql_types import PlantType, EmployeeType, SiloType
+from dairy_project.graphql_types import PlantType, EmployeeType, SiloType, MilkLotVolumeStatType, RouteVolumeStats
+from django.db.models import Sum
+from datetime import date
+import calendar
 
 
 @strawberry.type
 class Query:
+    @strawberry.field
+    def milk_lot_volume_stats_current_month(self, info) -> list[MilkLotVolumeStatType]:
+        today = date.today()
+        start_of_month = today.replace(day=1)
+        end_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+
+        qs = (
+            MilkLot.objects.filter(date_created__range=[start_of_month, end_of_month])
+            .values("date_created", "status")
+            .annotate(total_volume=Sum("volume_l"))
+            .order_by("date_created")
+        )
+
+        return [
+            MilkLotVolumeStatType(
+                date=row["date_created"],
+                status=row["status"],
+                total_volume=row["total_volume"] or 0.0,
+            )
+            for row in qs
+        ]
+    
+    @strawberry.field
+    def milk_lot_volume_by_route(self, info) -> List[RouteVolumeStats]:
+        today = date.today()
+
+        qs = (
+            MilkLot.objects.filter(
+                date_created__year=today.year,
+                date_created__month=today.month,
+            )
+            .values("supplier__route__name")
+            .annotate(total_volume=Sum("volume_l"))
+        )
+
+        return [
+            RouteVolumeStats(
+                route_name=item["supplier__route__name"] or "Unassigned",
+                total_volume=item["total_volume"] or 0
+            )
+            for item in qs
+        ]
+
+
     @field
     def testers(self) -> List[EmployeeType]:
         return Employee.objects.filter(role__name="tester")

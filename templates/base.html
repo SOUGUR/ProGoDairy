@@ -9,6 +9,8 @@
   <title>Go Pro Dairy MS</title>
   <link rel="icon" href="{% static 'images/favicon.png' %}" type="image/png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
 
   <style>
     * {
@@ -731,9 +733,9 @@
       </div>
       <ul class="submenu">
         <li class="menu-item">
-          <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+          <a href="{% url 'plants:dashboard' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-file-pdf"></i></span>
-            <span class="menu-text">Reports</span>
+            <span class="menu-text">Dashboard</span>
           </a>
         </li>
         <li class="menu-item">

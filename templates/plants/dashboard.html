@@ -1,0 +1,319 @@
+
+{% extends "base.html" %}
+
+{% block title %}Milk Logistics Dashboard{% endblock %}
+
+{% block content %}
+{% load static %}
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <h1>Current Month Insight</h1>
+        <div class="header-controls">
+            <div class="date-filter">
+                <span>September 2023</span>
+                <i class="dropdown-icon">▼</i>
+            </div>
+        </div>
+    </header>
+
+    <div class="metrics-summary">
+        <div class="metric-card">
+            <div class="metric-value">12,450</div>
+            <div class="metric-label">Total Liters Collected</div>
+            <div class="metric-trend positive">+5.2%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">187</div>
+            <div class="metric-label">Active Suppliers</div>
+            <div class="metric-trend positive">+2.7%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">98.3%</div>
+            <div class="metric-label">Quality Pass Rate</div>
+            <div class="metric-trend negative">-0.4%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">₦4.82M</div>
+            <div class="metric-label">Total Payments</div>
+            <div class="metric-trend positive">+8.1%</div>
+        </div>
+    </div>
+
+    <div class="graphs-grid">
+        <div class="graph-card large">
+            <div class="graph-header">
+                <h3>Daily Collection Volume</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <canvas id="milkVolumeChart" width="400" height="200"></canvas>
+                <div class="graph-mock">Line Graph Area</div>
+            </div>
+        </div>
+        
+        <div class="graph-card">
+            <div class="graph-header">
+                <h3>Collection by Region</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <canvas id="routeVolumeChart"></canvas>
+                <div class="graph-mock">Pie Chart</div>
+            </div>
+        </div>
+        
+        <div class="graph-card">
+            <div class="graph-header">
+                <h3>Quality Metrics</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <!-- Graph 3 will be inserted here -->
+                <div class="graph-mock">Bar Chart</div>
+            </div>
+        </div>
+        
+        <div class="graph-card">
+            <div class="graph-header">
+                <h3>Supplier Performance</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <!-- Graph 4 will be inserted here -->
+                <div class="graph-mock">Radar Chart</div>
+            </div>
+        </div>
+        
+        <div class="graph-card large">
+            <div class="graph-header">
+                <h3>Collection Route Efficiency</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <!-- Graph 5 will be inserted here -->
+                <div class="graph-mock">Map Visualization</div>
+            </div>
+        </div>
+        
+        <div class="graph-card">
+            <div class="graph-header">
+                <h3>Vehicle Utilization</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <!-- Graph 6 will be inserted here -->
+                <div class="graph-mock">Gauge Chart</div>
+            </div>
+        </div>
+        
+        <div class="graph-card">
+            <div class="graph-header">
+                <h3>Temperature Monitoring</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <!-- Graph 7 will be inserted here -->
+                <div class="graph-mock">Line Graph</div>
+            </div>
+        </div>
+        
+        <div class="graph-card">
+            <div class="graph-header">
+                <h3>Payment Status</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <!-- Graph 8 will be inserted here -->
+                <div class="graph-mock">Donut Chart</div>
+            </div>
+        </div>
+        
+        <div class="graph-card">
+            <div class="graph-header">
+                <h3>Collection Forecast</h3>
+                <button class="graph-option">⋮</button>
+            </div>
+            <div class="graph-placeholder">
+                <!-- Graph 9 will be inserted here -->
+                <div class="graph-mock">Area Chart</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'plants/js/MilkCollectionVolume.js' %}"></script>
+<script src="{% static 'plants/js/MilkCollectionVolumeRoute.js' %}"></script>
+<style>
+.dashboard-container {
+    padding: 20px;
+    background-color: #f5f7f9;
+    min-height: 100vh;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.dashboard-header h1 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+}
+
+.date-filter {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    font-size: 14px;
+    color: #5a677d;
+}
+
+.dropdown-icon {
+    margin-left: 8px;
+    font-size: 10px;
+}
+
+.metrics-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.metric-label {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin: 4px 0;
+}
+
+.metric-trend {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.metric-trend.positive {
+    color: #27ae60;
+}
+
+.metric-trend.negative {
+    color: #e74c3c;
+}
+
+.graphs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.graph-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.graph-card.large {
+    grid-column: span 2;
+}
+
+.graph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.graph-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.graph-option {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #a0aec0;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.graph-placeholder {
+    height: 300px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.graph-mock {
+    color: #cbd5e0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .metrics-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .graphs-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .metrics-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .graphs-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .graph-card.large {
+        grid-column: span 1;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-controls {
+        margin-top: 12px;
+    }
+}
+</style>
+{% endblock %}
