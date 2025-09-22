@@ -10,7 +10,7 @@
         <h1>Current Month Insight</h1>
         <div class="header-controls">
             <div class="date-filter">
-                <span>September 2023</span>
+                <span id="current-date">September 2023</span>
                 <i class="dropdown-icon">▼</i>
             </div>
         </div>
@@ -47,7 +47,6 @@
             </div>
             <div class="graph-placeholder">
                 <canvas id="milkVolumeChart" width="400" height="200"></canvas>
-                <div class="graph-mock">Line Graph Area</div>
             </div>
         </div>
         
@@ -58,7 +57,6 @@
             </div>
             <div class="graph-placeholder">
                 <canvas id="routeVolumeChart"></canvas>
-                <div class="graph-mock">Pie Chart</div>
             </div>
         </div>
         
@@ -68,8 +66,7 @@
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                <!-- Graph 3 will be inserted here -->
-                <div class="graph-mock">Bar Chart</div>
+                 <canvas id="qualityMetricsChart"></canvas>
             </div>
         </div>
         
@@ -79,8 +76,7 @@
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                <!-- Graph 4 will be inserted here -->
-                <div class="graph-mock">Radar Chart</div>
+                <canvas id="supplierChart"></canvas>
             </div>
         </div>
         
@@ -124,7 +120,7 @@
             </div>
             <div class="graph-placeholder">
                 <!-- Graph 8 will be inserted here -->
-                <div class="graph-mock">Donut Chart</div>
+                <canvas id="paymentStatusChart"></canvas>
             </div>
         </div>
         
@@ -140,8 +136,36 @@
         </div>
     </div>
 </div>
+<!--====================================== Load all necessary graphs ==============================================-->
 <script src="{% static 'plants/js/MilkCollectionVolume.js' %}"></script>
 <script src="{% static 'plants/js/MilkCollectionVolumeRoute.js' %}"></script>
+<script src="{% static 'plants/js/MilkQualityMetrics.js' %}"></script>
+<script src="{% static 'plants/js/supplier_performance.js' %}"></script>
+<script src="{% static 'plants/js/payment_status_chart.js' %}"></script>
+
+<!--================================================= add current date and day =======================================================-->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateSpan = document.getElementById('current-date');
+        const now = new Date();
+        const day = now.getDate();
+        const daySuffix = getDaySuffix(day);
+        const monthName = now.toLocaleString('default', { month: 'long' });
+        const year = now.getFullYear();
+        const dayName = now.toLocaleString('default', { weekday: 'long' });
+        dateSpan.textContent = `${day}${daySuffix} ${monthName} ${year}, ${dayName}`;
+    });
+
+    function getDaySuffix(day) {
+        if (day > 3 && day < 21) return 'th';
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
+</script>
 <style>
 .dashboard-container {
     padding: 20px;

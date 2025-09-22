@@ -4,12 +4,12 @@ from strawberry_django import field
 from plants.models import Employee, Plant, Silo
 from django.db.models import Max
 from distribution.models import MilkTransfer
-from suppliers.models import MilkLot
+from suppliers.models import MilkLot, PaymentBill
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from strawberry.types import Info
 from graphql import GraphQLError
 from django.utils import timezone
-from dairy_project.graphql_types import PlantType, EmployeeType, SiloType, MilkLotVolumeStatType, RouteVolumeStats
+from dairy_project.graphql_types import PlantType, EmployeeType, SiloType, MilkLotVolumeStatType, RouteVolumeStats, SupplierVolumeStatType,BillSummaryType
 from django.db.models import Sum
 from datetime import date
 import calendar
@@ -59,7 +59,55 @@ class Query:
             )
             for item in qs
         ]
+    
+    @strawberry.field
+    def supplier_milk_volume_stats_current_month(self, info) -> list[SupplierVolumeStatType]:
+        today = date.today()
+        start_of_month = today.replace(day=1)
+        end_of_month = today.replace(
+            day=calendar.monthrange(today.year, today.month)[1]
+        )
 
+        qs = (
+            MilkLot.objects.filter(date_created__range=[start_of_month, end_of_month])
+            .values("supplier__user__id", "supplier__user__username", "status")
+            .annotate(total_volume=Sum("volume_l"))
+            .order_by("supplier__user__id", "status")
+        )
+
+        return [
+            SupplierVolumeStatType(
+                supplier_id=row["supplier__user__id"],
+                supplier_name=row["supplier__user__username"],
+                status=row["status"],
+                total_volume=row["total_volume"] or 0.0,
+            )
+            for row in qs
+        ]
+
+    @strawberry.field
+    def bill_summary_current_month(self, info) -> List[BillSummaryType]:
+        today = date.today()
+        start_of_month = today.replace(day=1)
+        end_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+
+        qs = (
+            PaymentBill.objects.filter(date__range=[start_of_month, end_of_month])
+            .values("is_paid")
+            .annotate(
+                total_value=Sum("total_value"),
+                total_volume_l=Sum("total_volume_l"),
+            )
+        )
+
+        return [
+            BillSummaryType(
+                is_paid=row["is_paid"],
+                total_value=row["total_value"] or 0.0,
+                total_volume_l=row["total_volume_l"] or 0.0,
+            )
+            for row in qs
+        ]
 
     @field
     def testers(self) -> List[EmployeeType]:

@@ -46,8 +46,22 @@ class Query:
 class Mutation:
 
     @strawberry.mutation
-    def register(self, info: Info, username: str, email: str, password: str) -> str:
-        user = User.objects.create_user(username=username, email=email, password=password)
+    def register(
+        self,
+        info: Info,
+        username: str,                         
+        password: str,                       
+        first_name: str | None = None,          
+        last_name: str | None = None,           
+        email: str | None = None,               
+    ) -> str:
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            first_name=first_name or "",
+            last_name=last_name or "",
+            email=email or "",
+        )
         return f"User {user.username} registered successfully."
 
     @strawberry.mutation

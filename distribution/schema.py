@@ -159,15 +159,14 @@ class Mutation:
             transfer.full_clean()
             transfer.save()
             transfer.calculate_total_volume()
-        except DjangoValidationError:
-            return ValidationError(
-                "Milk Transfer for the selected tanker already created"
-            )
-    
-        except Exception:
-            return DjangoValidationError(
-                "Error in creating the Milk Transfer, check the inputs again"
-            )
+            return transfer
+        except DjangoValidationError as e:
+            print("Validation error:", e.messages)
+            raise
+        except Exception as e:
+            print("Unexpected error:", str(e))
+            raise
+
 
     
     @strawberry.mutation

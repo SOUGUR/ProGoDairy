@@ -1,4 +1,5 @@
 // plants/static/plants/js/milk_volume_chart.js
+// Volume of Milk Collected in Litres Vs Date Collected  
 async function fetchMilkLotVolume() {
   const query = `
     query {
@@ -55,19 +56,19 @@ async function renderMilkVolumeGraph() {
     return {
       label: `${status.charAt(0).toUpperCase() + status.slice(1)} Volume`,
       data: volumes,
-      fill: false,
-      borderColor: statusColors[status],
       backgroundColor: statusColors[status],
-      tension: 0.3,
-      pointRadius: 4,
-      pointBackgroundColor: statusColors[status]
+      borderColor: statusColors[status],
+      borderWidth: 1,
+      barPercentage: 0.3,     
+      categoryPercentage: 0.8, 
+      borderRadius: 2,         
     };
   });
 
   const ctx = document.getElementById("milkVolumeChart").getContext("2d");
 
   new Chart(ctx, {
-    type: "line",
+    type: "bar", 
     data: {
       labels: allDates,
       datasets: datasets
@@ -75,12 +76,37 @@ async function renderMilkVolumeGraph() {
     options: {
       responsive: true,
       plugins: {
-        legend: { display: true },
-        tooltip: { mode: "index", intersect: false }
+        legend: { display: true, position: "top" },
+        tooltip: {
+          mode: "index",
+          intersect: false,
+          callbacks: {
+            label: function(context) {
+              return `${context.dataset.label}: ${context.parsed.y} L`;
+            }
+          }
+        }
       },
       scales: {
-        x: { title: { display: true, text: "Date" } },
-        y: { title: { display: true, text: "Volume (Litres)" } }
+        x: {
+          title: { display: true, text: "Date" },
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45,
+            autoSkip: false 
+          }
+        },
+        y: {
+          title: { display: true, text: "Volume (Litres)" },
+          beginAtZero: true
+        }
+      },
+      
+      layout: {
+        padding: {
+          left: 10,
+          right: 10
+        }
       }
     }
   });

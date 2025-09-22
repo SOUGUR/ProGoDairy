@@ -151,18 +151,16 @@ class MilkTransfer(models.Model):
 
     
     def save(self, *args, **kwargs):
-        if self.total_volume is None:
-            self.calculate_total_volume()
+        if not self.pk and self.total_volume is None:
+            self.total_volume = self.calculate_total_volume(save=False)
 
-        self.full_clean()  
-
+        self.full_clean()
         super().save(*args, **kwargs)
 
-        if self.status == 'completed':
-            if self.silo:
-                self.silo.update_current_volume()
+        if self.status == 'completed' and self.silo:
+            self.silo.update_current_volume()
 
-    def calculate_total_volume(self):
+    def calculate_total_volume(self, save=True):
         if self.bulk_cooler:
             self.total_volume = self.bulk_cooler.current_volume_liters
         elif self.on_farm_tank:
@@ -171,7 +169,8 @@ class MilkTransfer(models.Model):
             self.total_volume = self.can_collection.total_volume_liters
         else:
             self.total_volume = 0
-        self.save(update_fields=['total_volume'])
+        if save and self.pk:  
+            super().save(update_fields=['total_volume'])
         return self.total_volume
 
     def __str__(self):

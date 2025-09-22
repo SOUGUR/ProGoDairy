@@ -22,6 +22,19 @@ class MilkLotVolumeStatType:
     status: str
     total_volume: float
 
+@strawberry.type
+class SupplierVolumeStatType:
+    supplier_id: int
+    supplier_name: str
+    status: str
+    total_volume: float
+
+@strawberry.type
+class BillSummaryType:
+    is_paid: bool
+    total_value: float
+    total_volume_l: float
+
 
 @strawberry_django_type(Supplier)
 class SupplierType:
