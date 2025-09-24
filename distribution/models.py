@@ -107,7 +107,7 @@ class MilkTransfer(models.Model):
         choices=STATUS_CHOICES,
         default='scheduled'
     )
-    total_volume = models.FloatField(blank=True, null=True)
+    total_volume = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
 
     emptied_at = models.DateTimeField(null=True, blank=True)

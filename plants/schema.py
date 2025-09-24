@@ -166,7 +166,6 @@ class Mutation:
 
             transfer.emptied_at = timezone.now()
             transfer.save(update_fields=["emptied_at"])
-            silo.update_transfer_count()
             return f"Silo '{silo.name}' assigned to transfer {transfer.id}. Current silo volume: {silo.current_volume}L"
 
         except ObjectDoesNotExist as e:
