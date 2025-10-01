@@ -364,7 +364,7 @@
 }
 </style>
 <div class="container">
-  <h1>Composite Samples</h1>
+  <h1>Update Composite Sample results</h1>
   
   <div class="filter-card">
     <div class="section-title">Filter Samples</div>
@@ -583,12 +583,23 @@ function renderSamples(samples) {
 
   samples.forEach(sample => {
     const collectedDate = new Date(sample.collectedAt);
-    const dateStr = collectedDate.toLocaleDateString();
-    const timeStr = collectedDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    const dateStr = collectedDate.toLocaleDateString('en-GB', { timeZone: 'UTC' });
+    const timeStr = collectedDate.toLocaleTimeString('en-GB', { 
+      timeZone: 'UTC', 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
 
     const receivedDate = new Date(sample.receivedAtLab);
-    const receiveddateStr = receivedDate.toLocaleDateString();
-    const receivedtimeStr = receivedDate.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    const receiveddateStr = receivedDate.toLocaleDateString('en-GB', { timeZone: 'UTC' });
+    const receivedtimeStr = receivedDate.toLocaleTimeString('en-GB', { 
+      timeZone: 'UTC', 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+
 
     let sourceType = "", sourceName = "";
     if (sample.bulkCooler) {

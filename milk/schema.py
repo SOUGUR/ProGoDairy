@@ -26,7 +26,7 @@ class CompositeSampleInput:
 @strawberry.input
 class UpdateCompositeSampleInput:
     id: int
-    received_at_lab: str | None = None
+    received_at_lab: Optional[datetime] = None
     remark: str | None = None
     fat_percent: float | None = None
     snf_percent: float | None = None
@@ -176,7 +176,6 @@ class Mutation:
             model = BulkCooler
         elif input.type == "on_farm_tank":
             model = OnFarmTank
-            print("===="*35)
         else:
             return UpdateTankerResponse(success=False, message="Invalid type. Must be 'bulk_cooler' or 'on_farm_tank'.")
 

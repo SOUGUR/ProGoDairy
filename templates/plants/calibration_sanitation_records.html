@@ -529,7 +529,7 @@ async function loadRoutes() {
 }
 
 loadRoutes();
-//==================================================== Load the table with latest records of tanker Usage =======================================//
+//========================================================== Load the table with latest records of tanker Usage =======================================//
 async function loadTankers(routeId, tankerType) {
   let query;
 
@@ -595,26 +595,64 @@ async function loadTankers(routeId, tankerType) {
 
   tankers.forEach(t => {
     const row = document.createElement("tr");
-    row.innerHTML = `
+    row.innerHTML = ` 
       <td>${t.id}</td>
       <td>${t.name}</td>
       <td>${t.capacityLiters || ""}</td>
-      <td>${t.createdAt ? new Date(t.createdAt).toLocaleDateString() + "<br>" + new Date(t.createdAt).toLocaleTimeString() : ""}</td>
-      <td>${t.lastCleanedAt ? new Date(t.lastCleanedAt).toLocaleDateString() + "<br>" + new Date(t.lastCleanedAt).toLocaleTimeString() : ""}</td>
-      <td>${t.lastSanitizedAt ? new Date(t.lastSanitizedAt).toLocaleDateString() + "<br>" + new Date(t.lastSanitizedAt).toLocaleTimeString() : ""}</td>
-      <td>${t.lastServicedAt ? new Date(t.lastServicedAt).toLocaleDateString() + "<br>" + new Date(t.lastServicedAt).toLocaleTimeString() : ""}</td>
-      <td style="color: red; font-weight: bold;">
+      <td>
+        ${t.createdAt ? 
+          new Date(t.createdAt).toLocaleDateString('en-GB') + "<br>" + 
+          `<small style="font-size: 0.95em;">` + new Date(t.createdAt).toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: true }) + `</small>` 
+        : ""}
+      </td>
+      <td>
+        ${t.lastCleanedAt ? 
+          new Date(t.lastCleanedAt).toLocaleDateString('en-GB') + "<br>" + 
+          `<small style="font-size: 0.95em;">` + new Date(t.lastCleanedAt).toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: true }) + `</small>` 
+        : ""}
+      </td>
+      <td>
+        ${t.lastSanitizedAt ? 
+          new Date(t.lastSanitizedAt).toLocaleDateString('en-GB') + "<br>" + 
+          `<small style="font-size: 0.95em;">` + new Date(t.lastSanitizedAt).toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: true }) + `</small>` 
+        : ""}
+      </td>
+      <td>
+        ${t.lastServicedAt ? 
+          new Date(t.lastServicedAt).toLocaleDateString('en-GB') + "<br>" + 
+          `<small style="font-size: 0.95em;">` + new Date(t.lastServicedAt).toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: true }) + `</small>` 
+        : ""}
+      </td>
+
+      <td>
         ${
           t.lastServicedAt 
-            ? (() => {
-                const lastDate = new Date(t.lastServicedAt);
-                lastDate.setDate(lastDate.getDate() + (t.serviceIntervalDays || 0));
-                return lastDate.toLocaleDateString() + "<br>" + lastDate.toLocaleTimeString();
-              })()
-            : ""
+          ? (() => {
+  
+              const lastDate = new Date(t.lastServicedAt);
+              lastDate.setUTCDate(lastDate.getUTCDate() + (t.serviceIntervalDays || 0));
+              const dateStr = lastDate.toLocaleDateString('en-GB', { timeZone: 'UTC' });
+              const timeStr = `<small style="font-size: 0.95em;">${lastDate.toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: true })}</small>`;
+              
+              return dateStr + "<br>" + timeStr;
+            })()
+          : ""
         }
       </td>
-      <td>${(t.lastCalibrationDate)? new Date(t.lastCalibrationDate).toLocaleDateString() +"<br>" + new Date(t.lastCalibratedAt || t.lastCalibrationDate).toLocaleTimeString(): ""}</td>
+
+      <td>
+        ${
+          t.lastCalibrationDate 
+          ? (() => {
+              const dateVal = new Date(t.lastCalibratedAt || t.lastCalibrationDate);
+              const dateStr = dateVal.toLocaleDateString('en-GB', { timeZone: 'UTC' });
+              const timeStr = `<small style="font-size: 0.95em;">${dateVal.toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: true })}</small>`;
+              return dateStr + "<br>" + timeStr;
+            })()
+          : ""
+        }
+      </td>
+
       <td><button class="btn action-btn">Action</button></td>
     `;
     const btn = row.querySelector(".action-btn");   
@@ -640,8 +678,8 @@ document.getElementById("tanker-type").addEventListener("change", () => {
   if (routeId && tankerType) loadTankers(routeId, tankerType);
 });
 
+// ================================================ load modal for updating detail for tanker seltected ============================================= //
 document.addEventListener('DOMContentLoaded', function() {
-  // Get modal elements
   const modal = document.getElementById('editTankerModal');
   const closeBtn = document.querySelector('.close');
   const cancelBtn = document.getElementById('cancel-edit');
@@ -649,13 +687,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Function to open modal with tanker data
   window.openEditModal = function(tankerId, tankerType, tankerData) {
-    // Populate form fields
     document.getElementById('edit-tanker-id').value = tankerId;
     document.getElementById('edit-tanker-type').value = tankerType;
     document.getElementById('edit-tanker-name').value = tankerData.name || '';
     document.getElementById('edit-capacity').value = tankerData.capacity_liters || '';
     
-    // Format dates for datetime-local inputs
     const formatDateForInput = (dateString) => {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -667,12 +703,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('edit-service-interval').value = tankerData.service_interval_days || '';
     document.getElementById('edit-last-serviced').value = formatDateForInput(tankerData.last_serviced_at);
     document.getElementById('edit-last-calibrated').value = formatDateForInput(tankerData.last_calibration_date);
-    
-    // Show modal
+
     modal.style.display = 'block';
   };
   
-  // Close modal functions
+
   function closeModal() {
     modal.style.display = 'none';
   }

@@ -18,6 +18,7 @@ from asgiref.sync import async_to_sync
 from django.db.models import Max
 from django.utils.timezone import make_aware
 from dairy_project.graphql_types import MilkLotType,PaymentBillType, SupplierType,OnFarmTankType, CanCollectionType,AssignCanCollectionPayload
+from django.db import transaction
 
 class IsAuthenticated(BasePermission):
     message = "User is not authenticated"
@@ -468,61 +469,64 @@ class Mutation:
         
     @strawberry.mutation
     def create_onfarm_tank(self, info, tank_id: int, confirm: bool = False) -> Optional[OnFarmTankType]:
+        today = date.today()
+
         try:
             processed_tank = OnFarmTank.objects.get(id=tank_id)
         except OnFarmTank.DoesNotExist:
             raise Exception("OnFarmTank not found")
-        
-        today = date.today()
-        already_exists = OnFarmTank.objects.filter(
-            supplier=processed_tank.supplier,
-            name=processed_tank.name,
-            created_at__date=today,
-        ).exists()
 
-        if already_exists:
-            raise Exception(
-                f"An On-Farm Tank for {processed_tank.name} has already been created today {today}."
-            )
+        with transaction.atomic():
+            supplier = processed_tank.supplier.__class__.objects.select_for_update().get(id=processed_tank.supplier.id)
 
-        MAX_AGE_HOURS = 96 
+            already_exists = OnFarmTank.objects.filter(
+                supplier=supplier,
+                created_at__date=today,
+                name=processed_tank.name,
+            ).exists()
 
-        if processed_tank.last_sanitized_at is None:
-            raise Exception(f"Bulk Cooler {processed_tank.name} has no sanitization record.")
-
-        age = datetime.now(timezone.utc) - processed_tank.last_sanitized_at
-        if age > timedelta(hours=MAX_AGE_HOURS):
-            if not confirm:
+            if already_exists:
                 raise Exception(
-                    f"Bulk Cooler {processed_tank.name} was last sanitized {age.days} day(s) ago. "
-                    f"Sanitation must be within {MAX_AGE_HOURS} hours. "
-                    f"Please re-sanitize before use or confirm override."
+                    f"An On-Farm Tank for {supplier.user.username} has already been created today {today}."
                 )
 
-        new_tank = OnFarmTank.objects.create(
-            supplier=processed_tank.supplier,
-            name=processed_tank.name,
-            capacity_liters=processed_tank.capacity_liters,
-            current_volume_liters=0.0, 
-            temperature_celsius=processed_tank.temperature_celsius,
+            MAX_AGE_HOURS = 96
+            if processed_tank.last_sanitized_at is None:
+                raise Exception(f"Bulk Cooler {processed_tank.name} has no sanitization record.")
 
-            filled_at=None,
-            emptied_at=None,
+            age = datetime.now(timezone.utc) - processed_tank.last_sanitized_at
+            if age > timedelta(hours=MAX_AGE_HOURS):
+                if not confirm:
+                    raise Exception(
+                        f"Bulk Cooler {processed_tank.name} was last sanitized {age.days} day(s) ago. "
+                        f"Sanitation must be within {MAX_AGE_HOURS} hours. "
+                        f"Please re-sanitize before use or confirm override."
+                    )
 
-            last_cleaned_at=processed_tank.last_cleaned_at,
-            last_sanitized_at=processed_tank.last_sanitized_at,
-            last_serviced_at=processed_tank.last_serviced_at,
-            last_calibration_date=processed_tank.last_calibration_date,
-            service_interval_days=processed_tank.service_interval_days,
-        )
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-        "notifications",  
-        {
-            "type": "send_notification",   
-            "message": f"A new OnFarm Tank {today} was created successfully!"
-        }
-        )
-        return new_tank
-        
+            new_tank = OnFarmTank.objects.create(
+                supplier=supplier,
+                name=processed_tank.name,
+                capacity_liters=processed_tank.capacity_liters,
+                current_volume_liters=0.0,
+                temperature_celsius=processed_tank.temperature_celsius,
+                filled_at=None,
+                emptied_at=None,
+                last_cleaned_at=processed_tank.last_cleaned_at,
+                last_sanitized_at=processed_tank.last_sanitized_at,
+                last_serviced_at=processed_tank.last_serviced_at,
+                last_calibration_date=processed_tank.last_calibration_date,
+                service_interval_days=processed_tank.service_interval_days,
+            )
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "notifications",
+                {
+                    "type": "send_notification",
+                    "message": f"A new OnFarm Tank {today} was created successfully!"
+                }
+            )
+
+            return new_tank
+            
 schema = strawberry.Schema(query=Query, mutation=Mutation)

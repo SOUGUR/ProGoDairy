@@ -222,7 +222,7 @@ async function applyFilters() {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${r.id}</td>
-        <td>${new Date(r.createdAt).toLocaleString()}</td>
+        <td>${r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-GB', { timeZone: 'UTC' }) + "<br>" + new Date(r.createdAt).toLocaleTimeString('en-GB', { timeZone: 'UTC' })  : ""}</td>
         <td>${sourceType}</td>
         <td>${r.name}</td>
         <td>${r.lastSanitizedAt ? new Date(r.lastSanitizedAt).toLocaleString() : "-"}</td>
@@ -241,8 +241,7 @@ async function applyFilters() {
               : "-"
           }
         </td>
-        <td>${r.emptiedAt || "-"}</td>
-      `;
+        <td>${r.emptiedAt ? new Date(r.emptiedAt).toLocaleDateString('en-GB', { timeZone: 'UTC' }) + "<br>" + new Date(r.emptiedAt).toLocaleTimeString('en-GB', { timeZone: 'UTC' }) : "-"}</td>`;
       tbody.appendChild(tr);
     });
 

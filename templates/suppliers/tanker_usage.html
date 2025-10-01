@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Tanker Usage Log{% endblock %}
 
@@ -173,7 +174,7 @@
   }
 </style>
 <div class="container">
-  <h1><i class="fas fa-truck"></i> Tanker Usage Log</h1>
+  <h1><i class="fas fa-truck"></i> Set Up Tanker</h1>
   
   <!-- Filters Card -->
   <div class="cooler-selection-card">
@@ -226,7 +227,7 @@
             <th>Tanker Type</th>
             <th>Tanker Name</th>
             <th>Tanker Volume (L)</th>
-            <th>Current Volume (L)</th>
+            <th>Volume at Use(L)</th>
             <th>Last Sanitized At</th>
             <th>Last Cleaned At</th>
             <th>Last Serviced At</th>
@@ -249,7 +250,38 @@
   </div>
 </div>
 
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
+  //SINGLE, GLOBAL fetchGraphQL 
+async function fetchGraphQL(query, variables = {}) {
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+
+    if (result.errors && result.errors.length > 0) {
+      console.error("GraphQL Errors:", result.errors);
+      const errorMsg = result.errors.map(e => e.message).join("\n");
+      showNotification(errorMsg, 'error', 6000);
+      return null;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error("Network or parsing error:", error);
+    showNotification("Network error: Could not connect to server.", 'error', 6000);
+    return null;
+  }
+}
+  //======================================================= load Routes =======================================================//
   async function loadRoutes() {
     const query = `
       query {
@@ -294,20 +326,6 @@ const routeSelect = document.getElementById("route-select");
 const tankerTypeSelect = document.getElementById("tanker-type-select");
 const tankerContainerSelect = document.getElementById("tanker-containor-select");
 
-
-  async function fetchGraphQL(query, variables = {}) {
-    const response = await fetch("/graphql/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables }),
-    });
-    const result = await response.json();
-    if (result.errors) {
-      console.error("GraphQL Errors:", result.errors);
-      return null;
-    }
-    return result.data;
-  }
 
   async function loadTankerContainers() {
     const routeId = routeSelect.value;
@@ -355,7 +373,13 @@ const tankerContainerSelect = document.getElementById("tanker-containor-select")
       let createdDate = new Date(container.createdAt).toISOString().split('T')[0];
       const option = document.createElement("option");
       option.value = container.id;
-      option.innerHTML = `${container.name} (Capacity: ${container.capacityLiters}L) <small>(dateLog: ${createdDate})</small>`;
+      const date = new Date(container.createdAt);
+      const formattedDate = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      option.innerHTML = `${container.name} <small style="font-size: 0.02em;">(last used: ${formattedDate})</small>`;
       tankerContainerSelect.appendChild(option);
     });
   }
@@ -366,22 +390,6 @@ const tankerContainerSelect = document.getElementById("tanker-containor-select")
 
   //========================================= Make ready tankers for today's operation ===========================//
   const useTankerBtn = document.getElementById("use-tanker-btn");
-
-  async function fetchGraphQL(query, variables = {}) {
-    const response = await fetch("/graphql/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables }),
-    });
-    const result = await response.json();
-    if (result.errors) {
-      console.error("GraphQL Errors:", result.errors);
-      alert(result.errors.map(e => e.message).join("\n"));
-      return null;
-    }
-    return result.data;
-  }
-
   async function useTanker() {
     const tankerType = tankerTypeSelect.value;
     const containerId = tankerContainerSelect.value;
@@ -419,7 +427,12 @@ const tankerContainerSelect = document.getElementById("tanker-containor-select")
 
     const data = await fetchGraphQL(mutation, variables);
     if (data) {
-      alert(`✅ Tanker ready: ${JSON.stringify(data)}`);
+      const tankerInfo = data.createOnfarmTank || data.createBulkCooler;
+      if (tankerInfo) {
+        showNotification(`Tanker ready: ${tankerInfo.name} (ID: ${tankerInfo.id}, Capacity: ${tankerInfo.capacityLiters}L)`, 'success', 1400);
+      } else {
+      showNotification("Tanker ready", 'success', 6000);
+      }
     }
   }
 
@@ -427,22 +440,6 @@ const tankerContainerSelect = document.getElementById("tanker-containor-select")
 
 //================================================= Populate the table based on selected route and tanker type =======================================//
 const milkLotsTableBody = document.getElementById("milk-lots-table-body");
-
-// Reusable GraphQL fetcher
-async function fetchGraphQL(query, variables = {}) {
-  const response = await fetch("/graphql/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-  });
-  const result = await response.json();
-  if (result.errors) {
-    console.error("GraphQL Errors:", result.errors);
-    alert(result.errors.map(e => e.message).join("\n"));
-    return null;
-  }
-  return result.data;
-}
 
 async function loadTankerHistory() {
   const routeId = routeSelect.value;

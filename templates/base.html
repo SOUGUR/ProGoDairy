@@ -430,8 +430,8 @@
 
 .mark-read {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 35px;
+  right: 10px;
   background: none;
   border: none;
   color: #3498db;
@@ -499,47 +499,19 @@
     <ul class="sidebar-menu">
 
     <li class="menu-category">
-  <div class="category-header">
-    <span class="menu-icon"><i class="fas fa-tachometer-alt"></i></span>
-    <span class="menu-text">Dashboard</span>
-    <i class="fas fa-chevron-down category-toggle"></i>
-  </div>
-  <ul class="submenu">
-    <li class="menu-item">
-      <a href="{% url 'milk_market_dashboard' %}" class="menu-link">
-        <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-        <span class="menu-text">Latest Prices and Demand</span>
-      </a>
-    </li>
-  </ul>
-</li>
-
-<li class="menu-category">
-    <div class="category-header">
-      <span class="menu-icon"><i class="fas fa-history"></i></i></span>
-      <span class="menu-text">Logs and tankers</span>
-      <i class="fas fa-chevron-down category-toggle"></i>
-    </div>
-    <ul class="submenu">
-      <li class="menu-item">
-        <a href="{% url 'plants:tanker_logs' %}"  class="menu-link">
-          <span class="menu-icon"><i class="fas fa-book"></i></span>
-          <span class="menu-text">Log entries for tankers</span>
-        </a>
-      </li>
-      <li class="menu-item">
-          <a href="{% url 'tanker_usage' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-oil-can"></i></span>
-            <span class="menu-text">Tanker Usage</span>
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-tachometer-alt"></i></span>
+        <span class="menu-text">Dashboard</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'milk_market_dashboard' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+            <span class="menu-text">Latest Prices and Demand</span>
           </a>
-      </li>
-      <li class="menu-item">
-          <a href="{% url 'plants:sanitation_records' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-spray-can"></i></span>
-            <span class="menu-text">Calibration and Sanitation Records</span>
-          </a>
-      </li>
-    </ul>
+        </li>
+      </ul>
   </li>
 
   <li class="menu-category">
@@ -558,6 +530,34 @@
     </ul>
   </li>
 
+<li class="menu-category">
+    <div class="category-header">
+      <span class="menu-icon"><i class="fas fa-history"></i></i></span>
+      <span class="menu-text">Tankers and Operations</span>
+      <i class="fas fa-chevron-down category-toggle"></i>
+    </div>
+    <ul class="submenu">
+      <li class="menu-item">
+          <a href="{% url 'tanker_usage' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-oil-can"></i></span>
+            <span class="menu-text">Set Up /Allocate Tanker</span>
+          </a>
+      </li>
+      <li class="menu-item">
+          <a href="{% url 'plants:sanitation_records' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-spray-can"></i></span>
+            <span class="menu-text">Calibration and Sanitation Records</span>
+          </a>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'plants:tanker_logs' %}"  class="menu-link">
+          <span class="menu-icon"><i class="fas fa-book"></i></span>
+          <span class="menu-text">Tanker Operations Log</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
   <!-- Suppliers & Procurement Section -->
     <li class="menu-category">
       <div class="category-header">
@@ -567,15 +567,9 @@
       </div>
       <ul class="submenu">
         <li class="menu-item">
-          <a href="{% url 'supplier_list' %}" class="menu-link active">
-            <span class="menu-icon"><i class="fas fa-people-carry"></i></span>
-            <span class="menu-text">Suppliers</span>
-          </a>
-        </li>
-        <li class="menu-item">
           <a href="{% url 'create_supplier' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
-            <span class="menu-text">Add Supplier</span>
+            <span class="menu-text">Enroll Supplier</span>
           </a>
         </li>
         <li class="menu-item">
@@ -587,61 +581,13 @@
         <li class="menu-item">
           <a href="{% url 'milk_lot_list' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-wine-bottle"></i></span>
-            <span class="menu-text">Milk Lots</span>
-          </a>
-        </li>
-      </ul>
-    </li>
-
-    <!-- Finance & Billing Section -->
-    <li class="menu-category">
-      <div class="category-header">
-        <span class="menu-icon"><i class="fas fa-money-bill-wave"></i></span>
-        <span class="menu-text">Finance & Billing</span>
-        <i class="fas fa-chevron-down category-toggle"></i>
-      </div>
-      <ul class="submenu">
-        <li class="menu-item">
-          <a href="{% url 'create_payment_bill' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-            <span class="menu-text">Payment Bills</span>
-          </a>
-        </li>
-      </ul>
-    </li>
-
-    <!-- Logistics & Transport Section -->
-    <li class="menu-category">
-      <div class="category-header">
-        <span class="menu-icon"><i class="fas fa-truck"></i></span>
-        <span class="menu-text">Logistics & Transport</span>
-        <i class="fas fa-chevron-down category-toggle"></i>
-      </div>
-      <ul class="submenu">
-        <li class="menu-item">
-          <a href="{% url 'distribution:create_milk_transfer' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
-            <span class="menu-text">Create Milk Lot Delivery </span>
-          </a>
-        </li>
-
-        <li class="menu-item">
-          <a href="{% url 'distribution:milk_transfer_list' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-dolly"></i></span>
-            <span class="menu-text"> Milk Lot Transfer List </span>
-          </a>
-        </li>
-
-        <li class="menu-item">
-          <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-shipping-fast"></i></span>
-            <span class="menu-text">Vehicles</span>
+            <span class="menu-text">Milk Lots Record</span>
           </a>
         </li>
         <li class="menu-item">
-          <a href="milk_distribution.html" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-route"></i></span>
-            <span class="menu-text">Distribution</span>
+          <a href="{% url 'supplier_list' %}" class="menu-link active">
+            <span class="menu-icon"><i class="fas fa-people-carry"></i></span>
+            <span class="menu-text">Suppliers Record</span>
           </a>
         </li>
       </ul>
@@ -676,6 +622,94 @@
       </ul>
     </li>
 
+
+    <!-- Logistics & Transport Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-truck"></i></span>
+        <span class="menu-text">Logistics & Transport</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'distribution:create_milk_transfer' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
+            <span class="menu-text">Pooled Milk Shipment </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'distribution:milk_transfer_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-dolly"></i></span>
+            <span class="menu-text"> Milk Shipment Records </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-shipping-fast"></i></span>
+            <span class="menu-text">Vehicles</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="milk_distribution.html" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-route"></i></span>
+            <span class="menu-text">Distribution</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+     <!-- Quality & Testing Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-flask"></i></span>
+        <span class="menu-text">Quality & Testing</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-text">Collect Composite Samples</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-text">Composite Samples (CanCollection)</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:list_composite_samples' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-text">Update Composite Samples Results</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Finance & Billing Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-money-bill-wave"></i></span>
+        <span class="menu-text">Finance & Billing</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'create_payment_bill' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+            <span class="menu-text">Payment Bills</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    
     <!---------------------------------------------------------- Silos and Plants ---------------------------------------------------------------->
     <li class="menu-category">
       <div class="category-header">
@@ -688,37 +722,6 @@
           <a href="{% url 'plants:pump_into_silos' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-water"></i></span>
             <span class="menu-text">Pump into Silos</span>
-          </a>
-        </li>
-      </ul>
-    </li>
-
-    <!-- Quality & Testing Section -->
-    <li class="menu-category">
-      <div class="category-header">
-        <span class="menu-icon"><i class="fas fa-flask"></i></span>
-        <span class="menu-text">Quality & Testing</span>
-        <i class="fas fa-chevron-down category-toggle"></i>
-      </div>
-      <ul class="submenu">
-        <li class="menu-item">
-          <a href="{% url 'milk:list_composite_samples' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
-            <span class="menu-text">Composite Samples List</span>
-          </a>
-        </li>
-
-        <li class="menu-item">
-          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
-            <span class="menu-text">Composite Samples for Bulk Cooler and OnFarm tank</span>
-          </a>
-        </li>
-
-        <li class="menu-item">
-          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
-            <span class="menu-text">Composite Samples for CanCollection</span>
           </a>
         </li>
       </ul>

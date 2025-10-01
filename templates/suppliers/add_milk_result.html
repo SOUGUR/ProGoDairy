@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Supplier List{% endblock %}
 
@@ -386,7 +387,7 @@
     </div>
   </div>
 </div>
-
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
 //------------------------------------------CREATE Milk Lot if lot_Id not present, else UPDATE Milk Lot-------------------------------------//
 document.addEventListener("DOMContentLoaded", () => {
@@ -452,8 +453,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const milkLot = result.data.updateMilkLot;
-      alert(`Milk lot ${lotId ? 'updated' : 'created'} successfully! ID: ${milkLot.id}`);
-      window.location.href = "/milk-lot/list/";
+      showNotification(`Milk lot of ID: ${milkLot.id} ${lotId ? 'updated' : 'created'} successfully!`, 'success', 2000);
+      setTimeout(() => {
+        window.location.href = "/milk-lot/list/";
+      }, 2000);
     } catch (error) {
       console.error("Request Error:", error);
       alert("Network error saving milk lot.");

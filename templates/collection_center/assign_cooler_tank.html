@@ -131,6 +131,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const totalCapacityEl = document.getElementById("total-capacity");
   const currentVolumeEl = document.getElementById("current-volume");
   const availableSpaceEl = document.getElementById("available-space");
+  const last_sanitized = document.getElementById("last_sanitized");
+  const last_calibrated = document.getElementById("last_calibrated");
+  const last_serviced = document.getElementById("last_serviced");
+  const service_interval = document.getElementById("service_interval");
 
   let coolersCache = []; // Store the coolers for the selected route
 
@@ -179,6 +183,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             name
             capacityLiters
             currentVolumeLiters
+            lastCleanedAt
+            lastSanitizedAt
+            serviceIntervalDays
+            lastServicedAt
+            lastCalibrationDate
             route {
               name
             }
@@ -216,13 +225,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       const currentVolume = selectedCooler.currentVolumeLiters;
       const availableSpace = totalCapacity - currentVolume;
 
-      totalCapacityEl.textContent = totalCapacity;
-      currentVolumeEl.textContent = currentVolume;
-      availableSpaceEl.textContent = availableSpace;
+      function formatToDatetimeLocal(isoString) {
+      if (!isoString) return '';
+      const d = new Date(isoString);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    document.getElementById("last_cleaned").value = formatToDatetimeLocal(selectedCooler.lastCleanedAt);
+    document.getElementById("last_sanitized").value = formatToDatetimeLocal(selectedCooler.lastSanitizedAt);
+    document.getElementById("last_calibrated").value = formatToDatetimeLocal(selectedCooler.lastCalibrationDate);
+    document.getElementById("last_serviced").value = formatToDatetimeLocal(selectedCooler.lastServicedAt);
+
+    document.getElementById("service_interval").value = selectedCooler.serviceIntervalDays || 90;
     } else {
       totalCapacityEl.textContent = "0";
-      currentVolumeEl.textContent = "0";
-      availableSpaceEl.textContent = "0";
+    currentVolumeEl.textContent = "0";
+    availableSpaceEl.textContent = "0";
+    
+    ["last_cleaned", "last_sanitized", "last_calibrated", "last_serviced"].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById("service_interval").value = '90';
+    document.getElementById("temperature").value = '4.0';
     }
   });
 });

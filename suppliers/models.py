@@ -270,20 +270,6 @@ class OnFarmTank(models.Model):
         self.save(update_fields=["current_volume_liters"])
         return len(candidates)
 
-    def create_daily_log(self):
-        OnFarmTankLog.objects.create(
-            on_farm_tank=self,
-            log_date=self.created_at,
-            volume_liters=self.current_volume_liters,
-            temperature_celsius=self.temperature_celsius,
-            filled_at=self.filled_at,
-            emptied_at=self.emptied_at,
-            last_cleaned_at=self.last_cleaned_at,
-            last_sanitized_at=self.last_sanitized_at,
-            last_stirred_at=self.last_calibration_date,
-            last_serviced_at=self.last_serviced_at,
-        )
-
     def __str__(self):
         return f"{self.name} ({self.supplier.user.username})"
 
