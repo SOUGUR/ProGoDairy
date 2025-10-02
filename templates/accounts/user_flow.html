@@ -1,0 +1,529 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Indian Milk Supply Chain Flow{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1><i class="fas fa-drumstick-bite"></i> Indian Milk Supply Chain Flow</h1>
+        <p class="subtitle">Complete logistics process from farmer to consumer - Amul / NDDB pattern with twice-daily collection, composite testing, and automated payments</p>
+    </header>
+    
+    <div class="flow-container">
+        <!-- Step 1 -->
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-user-farmer"></i> Farmer</h2>
+                <p class="step-description">Primary milk supplier pours milk during two collection windows:</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-sun"></i> Morning Collection</div>
+                        <p>6:00 AM - 8:00 AM</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-moon"></i> Evening Collection</div>
+                        <p>4:00 PM - 6:00 PM</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">Farmer</span>, <span class="highlight">MilkLot</span></div>
+            </div>
+        </div>
+        
+        <!-- Step 2 -->
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-building"></i> DCS / Society (Route)</h2>
+                <p class="step-description">Milk is pooled in Bulk Milk Cooler (BMC) and a composite sample is drawn for quality testing.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-temperature-low"></i> Storage</div>
+                        <p>Bulk Milk Cooler (BMC) at 4°C ±1°C</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-vial"></i> Sampling</div>
+                        <p>DCS-level composite sample drawn</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">Route</span>, <span class="highlight">CompositeSample</span></div>
+            </div>
+        </div>
+        
+        <!-- Step 3 -->
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-flask"></i> Quality Result at DCS</h2>
+                <p class="step-description">Based on test results, one of three actions is taken:</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="pass">PASS</span></div>
+                        <p>Accept milk, print payment slip to farmer</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="penalty">PENALTY</span></div>
+                        <p>Deduct percentage from that shift's rate</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="fail">FAIL</span></div>
+                        <p>Reject milk, no payment, farmer takes milk back</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">CompositeSample</span>, <span class="highlight">PaymentLine</span></div>
+            </div>
+        </div>
+        
+        <!-- Step 4 -->
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-truck"></i> Milk Transfer</h2>
+                <p class="step-description">Milk is transported from DCS to processing plant in scheduled tankers.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-map-marker-alt"></i> Route</div>
+                        <p>Source: DCS → Destination: Plant</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-tasks"></i> Status Tracking</div>
+                        <p>SCHEDULED → IN_TRANSIT → COMPLETED</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">MilkTransfer</span></div>
+            </div>
+        </div>
+        
+        <!-- Step 5 -->
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-industry"></i> Plant RMRD (Raw-Milk Reception Dock)</h2>
+                <p class="step-description">Tanker arrives at plant for verification and sampling.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-weight-hanging"></i> Weighing</div>
+                        <p>Weigh-bridge verification</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-lock"></i> Security</div>
+                        <p>Seal check for tampering</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-vial"></i> Sampling</div>
+                        <p>2% gate composite sample drawn</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">TankerReceipt</span></div>
+            </div>
+        </div>
+        
+        <!-- Step 6 -->
+        <div class="step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-microscope"></i> Gate Lab Tests</h2>
+                <p class="step-description">Quality tests performed within 15-30 minutes with three possible outcomes:</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="pass">PASS</span></div>
+                        <p>Unload to dump tank → PHE chiller → Raw Silo</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="penalty">PENALTY</span></div>
+                        <p>Unload with penalty % logged against TankerReceipt</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="fail">FAIL</span></div>
+                        <p>Whole tanker rejected → diverted to effluent/cattle-feed → zero payment to DCS</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">CompositeSample</span> (gate-level), <span class="highlight">RejectionEvent</span></div>
+            </div>
+        </div>
+        
+        <!-- Step 7 -->
+        <div class="step">
+            <div class="step-number">7</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-warehouse"></i> Raw Silo</h2>
+                <p class="step-description">Milk is stored under strict conditions before processing.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-temperature-low"></i> Storage Conditions</div>
+                        <p>4°C ±1°C with constant agitation</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-hourglass-half"></i> Holding Time</div>
+                        <p>Maximum 12 hours storage</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-sort-amount-down"></i> Dispatch Rule</div>
+                        <p>FIFO (First-In-First-Out) for silo emptying</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">Silo</span> (raw)</div>
+            </div>
+        </div>
+        
+        <!-- Step 8 -->
+        <div class="step">
+            <div class="step-number">8</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-cogs"></i> Process Line Release</h2>
+                <p class="step-description">Milk undergoes pasteurization and homogenization.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-thermometer-half"></i> Pasteurization</div>
+                        <p>HTST: 72°C for 15 seconds</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-compress-alt"></i> Homogenization</div>
+                        <p>Pressure treatment for uniform fat distribution</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-snowflake"></i> Cooling</div>
+                        <p>Cooled to 4°C after processing</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">Silo</span> (processed)</div>
+            </div>
+        </div>
+        
+        <!-- Step 9 -->
+        <div class="step">
+            <div class="step-number">9</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-box-open"></i> Packaging & Dispatch</h2>
+                <p class="step-description">Processed milk is packaged and prepared for distribution.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-box"></i> Packaging Types</div>
+                        <p>Pouch, Tetra Pak, PET bottles</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-warehouse"></i> Cold Storage</div>
+                        <p>Stored in cold-room at 4°C</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-truck-loading"></i> Dispatch</div>
+                        <p>Loaded onto refrigerated trucks for distribution</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 10 -->
+        <div class="step">
+            <div class="step-number">10</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-money-bill-wave"></i> Payment Settlement</h2>
+                <p class="step-description">Automated payment system with claw-back mechanism for quality failures.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-hand-holding-usd"></i> Farmer Payment</div>
+                        <p>Same evening payment using dip-test results</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-file-invoice-dollar"></i> DCS Payment</div>
+                        <p>Union credits DCS weekly/10-day cycle via bank</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-undo-alt"></i> Claw-back</div>
+                        <p>Adjustments applied if gate composite fails</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data Model: <span class="highlight">PaymentLine</span>, <span class="highlight">RejectionEvent</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="key-achievements">
+        <h2><i class="fas fa-check-circle"></i> Key Achievements of This Flow</h2>
+        <div class="achievements-grid">
+            <div class="achievement-item">
+                <div class="achievement-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="achievement-content">
+                    <h3>Twice-Daily Collection</h3>
+                    <p>AM/PM collection windows mapped to MilkLot.shift for precise tracking</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon">
+                    <i class="fas fa-vial"></i>
+                </div>
+                <div class="achievement-content">
+                    <h3>Dual Composite Sampling</h3>
+                    <p>Quality checks at DCS and plant gate with penalty/rejection logic</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon">
+                    <i class="fas fa-snowflake"></i>
+                </div>
+                <div class="achievement-content">
+                    <h3>Unbroken Cold Chain</h3>
+                    <p>BMC → tanker → dump tank → PHE → silo at consistent 4°C</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="achievement-content">
+                    <h3>End-to-End Traceability</h3>
+                    <p>Any pouch traced back to farmers via silo batch → tanker → DCS → MilkLot</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="achievement-content">
+                    <h3>Automated Payments</h3>
+                    <p>Farmer paid same evening; claw-back applied if gate composite fails</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="achievement-content">
+                    <h3>Quality Assurance</h3>
+                    <p>Multi-point testing ensures only quality milk enters the supply chain</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* All your CSS goes here */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        color: #333;
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 100vh;
+    }
+    
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    header {
+        text-align: center;
+        padding: 30px 0;
+        margin-bottom: 30px;
+    }
+    
+    h1 {
+        font-size: 2.8rem;
+        color: #1a3a6c;
+        margin-bottom: 10px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .subtitle {
+        font-size: 1.2rem;
+        color: #5a7d9a;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .flow-container {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .step {
+        display: flex;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 30, 60, 0.12);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .step:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 30, 60, 0.18);
+    }
+    
+    .step-number {
+        background: #1a3a6c;
+        color: white;
+        width: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    
+    .step-content {
+        padding: 25px;
+        flex: 1;
+    }
+    
+    .step-title {
+        font-size: 1.5rem;
+        color: #1a3a6c;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .step-title i {
+        background: #e6f0fa;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1a3a6c;
+    }
+    
+    .step-description {
+        color: #555;
+        margin-bottom: 20px;
+        line-height: 1.7;
+    }
+    
+    .step-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .detail-card {
+        background: #f8fbff;
+        border-radius: 10px;
+        padding: 15px;
+        border-left: 3px solid #4a90e2;
+    }
+    
+    .detail-title {
+        font-weight: 600;
+        color: #1a3a6c;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .model-reference {
+        background: #e6f0fa;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        display: inline-block;
+        margin-top: 10px;
+        color: #1a3a6c;
+    }
+    
+    .key-achievements {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 8px 20px rgba(0, 30, 60, 0.12);
+        margin-top: 20px;
+    }
+    
+    .key-achievements h2 {
+        color: #1a3a6c;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .achievement-item {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .achievement-icon {
+        background: #e6f0fa;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: #1a3a6c;
+        font-size: 1.4rem;
+    }
+    
+    .achievement-content h3 {
+        color: #1a3a6c;
+        margin-bottom: 8px;
+    }
+    
+    .milk-icon {
+        font-size: 1.8rem;
+        color: #f8c471;
+        margin-right: 10px;
+    }
+    
+    .penalty {
+        color: #e74c3c;
+        font-weight: 600;
+    }
+    
+    .pass {
+        color: #27ae60;
+        font-weight: 600;
+    }
+    
+    .fail {
+        color: #e74c3c;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .step {
+            flex-direction: column;
+        }
+        
+        .step-number {
+            width: 100%;
+            padding: 15px 0;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+        }
+    }
+    
+    .highlight {
+        background: linear-gradient(120deg, #e6f0fa 0%, #d1e3f5 100%);
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

@@ -1,5 +1,5 @@
 from django.db import models
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from django.contrib.auth.models import User
 from distribution.models import Route
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -137,7 +137,7 @@ class MilkLot(models.Model):
 
     def evaluate_and_price(self):
         try:
-            MilkPricingConfig = apps.get_model("milk", "milk.MilkPricingConfig")
+            MilkPricingConfig = apps.get_model("milk", "MilkPricingConfig")
             config = MilkPricingConfig.objects.get(route=self.supplier.route)
         except MilkPricingConfig.DoesNotExist:
             raise ValidationError("No milk pricing configuration set. Please configure pricing first.")
@@ -167,8 +167,8 @@ class MilkLot(models.Model):
         if final_price_per_litre < Decimal("0.00"):
             final_price_per_litre = Decimal("0.00")
 
-        self.price_per_litre = final_price_per_litre
-        self.total_price = round(Decimal(self.volume_l) * final_price_per_litre, 2)
+        self.price_per_litre = final_price_per_litre.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        self.total_price = (Decimal(self.volume_l) * self.price_per_litre).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return self.total_price
 
     

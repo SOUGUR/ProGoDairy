@@ -5,6 +5,9 @@ from django.contrib.auth import authenticate, login as auth_login
 def user_access(request):
     return render(request, "accounts/rights_access.html")
 
+def user_flow(request):
+    return render(request, "accounts/user_flow.html")
+
 
 
 def login(request):

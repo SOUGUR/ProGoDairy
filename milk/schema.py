@@ -19,11 +19,13 @@ from milk.models import MilkPricingConfig
 class CompositeSampleInput:
     bulk_cooler_id: Optional[int] = None
     on_farm_tank_id: Optional[int] = None
-    vehicle_id: Optional[int] = None
+    vehicle_id: Optional[str] = None
     remark: Optional[str] = None
     sample_volume_ml: Optional[int] = 50
     temperature_c: Optional[float] = 4.0
     is_stirred:Optional[bool] = False
+    
+    
 
 @strawberry.input
 class UpdateCompositeSampleInput:
@@ -37,6 +39,12 @@ class UpdateCompositeSampleInput:
     antibiotic_residue: bool | None = None
     added_water_percent: float | None = None
     passed: str | None = None   
+
+    sample_type: Optional[str] = None 
+    cob_test: Optional[bool] = None
+    alcohol_test: Optional[bool] = None
+    ph_value: Optional[float] = None
+    mbtr_quick: Optional[int] = None
 
 
 @strawberry.type
@@ -103,7 +111,7 @@ class Mutation:
     def create_composite_sample(self, input: CompositeSampleInput) -> CompositeSampleType:
         bulk_cooler = BulkCooler.objects.filter(id=input.bulk_cooler_id).first() if input.bulk_cooler_id else None
         on_farm_tank = OnFarmTank.objects.filter(id=input.on_farm_tank_id).first() if input.on_farm_tank_id else None
-        vehicle = Vehicle.objects.filter(id=input.vehicle_id).first() if input.vehicle_id else None
+        vehicle = Vehicle.objects.filter(vehicle_id=input.vehicle_id).first() if input.vehicle_id else None
         if not (bulk_cooler or on_farm_tank or vehicle):
             raise ValueError("At least one of bulk_cooler_id, on_farm_tank_id, or vehicle_id must be provided.")
         
@@ -114,6 +122,12 @@ class Mutation:
         if on_farm_tank is not None:
             on_farm_tank.is_stirred = input.is_stirred
             on_farm_tank.save(update_fields=["is_stirred"])
+        
+        if not bulk_cooler and not on_farm_tank:
+            sample_type_value = 'instant-gate tests'
+        else:
+            sample_type_value = 'society test'
+
 
         sample = CompositeSample.objects.create(
             bulk_cooler=bulk_cooler,
@@ -122,6 +136,7 @@ class Mutation:
             remark=input.remark,
             sample_volume_ml=input.sample_volume_ml or 50,
             temperature_c=input.temperature_c or 4.0,
+            sample_type=sample_type_value
         )
 
         return CompositeSampleType(

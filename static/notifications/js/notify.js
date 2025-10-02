@@ -218,7 +218,6 @@
                 box-shadow: 0 6px 25px rgba(0,0,0,0.2);
             }
 
-            /* Progress bar for auto-dismiss */
             .notification-progress {
                 position: absolute;
                 bottom: 0;

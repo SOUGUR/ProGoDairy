@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Milk Transfer Management{% endblock %}
 
@@ -346,6 +347,7 @@
     </table>
   </div>
 </div>
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
 //==================================================== Load Routes =====================================================//
   document.addEventListener("DOMContentLoaded", function () {
@@ -700,12 +702,12 @@ document.querySelector(".transfer-form").addEventListener("submit", async functi
     }
 
     const transfer = result.data.createMilkTransfer;
-    alert(`Milk Transfer ${transfer.id} created successfully with status ${transfer.status}`);
+    showNotification(`You scheduled a Milk Transfer ${transfer.id} with status ${transfer.status} successfully`, 'success', 4000);
     
     e.target.reset();
   } catch (error) {
     console.error("Error creating transfer:", error);
-    alert("Unexpected error while creating transfer.");
+   showNotification('You encountered an error while creating Milk Transfer', 'error', 6000);
   }
 });
 

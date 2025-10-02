@@ -10,6 +10,7 @@ from suppliers.models import Supplier, MilkLot, OnFarmTank
 from distribution.models import Vehicle, Distributor
 from plants.models import Employee, Role, Silo
 from collection_center.models import BulkCooler
+from milk.models import CompositeSample
 
 @strawberry.type
 class RouteVolumeStats:
@@ -112,14 +113,22 @@ class MilkTransferType:
     total_volume: Optional[float]      
     remarks: Optional[str]             
 
-    # ForeignKey relationships
     vehicle: Optional["VehicleType"]
     destination: Optional["PlantType"]
 
-    # Sources (since model allows multiple)
     bulk_cooler: Optional["BulkCoolerType"]
     on_farm_tank: Optional["OnFarmTankType"]
     can_collection: Optional["CanCollectionType"]
+
+    @strawberry.field(name="gateSamplesCount")
+    def gate_sample_count(self, info) -> int:
+        if not self.vehicle:
+            return 0
+
+        samples_qs = CompositeSample.objects.filter(
+            vehicle__transfers__id=self.id
+        )
+        return samples_qs.count()
 
 @strawberry.type
 class CanCollectionType:

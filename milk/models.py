@@ -46,7 +46,7 @@ class CompositeSample(models.Model):
     )
     vehicle  = models.ForeignKey(  
         'distribution.Vehicle', null=True, blank=True, on_delete=models.CASCADE,
-        related_name='samples'
+        related_name='gateSamples'
     )
 
     sample_volume_ml = models.PositiveSmallIntegerField(default=50)  
@@ -127,12 +127,6 @@ class CompositeSample(models.Model):
         )
 
     def __str__(self):
-        if self.bulk_cooler:
-            return f"Sample from Bulk Cooler {self.bulk_cooler}"
-        if self.on_farm_tank:
-            return f"Sample from On-Farm Tank {self.on_farm_tank}"
-        if self.vehicle:
-            return f"Sample from Vehicle {self.vehicle}"
         return f"Composite Sample {self.id}"
     
 
