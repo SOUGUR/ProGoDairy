@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from distribution.models import Route
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from django.apps import apps
 
 
 class Supplier(models.Model):
@@ -121,11 +122,6 @@ class MilkLot(models.Model):
         blank=True,
     )
 
-    def __str__(self):
-        return (
-            f"{self.supplier.user.username} – {self.volume_l} L – {self.date_created}"
-        )
-
     def clean(self):
         storage_links = [self.bulk_cooler, self.can_collection, self.on_farm_tank]
         if sum(1 for link in storage_links if link is not None) > 1:
@@ -140,33 +136,34 @@ class MilkLot(models.Model):
         super().save(*args, **kwargs)
 
     def evaluate_and_price(self):
-        ADDED_WATER_MAX = 3.0
-        base_price = Decimal("26.00")
+        try:
+            MilkPricingConfig = apps.get_model("milk", "milk.MilkPricingConfig")
+            config = MilkPricingConfig.objects.get(route=self.supplier.route)
+        except MilkPricingConfig.DoesNotExist:
+            raise ValidationError("No milk pricing configuration set. Please configure pricing first.")
+
         bonus = Decimal("0.00")
 
-        # Quality-based bonuses
-        if self.fat_percent >= 3.5:
-            bonus += Decimal("1.50")
-        if self.snf >= 8.5:
-            bonus += Decimal("1.00")
-        if self.protein_percent >= 3.0:
-            bonus += Decimal("0.50")
-        if self.urea_nitrogen <= 70:
-            bonus += Decimal("0.50")
-        if self.bacterial_count <= 50000:
-            bonus += Decimal("0.50")
+        if self.fat_percent >= config.fat_min:
+            bonus += config.fat_bonus
+        if self.snf >= config.snf_min:
+            bonus += config.snf_bonus
+        if self.protein_percent >= config.protein_min:
+            bonus += config.protein_bonus
+        if self.urea_nitrogen <= config.urea_max:
+            bonus += config.urea_bonus
+        if self.bacterial_count <= config.bacteria_max:
+            bonus += config.bacteria_bonus
 
-        # Added water penalty / rejection
-        if self.added_water_percent > ADDED_WATER_MAX:
+        if self.added_water_percent > config.added_water_max:
             self.status = "rejected"
             self.price_per_litre = Decimal("0.00")
             self.total_price = Decimal("0.00")
             return self.total_price
         elif self.added_water_percent > 0.0:
-            bonus -= Decimal(str(0.10 * self.added_water_percent))
+            bonus -= config.water_penalty_per_percent * Decimal(str(self.added_water_percent))
 
-        # Final price calculation
-        final_price_per_litre = base_price + bonus
+        final_price_per_litre = config.base_price + bonus
         if final_price_per_litre < Decimal("0.00"):
             final_price_per_litre = Decimal("0.00")
 
@@ -174,6 +171,11 @@ class MilkLot(models.Model):
         self.total_price = round(Decimal(self.volume_l) * final_price_per_litre, 2)
         return self.total_price
 
+    
+    def __str__(self):
+        return (
+            f"{self.supplier.user.username} – {self.volume_l} L – {self.date_created}"
+        )
 
 class PaymentBill(models.Model):
     supplier = models.ForeignKey(

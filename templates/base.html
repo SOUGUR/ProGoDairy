@@ -153,10 +153,10 @@
 /* ------------------------------------------------------------------ ChatBot Styles -----------------------------------------------------------*/
     .chatbot-button {
       position: fixed;
-      bottom: 20px;
-      left: 10px;
-      width: 60px;
-      height: 60px;
+      top: 90px;
+      right: 20px;
+      width: 55px;
+      height: 55px;
       border-radius: 50%;
       background-color: #4a6fa5;
       color: white;
@@ -506,6 +506,12 @@
       </div>
       <ul class="submenu">
         <li class="menu-item">
+          <a href="{% url 'plants:dashboard' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-file-pdf"></i></span>
+            <span class="menu-text">Current Month Activity Dashboard</span>
+          </a>
+        </li>
+        <li class="menu-item">
           <a href="{% url 'milk_market_dashboard' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
             <span class="menu-text">Latest Prices and Demand</span>
@@ -634,7 +640,7 @@
         <li class="menu-item">
           <a href="{% url 'distribution:create_milk_transfer' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
-            <span class="menu-text">Pooled Milk Shipment </span>
+            <span class="menu-text">Ship Pooled Milk Lots </span>
           </a>
         </li>
 
@@ -672,7 +678,14 @@
         <li class="menu-item">
           <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-microscope"></i></span>
-            <span class="menu-text">Collect Composite Samples</span>
+            <span class="menu-text">Collect Society Sample</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_gate_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-torii-gate"></i></span>
+            <span class="menu-text">Collect Plant-Gate Sample</span>
           </a>
         </li>
 
@@ -736,15 +749,15 @@
       </div>
       <ul class="submenu">
         <li class="menu-item">
-          <a href="{% url 'plants:dashboard' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-file-pdf"></i></span>
-            <span class="menu-text">Dashboard</span>
-          </a>
-        </li>
-        <li class="menu-item">
           <a href="{% url 'accounts:user_access' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-user-cog"></i></span>
             <span class="menu-text">Admin</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'milk:milk_route_pricings' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-coins"></i></span>
+            <span class="menu-text">Pricing Control Panel</span>
           </a>
         </li>
       </ul>

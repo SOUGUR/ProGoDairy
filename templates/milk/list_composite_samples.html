@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Composite Samples Management{% endblock %}
 
@@ -507,7 +508,7 @@
   </div>
 </div>
 
-
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
 const samplesTableBody = document.querySelector(".samples-table tbody");
 const resultsCount = document.querySelector(".results-count strong");
@@ -669,7 +670,7 @@ async function fetchGraphQL(query, variables = {}) {
   console.log("GraphQL raw response:", result);
 
   if (result.errors) {
-    throw new Error(result.errors.map(e => e.message).join(", "));
+    showNotification(`Error: ${result.errors.map(e => e.message).join(", ")}`, 'error', 1900);
   }
 
   return result.data;  
@@ -733,7 +734,7 @@ async function saveSampleUpdate() {
 
   await fetchGraphQL(query, { input });
 
-  alert("Sample updated!");
+  showNotification(`Composite Sample updated successfully!`, 'success', 1900);;
   document.getElementById("edit-modal").style.display = "none";
 }
 

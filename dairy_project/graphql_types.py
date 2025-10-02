@@ -217,6 +217,55 @@ class UpdateTankerResponse:
     success: bool
     message: str
 
+@strawberry.input
+class MilkPricingConfigInput:
+    routeId: int
+    base_price: Optional[Decimal] = None
+    added_water_max: Optional[float] = None
+
+    fat_min: Optional[float] = None
+    fat_bonus: Optional[Decimal] = None
+
+    snf_min: Optional[float] = None
+    snf_bonus: Optional[Decimal] = None
+
+    protein_min: Optional[float] = None
+    protein_bonus: Optional[Decimal] = None
+
+    urea_max:Optional[float] = None
+    urea_bonus: Optional[Decimal] = None
+
+    bacteria_max: Optional[int] = None
+    bacteria_bonus: Optional[Decimal] = None
+
+    water_penalty_per_percent: Optional[Decimal] = None
+
+@strawberry.type
+class MilkPricingConfigType:
+    id: int
+    base_price: Decimal
+    added_water_max: float
+
+    fat_min: float
+    fat_bonus: Decimal
+
+    snf_min: float
+    snf_bonus: Decimal
+
+    protein_min: float
+    protein_bonus: Decimal
+
+    urea_max: float
+    urea_bonus: Decimal
+
+    bacteria_max: int
+    bacteria_bonus: Decimal
+
+    water_penalty_per_percent: Decimal
+
+    updated_at: datetime
+    route: RouteType 
+
 @strawberry.type
 class MilkLotType:
     id: int

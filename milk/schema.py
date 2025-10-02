@@ -9,8 +9,10 @@ from collection_center.models import BulkCooler
 from distribution.models import Vehicle
 from .models import CompositeSample
 from typing import List
-from dairy_project.graphql_types import UpdateTankerInput, UpdateTankerResponse
+from dairy_project.graphql_types import UpdateTankerInput, UpdateTankerResponse, MilkPricingConfigType, MilkPricingConfigInput
 from django.core.exceptions import ObjectDoesNotExist
+from distribution.models import Route
+from milk.models import MilkPricingConfig
 
 
 @strawberry.input
@@ -70,7 +72,7 @@ class Query:
         source_type: Optional[str] = None,  
         status: Optional[str] = None,     
     ) -> List[CompositeSampleType]:
-        qs = CompositeSample.objects.all()
+        qs = CompositeSample.objects.all().order_by('-collected_at')
 
         if start_date:
             qs = qs.filter(collected_at__gte=start_date)
@@ -86,6 +88,13 @@ class Query:
             qs = qs.filter(passed=status)
 
         return qs
+    
+    @strawberry.field
+    def milk_pricing_config(self, route_id: int) -> Optional[MilkPricingConfigType]:
+        try:
+            return MilkPricingConfig.objects.get(route_id=route_id)
+        except MilkPricingConfig.DoesNotExist:
+            return None
     
     
 @strawberry.type
@@ -207,6 +216,15 @@ class Mutation:
         tanker.save()
         return UpdateTankerResponse(success=True, message=f"{input.type.replace('_',' ').title()} with ID {input.id} updated successfully.")
     
+    @strawberry.mutation
+    def update_milk_pricing_config(self, info, input: MilkPricingConfigInput) -> MilkPricingConfigType:
+        route = Route.objects.get(id=input.routeId)
+        config, _ = MilkPricingConfig.objects.get_or_create(route=route)
+        for field, value in input.__dict__.items():
+            if value is not None:
+                setattr(config, field, value)
+        config.save()
+        return config
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)
 

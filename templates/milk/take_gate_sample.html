@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gate Sample Collection{% endblock %}
+
+{% block content %}
+
+<style>
+:root {
+    --primary-color: #2363b2;
+    --secondary-color: #ebf8ff;
+    --text-color: #333;
+    --border-color: #e2e8f0;
+    --success-color: #38a169;
+    --warning-color: #d69e2e;
+    --danger-color: #e53e3e;
+    --table-header-bg: #2363b2;
+    --table-header-color: #fff;
+    --table-row-alt: #f8fafc;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filters-card {
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #4a5568;
+}
+
+.filter-group select {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+}
+
+.filter-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.2);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2b6cb0;
+}
+
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e0;
+}
+
+.results-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.results-count {
+    color: #718096;
+    font-weight: 500;
+}
+
+.results-count span {
+    color: #2b6cb0;
+    font-weight: 600;
+}
+
+.table-container {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-color);
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tr:nth-child(even) {
+    background-color: var(--table-row-alt);
+}
+
+.data-table tr:hover {
+    background-color: var(--secondary-color);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #c6f6d5;
+    color: #22543d;
+}
+
+.status-pending {
+    background-color: #fefcbf;
+    color: #744210;
+}
+
+.status-inactive {
+    background-color: #fed7d7;
+    color: #742a2a;
+}
+
+.status-arrived {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.status-pending {
+    color: var(--warning-color);
+    font-weight: 500;
+}
+
+.status-delayed {
+    color: var(--danger-color);
+    font-weight: 500;
+}
+
+.sample-count {
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    max-width: 120px;
+}
+
+.form-input {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px 0 0 4px;
+    width: 60px;
+    text-align: center;
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.form-input:disabled {
+    background-color: #f8fafc;
+    color: #718096;
+}
+
+.input-suffix {
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-left: none;
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    color: #718096;
+    font-size: 0.9em;
+}
+
+/* Switch Toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e0;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--success-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+input:disabled + .slider {
+    background-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 25px;
+    border-top: 1px solid var(--border-color);
+}
+
+.action-info {
+    color: #718096;
+    font-size: 0.9em;
+}
+
+.action-group {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-action {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-collect {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-collect:hover {
+    background-color: #2f855a;
+}
+
+.btn-disabled {
+    background-color: #e2e8f0;
+    color: #718096;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .action-group {
+        justify-content: flex-end;
+    }
+}
+</style>
+<div class="container">
+    <h1>
+        <i class="fas fa-clipboard-check"></i>
+        Gate Sample Collection
+    </h1>
+
+    <!-- Selection Section -->
+    <div class="filters-card">
+        <div class="section-title">Select Collection Parameters</div>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="destinationSelect">Select Destination</label>
+                <select id="destinationSelect" name="destination">
+                    <option value="">-- Choose Destination --</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="milkTransferSelect">Select Milk Transfer</label>
+                <select id="milkTransferSelect" name="milk_transfer">
+                    <option value="">-- Choose Milk Transfer --</option>
+                </select>
+            </div>
+            
+            <div class="filter-group action-buttons">
+                <button type="button" class="btn btn-secondary">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Collection Table -->
+    <div class="results-section">
+        <div class="section-header">
+            <div class="results-count">Showing <span>5</span> transfers</div>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Milk Transfer ID</th>
+                        <th>Vehicle Arrived At</th>
+                        <th>Vehicle Name</th>
+                        <th>Society Samples</th>
+                        <th>Gate Samples Taken</th>
+                        <th>Is Stirred</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <div class="action-info">
+                Collect gate samples for quality testing and verification
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
