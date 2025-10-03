@@ -24,7 +24,7 @@
       .controls {
           display: flex;
           justify-content: center;
-          gap: 15px;
+          gap: 4.7px;
           flex-wrap: wrap;
           background: white;
           padding: 20px;
@@ -218,6 +218,19 @@
 
       <!-- Silo Information Display -->
       <div class="controls">
+            <div class="control-group">
+            <label>Silo Name</label>
+            <div id="silo-name-display" class="silo-info">-</div>
+          </div>
+          <div class="control-group">
+            <label>Silo Code</label>
+            <div id="silo-code-display" class="silo-info">-</div>
+          </div>
+          <div class="control-group">
+            <label>Created At</label>
+            <div id="silo-created-display" class="silo-info">-</div>
+          </div>
+        
           <div class="control-group">
               <label>Current Volume</label>
               <div id="volume-display" class="volume-display">0 L</div>
@@ -230,6 +243,7 @@
               <label>Available Space</label>
               <div id="available-display" class="capacity-display">0 L</div>
           </div>
+          
       </div>
 
       <!-- Silo Table -->
@@ -408,14 +422,11 @@
       option.textContent = `${silo.name} (${createdAtStr})`;
       option.dataset.volume = silo.currentVolume;
       option.dataset.capacity = silo.capacityLiters;
+      option.dataset.name = silo.name;
+      option.dataset.code = silo.code;
+      option.dataset.createdAt = silo.createdAt; 
       siloSelect.appendChild(option);
     });
-
-    if (silos.length > 0) {
-      updateVolumeDisplay(silos[0].currentVolume, silos[0].capacityLiters);
-    } else {
-      updateVolumeDisplay(0, 0);
-    }
   }
 
   function populateSilosTable(silos) {
@@ -476,11 +487,29 @@
     });
   }
 
-  function updateVolumeDisplay(volume, capacity) {
+  function updateVolumeDisplay(volume, capacity, name = "-", code = "-", createdAt = "-") {
     const available = capacity - volume;
     document.getElementById("volume-display").textContent = `${volume.toLocaleString()} L`;
     document.getElementById("capacity-display").textContent = `${capacity.toLocaleString()} L`;
     document.getElementById("available-display").textContent = `${available.toLocaleString()} L`;
+    document.getElementById("silo-name-display").textContent = name;
+    document.getElementById("silo-code-display").textContent = code;
+
+    if (createdAt && createdAt !== "-") {
+      const date = new Date(createdAt);
+      const formatted = date.toLocaleString('en-GB', {
+        timeZone: 'UTC',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+      document.getElementById("silo-created-display").textContent = formatted;
+    } else {
+      document.getElementById("silo-created-display").textContent = "-";
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -511,9 +540,12 @@
       const selected = e.target.options[e.target.selectedIndex];
       if (selected.value) {
         updateVolumeDisplay(
-          parseFloat(selected.dataset.volume), 
-          parseFloat(selected.dataset.capacity)
-        );
+        parseFloat(selected.dataset.volume), 
+        parseFloat(selected.dataset.capacity),
+        selected.dataset.name || "-",
+        selected.dataset.code || "-",
+        selected.dataset.createdAt || "-"
+      );
       }
     });
 
