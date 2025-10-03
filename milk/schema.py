@@ -13,7 +13,12 @@ from dairy_project.graphql_types import UpdateTankerInput, UpdateTankerResponse,
 from django.core.exceptions import ObjectDoesNotExist
 from distribution.models import Route
 from milk.models import MilkPricingConfig
+from enum import Enum
 
+@strawberry.enum
+class SampleTypeEnum(Enum):
+    INSTANT_GATE_TESTS = "instant-gate tests"
+    SOCIETY_TEST = "society test"
 
 @strawberry.input
 class CompositeSampleInput:
@@ -67,6 +72,8 @@ class CompositeSampleType:
     bulk_cooler: Optional["BulkCoolerType"]
     on_farm_tank: Optional["OnFarmTankType"]
     vehicle: Optional["VehicleType"]
+    sample_type: SampleTypeEnum
+
 
 
 @strawberry.type
@@ -109,6 +116,7 @@ class Query:
 class Mutation:
     @strawberry.mutation
     def create_composite_sample(self, input: CompositeSampleInput) -> CompositeSampleType:
+        print(input)
         bulk_cooler = BulkCooler.objects.filter(id=input.bulk_cooler_id).first() if input.bulk_cooler_id else None
         on_farm_tank = OnFarmTank.objects.filter(id=input.on_farm_tank_id).first() if input.on_farm_tank_id else None
         vehicle = Vehicle.objects.filter(vehicle_id=input.vehicle_id).first() if input.vehicle_id else None
@@ -158,6 +166,7 @@ class Mutation:
             bulk_cooler=sample.bulk_cooler,
             on_farm_tank=sample.on_farm_tank,
             vehicle=sample.vehicle,
+            sample_type=sample.sample_type
         )
     
     @strawberry.mutation
@@ -191,6 +200,7 @@ class Mutation:
             bulk_cooler=sample.bulk_cooler,
             on_farm_tank=sample.on_farm_tank,
             vehicle=sample.vehicle,
+            sample_type=sample.sample_type
         )
     
     @strawberry.mutation

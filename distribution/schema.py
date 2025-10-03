@@ -12,6 +12,7 @@ from accounts.schema import RouteType
 from django.core.exceptions import ValidationError as DjangoValidationError
 from dairy_project.graphql_types import MilkTransferType, VehicleInput, VehicleType, DistributorType
 from django.utils import timezone
+from decimal import Decimal
 
 
 
@@ -33,6 +34,9 @@ class MilkTransferUpdateInput:
     id: int
     arrival_datetime: datetime
     remarks: Optional[str] = None
+    departure_weight_kg: Optional[Decimal] = None
+    arrival_weight_kg: Optional[Decimal] = None
+
 
 
 
@@ -178,7 +182,18 @@ class Mutation:
             transfer.arrival_datetime = input.arrival_datetime
             transfer.remarks = input.remarks
             transfer.status = "completed"
-            transfer.save(update_fields=["arrival_datetime", "remarks", "status"])
+            if input.departure_weight_kg is not None:
+                transfer.departure_weight_kg = input.departure_weight_kg
+            if input.arrival_weight_kg is not None:
+                transfer.arrival_weight_kg = input.arrival_weight_kg
+
+            update_fields = ["arrival_datetime", "remarks", "status"]
+            if input.departure_weight_kg is not None:
+                update_fields.append("departure_weight_kg")
+            if input.arrival_weight_kg is not None:
+                update_fields.append("arrival_weight_kg")
+
+            transfer.save(update_fields=update_fields)
             return transfer
         except MilkTransfer.DoesNotExist:
             return None

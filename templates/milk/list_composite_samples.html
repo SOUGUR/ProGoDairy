@@ -455,7 +455,7 @@
       
       <div class="form-group">
         <label for="edit-received-at-lab">Received at Lab</label>
-        <input type="datetime-local" id="edit-received-at-lab">
+        <input type="datetime-local" id="edit-received-at-lab" required>
       </div>
       
       <div class="form-group">
@@ -519,9 +519,10 @@ const GET_COMPOSITE_SAMPLES = `
     id
     collectedAt
     sampleVolumeMl
+    sampleType
     bulkCooler { id name } 
     onFarmTank { id name supplier { user { username } } } 
-    vehicle { id name capacityLiters }
+    vehicle { vehicleId name capacityLiters }
     remark
     receivedAtLab
     fatPercent
@@ -584,22 +585,29 @@ function renderSamples(samples) {
 
   samples.forEach(sample => {
     const collectedDate = new Date(sample.collectedAt);
-    const dateStr = collectedDate.toLocaleDateString('en-GB', { timeZone: 'UTC' });
+    const dateStr = collectedDate.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
     const timeStr = collectedDate.toLocaleTimeString('en-GB', { 
-      timeZone: 'UTC', 
+      timeZone: 'Asia/Kolkata', 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: true 
     });
 
-    const receivedDate = new Date(sample.receivedAtLab);
-    const receiveddateStr = receivedDate.toLocaleDateString('en-GB', { timeZone: 'UTC' });
-    const receivedtimeStr = receivedDate.toLocaleTimeString('en-GB', { 
-      timeZone: 'UTC', 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
+    let receiveddateStr = null;
+    let receivedtimeStr = null;
+
+    if (sample.receivedAtLab) {
+      const receivedDate = new Date(sample.receivedAtLab);
+      if (!isNaN(receivedDate.getTime())) {
+        receiveddateStr = receivedDate.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
+        receivedtimeStr = receivedDate.toLocaleTimeString('en-GB', { 
+          timeZone: 'Asia/Kolkata', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true 
+        });
+      }
+    }
 
 
     let sourceType = "", sourceName = "";
@@ -609,9 +617,12 @@ function renderSamples(samples) {
     } else if (sample.onFarmTank) {
       sourceType = "On-Farm Tank";
       sourceName = sample.onFarmTank.supplier?.user?.username || sample.onFarmTank.name;
+    } else if (sample.vehicle && sample.sampleType == "INSTANT_GATE_TESTS") {
+      sourceType = "Milk Transfer";
+      sourceName = `Vehicle #${sample.vehicle.vehicleId}`;
     } else if (sample.vehicle) {
       sourceType = "Can Collection";
-      sourceName = `Vehicle #${sample.vehicle.registrationNumber}`;
+      sourceName = `Vehicle #${sample.vehicle.vehicleId}`;
     }
 
     const row = `
@@ -627,8 +638,8 @@ function renderSamples(samples) {
           <div class="time">${timeStr}</div>
         </td>
         <td class="received-date">
-          <div class="date">${receiveddateStr}</div>
-          <div class="time">${receivedtimeStr}</div>
+          <div class="date">${receiveddateStr ? receiveddateStr : "-"}</div>
+          <div class="time">${receivedtimeStr ? receivedtimeStr : "-"}</div>
         </td>
         <td class="status-cell">
           <span class="status-badge status-${sample.passed || 'pending'}">

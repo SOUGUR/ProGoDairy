@@ -102,6 +102,22 @@ class MilkTransfer(models.Model):
     transfer_date = models.DateTimeField(auto_now_add=True)
     arrival_datetime = models.DateTimeField(null=True, blank=True)
 
+    departure_weight_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Weight of milk (in kg) while leaving the cooperative/source."
+    )
+
+    arrival_weight_kg = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Weight of milk (in kg) while arriving at the destination."
+    )
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

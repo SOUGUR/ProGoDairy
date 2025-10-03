@@ -697,7 +697,7 @@ document.querySelector(".transfer-form").addEventListener("submit", async functi
     const result = await res.json();
     if (result.errors) {
       console.error("GraphQL Errors:", result.errors);
-      alert("Failed to create transfer: " + result.errors[0].message);
+      showNotification("Failed to create transfer: " + result.errors[0].message, 'error', 1800);
       return;
     }
 
@@ -707,7 +707,7 @@ document.querySelector(".transfer-form").addEventListener("submit", async functi
     e.target.reset();
   } catch (error) {
     console.error("Error creating transfer:", error);
-   showNotification('You encountered an error while creating Milk Transfer', 'error', 6000);
+   showNotification('You encountered an error while creating Milk Transfer', 'error', 1800);
   }
 });
 

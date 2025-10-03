@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Milk Transfers Management{% endblock %}
 
@@ -412,7 +413,7 @@
 
   <!-- Filter Section -->
   <div class="filter-card">
-    <div class="section-title">Filter Transfers</div>
+    <div class="section-title">Filter milk-transfers</div>
     <form class="filter-form">
       <div class="form-grid">
         <div class="form-group">
@@ -475,6 +476,7 @@
           <th>Transfer Date</th>
           <th>Arrival Time</th>
           <th>Actions</th>
+          <th>Update</th>
         </tr>
       </thead>
       <tbody>
@@ -501,6 +503,24 @@
       <input type="hidden" id="transferId" />
       <label for="arrivalDatetime">Arrival DateTime:</label>
       <input type="datetime-local" id="arrivalDatetime" required />
+      
+      <label for="departureWeight">Departure Weight (kg)</label>
+      <input 
+        type="number" 
+        id="departureWeight" 
+        step="0.01" 
+        min="0"
+        placeholder="e.g. 1250.50"
+      />
+
+      <label for="arrivalWeight">Arrival Weight (kg)</label>
+      <input 
+        type="number" 
+        id="arrivalWeight" 
+        step="0.01" 
+        min="0"
+        placeholder="e.g. 1245.75"
+      />
 
       <label for="updateRemark">Remark</label>
       <input type="text" id="updateRemark" required />
@@ -509,7 +529,7 @@
   </div>
 </div>
 
-
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
 
 //================================================= Populate the table based on filters selected ====================================================================//
@@ -617,9 +637,29 @@ function populateTable(transfers) {
     const vehicle = t.vehicle ? `${t.vehicle.name} (${t.vehicle.vehicleId})` : "Unassigned";
     const destination = t.destination?.name || "-";
     const volume = t.totalVolume?.toFixed(2) || "0.00";
-    const transferDate = new Date(t.transferDate).toLocaleString();
-    const arrivalTime = t.arrivalDatetime ? new Date(t.arrivalDatetime).toLocaleString() : "-";
-    const status = t.status.charAt(0).toUpperCase() + t.status.slice(1);
+    function formatUTCDateTime(isoString) {
+      if (!isoString) return "-";
+
+      const date = new Date(isoString);
+
+      const datePart = date.toLocaleDateString('en-GB', {
+        timeZone: 'UTC',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      const timePart = date.toLocaleTimeString('en-US', {
+        timeZone: 'UTC',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      return `${datePart}<br>${timePart}`;
+    }
+    const transferDate = formatUTCDateTime(t.transferDate);
+    const arrivalTime = formatUTCDateTime(t.arrivalDatetime);
 
     const row = `
       <tr>
@@ -637,6 +677,10 @@ function populateTable(transfers) {
             <a onclick = "loadTransfer(${t.id});" title="View Details" class="btn-view">
               <i class="fas fa-eye"></i>
             </a>
+          </div>
+        </td>
+        <td>
+          <div class="action-buttons">
             <a onclick = "editTransfer(${t.id});" title="Edit Transfer" class="btn-edit">
               <i class="fas fa-edit"></i>
             </a>
@@ -664,6 +708,8 @@ async function fetchMilkTransferById(id) {
         transferDate
         arrivalDatetime
         status
+        departureWeightKg  
+        arrivalWeightKg    
         totalVolume
         remarks
         vehicle { id name vehicleId }
@@ -718,21 +764,24 @@ window.onclick = function (event) {
 };
 
 async function loadTransfer(id) {
-  document.querySelector(".btn-view").addEventListener("click", async (e) => {
-    e.preventDefault();
-    const transfer = await fetchMilkTransferById(id);
+  const transfer = await fetchMilkTransferById(id);
+  if (transfer) {
     showTransferDetails(transfer);
-  });
+  } else {
+    alert("Transfer not found!");
+  }
 }
 
 //======================================================== Update Milk Transfer =====================================================//
-async function updateMilkTransfer(id, arrivalDatetime, remarks) {
+async function updateMilkTransfer(id, arrivalDatetime, remarks, departureWeightKg, arrivalWeightKg) {
   const mutation = `
     mutation UpdateMilkTransfer($input: MilkTransferUpdateInput!) {
       updateMilktransfer(input: $input) {
         id
         arrivalDatetime
         remarks
+        departureWeightKg
+        arrivalWeightKg
       }
     }
   `;
@@ -741,7 +790,9 @@ async function updateMilkTransfer(id, arrivalDatetime, remarks) {
     input: {
       id: id,
       arrivalDatetime: arrivalDatetime,
-      remarks: remarks
+      remarks: remarks,
+      departureWeightKg: departureWeightKg,  
+      arrivalWeightKg: arrivalWeightKg     
     },
   };
 
@@ -758,9 +809,35 @@ async function updateMilkTransfer(id, arrivalDatetime, remarks) {
   return result.data.updateMilktransfer;
 }
 
-function editTransfer(id) {
+async function editTransfer(id) {
+  const transfer = await fetchMilkTransferById(id);
+  if (!transfer) {
+    alert("Transfer not found!");
+    return;
+  }
+
+  document.getElementById("transferId").value = transfer.id;
+
+  if (transfer.arrivalDatetime) {
+    const localArrival = new Date(transfer.arrivalDatetime).toLocaleString('sv-SE', {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    document.getElementById("arrivalDatetime").value = localArrival;
+  } else {
+    document.getElementById("arrivalDatetime").value = "";
+  }
+
+  document.getElementById("departureWeight").value = transfer.departureWeightKg ?? "";
+  document.getElementById("arrivalWeight").value = transfer.arrivalWeightKg ?? "";
+
+  document.getElementById("updateRemark").value = transfer.remarks ?? "";
   document.getElementById("editModal").style.display = "block";
-  document.getElementById("transferId").value = id;
 }
 
 document.getElementById("closeUpdateModal").onclick = function () {
@@ -773,15 +850,21 @@ document.getElementById("editForm").onsubmit = async function (e) {
   const arrivalDatetime = document.getElementById("arrivalDatetime").value;
   const remarks = document.getElementById("updateRemark").value;
 
-  const updated = await updateMilkTransfer(id, arrivalDatetime, remarks);
+  const departureWeightRaw = document.getElementById("departureWeight").value;
+  const arrivalWeightRaw = document.getElementById("arrivalWeight").value;
+
+  const departureWeight = departureWeightRaw ? parseFloat(departureWeightRaw) : null;
+  const arrivalWeight = arrivalWeightRaw ? parseFloat(arrivalWeightRaw) : null;
+
+  const updated = await updateMilkTransfer(id, arrivalDatetime, remarks, departureWeight, arrivalWeight);
 
   if (updated) {
-    alert(`Milk Transfer ID ${id} updated with arrival time ${arrivalDatetime} successfully!`);
+    showNotification(`Milk Transfer ID ${id} updated with arrival time ${arrivalDatetime} successfully!`, 'transfer', 4000);
     document.getElementById("editModal").style.display = "none";
     const transfers = await fetchMilkTransfers();
     populateTable(transfers);
   } else {
-    alert("Failed to update Milk Transfer!");
+    showNotification("Failed to update Milk Transfer!", 'warning', 6000);
   }
 };
 

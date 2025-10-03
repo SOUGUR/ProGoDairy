@@ -116,6 +116,9 @@ class MilkTransferType:
     vehicle: Optional["VehicleType"]
     destination: Optional["PlantType"]
 
+    departure_weight_kg: Optional[float]
+    arrival_weight_kg: Optional[float]
+
     bulk_cooler: Optional["BulkCoolerType"]
     on_farm_tank: Optional["OnFarmTankType"]
     can_collection: Optional["CanCollectionType"]
