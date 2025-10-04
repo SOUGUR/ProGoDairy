@@ -69,6 +69,11 @@ class CompositeSampleType:
     added_water_percent: float
     passed: Optional[str]
 
+    cob_test: Optional[bool]
+    alcohol_test: Optional[bool]
+    ph_value: Optional[float]
+    mbtr_quick: Optional[int]
+
     bulk_cooler: Optional["BulkCoolerType"]
     on_farm_tank: Optional["OnFarmTankType"]
     vehicle: Optional["VehicleType"]
@@ -196,6 +201,11 @@ class Mutation:
             antibiotic_residue=sample.antibiotic_residue,
             added_water_percent=sample.added_water_percent,
             passed=sample.passed,
+
+            cob_test=sample.cob_test,
+            alcohol_test=sample.alcohol_test,
+            ph_value=sample.ph_value,
+            mbtr_quick=sample.mbtr_quick,
 
             bulk_cooler=sample.bulk_cooler,
             on_farm_tank=sample.on_farm_tank,

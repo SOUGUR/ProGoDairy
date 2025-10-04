@@ -510,6 +510,13 @@
     color: #777;
   }
   
+   .close-register {
+    font-size: 24px;
+    cursor: pointer;
+    color: #777;
+  }
+  
+  
   .close-login:hover {
     color: #333;
   }
@@ -547,7 +554,7 @@
   .login-submit-btn:hover {
     background-color: #3a5a80;
   }
-    </style>
+</style>
 </head>
 <body>
 
@@ -736,6 +743,82 @@
         </div>
     </section>
 
+<!------------------------------------------------ Registration Form ------------------------------------------->
+<div id="register-modal" class="login-modal">
+  <div class="login-form-container">
+    <div class="login-header">
+      <h3>Register</h3>
+      <span class="close-register">&times;</span>
+    </div>
+    <form class="login-form" id="register-form" method="POST" action="">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="id_username">Phone Number</label>
+        <input 
+          type="tel" 
+          id="id_username" 
+          name="username" 
+          placeholder="Enter 10-digit phone number"
+          pattern="[0-9]{10}"
+          title="Please enter a valid 10-digit phone number"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="id_first_name">First Name</label>
+        <input 
+          type="text" 
+          id="id_first_name" 
+          name="first_name" 
+          placeholder="Enter your first name"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="id_last_name">Last Name</label>
+        <input 
+          type="text" 
+          id="id_last_name" 
+          name="last_name" 
+          placeholder="Enter your last name"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="id_password1">Password</label>
+        <input 
+          type="password" 
+          id="id_password1" 
+          name="password1" 
+          placeholder="Create a password"
+          minlength="8"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="id_password2">Confirm Password</label>
+        <input 
+          type="password" 
+          id="id_password2" 
+          name="password2" 
+          placeholder="Confirm your password"
+          required
+        >
+        <div id="password-error" style="color: red; font-size: 14px; margin-top: 5px; display: none;">
+          Passwords do not match.
+        </div>
+      </div>
+
+      <input type="hidden" name="next" value="{{ request.GET.next }}">
+      <button type="submit" class="login-submit-btn">Register</button>
+    </form>
+  </div>
+</div>
 <!------------------------------------------------ Login Form ------------------------------------------->
 <div id="login-modal" class="login-modal">
   <div class="login-form-container">
@@ -769,7 +852,7 @@
     <div class="floating-buttons">
         <a href="#" class="floating-btn demo-btn">Request Demo</a>
         <a href="#" class="floating-btn login-btn">Login</a>
-        <a href="#" class="floating-btn login-btn">Register</a>
+        <a href="#"  class="floating-btn register-trigger">Register</a>
     </div>
 
 </body>
@@ -778,6 +861,10 @@
   const loginBtn = document.querySelector('.login-btn');
   const closeBtn = document.querySelector('.close-login');
   
+  const registerModal = document.getElementById('register-modal');
+  const registerBtn = document.querySelector('.register-trigger'); // new
+  const closeRegister = document.querySelector('.close-register');
+
   loginBtn.addEventListener('click', function(e) {
     e.preventDefault();
     loginModal.style.display = 'flex';
@@ -787,11 +874,19 @@
     loginModal.style.display = 'none';
   });
   
-  window.addEventListener('click', function(event) {
-    if (event.target === loginModal) {
-      loginModal.style.display = 'none';
-    }
-  });
+  registerBtn.addEventListener('click', function(e) {
+  e.preventDefault();
+  registerModal.style.display = 'flex';
+});
+
+closeRegister.addEventListener('click', () => {
+  registerModal.style.display = 'none';
+});
+
+window.addEventListener('click', function(event) {
+  if (event.target === loginModal) loginModal.style.display = 'none';
+  if (event.target === registerModal) registerModal.style.display = 'none';
+});
   
   document.querySelector('.login-form').addEventListener('submit', function(e) {
     const email = document.getElementById('id_username').value;
@@ -802,5 +897,28 @@
     loginModal.style.display = 'none';
     
   });
+
+  document.getElementById('register-form').addEventListener('submit', function(e) {
+  const pass1 = document.getElementById('id_password1').value;
+  const pass2 = document.getElementById('id_password2').value;
+  const errorDiv = document.getElementById('password-error');
+
+  if (pass1 !== pass2) {
+    e.preventDefault();
+    errorDiv.style.display = 'block';
+  } else {
+    errorDiv.style.display = 'none';
+  }
+});
+
+// Optional: hide error when user types
+document.getElementById('id_password2').addEventListener('input', () => {
+  document.getElementById('password-error').style.display = 'none';
+});
+
+// Close modal functionality
+document.querySelector('.close-register').onclick = () => {
+  document.getElementById('register-modal').style.display = 'none';
+};
 </script>
 </html>
