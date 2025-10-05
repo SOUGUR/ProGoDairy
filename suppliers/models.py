@@ -1,7 +1,6 @@
 from django.db import models
 from decimal import Decimal, ROUND_HALF_UP
 from django.contrib.auth.models import User
-from distribution.models import Route
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.apps import apps
@@ -32,7 +31,7 @@ class Supplier(models.Model):
     bank_name = models.CharField(max_length=100)
     ifsc_code = models.CharField(max_length=11)
     route = models.ForeignKey(
-        Route,
+        "distribution.Route",
         related_name="suppliers",
         blank=True,
         null=True,

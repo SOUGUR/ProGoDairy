@@ -1,6 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.db.models import Q
+from milk.models import CompositeSample
+from django.core.validators import RegexValidator
+from django.utils import timezone
+
+
+validate_mobile = RegexValidator(
+    regex=r'^[0-9]{10,17}$',
+    message="Enter a valid mobile number."
+)
 
 class Route(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -8,6 +18,16 @@ class Route(models.Model):
     def __str__(self):
         return self.name
 
+class VehicleDriver(models.Model):
+    name = models.CharField(max_length=100)
+    mobile = models.CharField(max_length=17, validators=[validate_mobile])
+    licence_no = models.CharField(max_length=50)
+    licence_expiry = models.DateField()
+    from_date = models.DateField()        # first day this driver is valid
+    to_date = models.DateField(null=True, blank=True)  # NULL = currently active
+
+    def __str__(self):
+        return f"{self.name} ({self.vehicle.vehicle_id})"
 
 class Distributor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
@@ -211,3 +231,207 @@ class MilkTransfer(models.Model):
                 condition=models.Q(can_collection__isnull=False)
             ),
         ]
+
+class CIPRecord(models.Model):
+    vehicle = models.ForeignKey(
+        'Vehicle',
+        on_delete=models.CASCADE,
+        related_name='cip_records'
+    )
+    certificate_no = models.CharField(max_length=50, unique=True)
+    wash_type = models.CharField(
+        max_length=20,
+        choices=[('Caustic', 'Caustic'), ('Acid', 'Acid'), ('Sanitiser', 'Sanitiser'), ('Full-CIP', 'Full-CIP')]
+    )
+    started_at = models.DateTimeField()
+    finished_at = models.DateTimeField()
+    expiry_at = models.DateTimeField()        
+    caustic_temp_c = models.FloatField(null=True, blank=True)
+    acid_temp_c = models.FloatField(null=True, blank=True)
+    caustic_conc_pct = models.FloatField(null=True, blank=True)
+    acid_conc_pct = models.FloatField(null=True, blank=True)
+    final_rinse_cond_ms = models.FloatField(null=True, blank=True)
+    operator_code = models.CharField(max_length=30)
+    passed = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-finished_at']
+        indexes = [
+            models.Index(fields=['vehicle', '-finished_at']),
+            models.Index(fields=['expiry_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.vehicle.vehicle_id} CIP-{self.certificate_no} ({self.finished_at:%Y-%m-%d %H:%M})"
+
+    
+class GatePass(models.Model):
+    PASS_STATUS = [
+        ("draft", "Draft"),          # not yet printed
+        ("open", "Open"),            # vehicle left, not yet returned / completed
+        ("completed", "Completed"),  # vehicle returned, seals broken, milk received
+        ("cancelled", "Cancelled"),  # never left
+    ]
+    gate_pass_status = models.CharField(max_length=12, choices=PASS_STATUS, default="draft")
+
+    milk_transfer = models.ForeignKey(
+        "distribution.MilkTransfer",
+        on_delete=models.CASCADE,
+        related_name="gate_passes",
+        help_text="The transfer that this pass certifies.",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    issued_at  = models.DateTimeField(null=True, blank=True)  
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # --- WEIGHTS ------------------------------------------------------------
+    empty_tare_kg = models.DecimalField(
+        max_digits=10, decimal_places=2, help_text="Vehicle + tanker completely empty"
+    )
+
+    net_volume_l = models.DecimalField(
+        max_digits=10, decimal_places=2, help_text="Net litres @ standard density"
+    )
+    density_kg_per_l = models.DecimalField(
+        max_digits=5, decimal_places=4, default=1.0320
+    )
+
+    # CIP REFERENCE 
+    cip_record = models.ForeignKey(
+        "distribution.CIPRecord",
+        on_delete=models.RESTRICT,  
+        related_name="gate_passes",
+    )
+
+    # ROUTE & ETA 
+    route = models.ForeignKey(
+        "distribution.Route",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="gate_passes",
+    )
+    expected_arrival_plant = models.DateTimeField()
+
+    # DRIVER 
+    driver = models.ForeignKey(
+    "distribution.VehicleDriver",
+    on_delete=models.RESTRICT,
+    related_name="gate_passes",
+    help_text="Driver on record when the pass was issued.",
+  )
+    
+    # QC QUICK RESULTS 
+    composite_samples = models.ManyToManyField(
+        "milk.CompositeSample",
+        through="distribution.GatePassQC",
+        related_name="gate_passes",
+    )
+
+
+    class Meta:
+        ...
+        constraints = [
+            models.UniqueConstraint(
+                fields=["milk_transfer"],        
+                condition=models.Q(gate_pass_status="open"),
+                name="unique_open_pass_per_transfer",
+            )
+        ]
+
+    @property
+    def vehicle(self):
+        return self.milk_transfer.vehicle
+
+
+
+    def seal_numbers(self):
+        return [s.seal_no for s in self.seals.all()]
+    
+    def link_samples(self):
+        transfer = self.milk_transfer
+        source_q = Q()
+        if transfer.bulk_cooler:
+            source_q |= Q(bulk_cooler=transfer.bulk_cooler)
+        if transfer.on_farm_tank:
+            source_q |= Q(on_farm_tank=transfer.on_farm_tank)
+        if transfer.can_collection:
+            source_q |= Q(can_collection=transfer.can_collection)
+
+        samples = CompositeSample.objects.filter(source_q)
+
+        for s in samples:
+            GatePassQC.objects.get_or_create(
+                gate_pass=self,
+                composite_sample=s,
+                defaults={"is_primary": s.sample_type == "society test"}
+            )
+        
+    def clean(self):
+        super().clean()
+        if self.gate_pass_status == "open":
+            open_cnt = (
+                GatePass.objects.exclude(pk=self.pk)               
+                .filter(driver=self.driver, gate_pass_status="open")
+                .count()
+            )
+            if open_cnt:
+                raise ValidationError(
+                    "Driver already has an open gate-pass. "
+                    "Complete or cancel it before creating a new one."
+                )
+
+    def save(self, *args, **kwargs):
+        # auto-calculate net litres from weight & density
+        if not self.net_volume_l and self.gross_weight_kg and self.empty_tare_kg:
+            net_kg = float(self.gross_weight_kg) - float(self.empty_tare_kg)
+            self.net_volume_l = round(net_kg / float(self.density_kg_per_l), 2)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"GP-{self.id}  {self.vehicle.vehicle_id}  {self.created_at:%d-%b %H:%M}"
+    
+    
+class Seal(models.Model):
+    gate_pass = models.ForeignKey(
+        GatePass,
+        on_delete=models.CASCADE,
+        related_name="seals"
+    )
+    seal_no = models.CharField(max_length=50, unique=True)
+    position = models.CharField(
+        max_length=30,
+        choices=[
+            ("top-man", "Top Man-hole"),
+            ("outlet", "Outlet Valve"),
+            ("pump-hatch", "Pump Hatch"),
+            ("instrument-cabinet", "Instrument Cabinet"),
+            ("sample-cock", "Sample Cock"),
+        ]
+    )
+    applied_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["position"]
+
+    def __str__(self):
+        return f"{self.position}  {self.seal_no}"
+    
+class GatePassQC(models.Model):
+    gate_pass = models.ForeignKey(
+        GatePass,
+        on_delete=models.CASCADE,
+        related_name="qc_samples"
+    )
+    composite_sample = models.ForeignKey(
+        "milk.CompositeSample",
+        on_delete=models.CASCADE,
+    )
+    is_primary = models.BooleanField(
+        default=False,
+        help_text="True if this pouch travels with the tanker (usually society test)."
+    )
+
+    class Meta:
+        unique_together = [('gate_pass', 'composite_sample')]
