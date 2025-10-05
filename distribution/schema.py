@@ -1,7 +1,7 @@
 import strawberry
 from typing import Optional, List
 from datetime import datetime
-from .models import Vehicle, Distributor, Route, MilkTransfer
+from .models import Vehicle, Distributor, Route, MilkTransfer, VehicleDriver
 from suppliers.models import OnFarmTank, CanCollection
 from collection_center.models import BulkCooler
 from django.core.exceptions import ValidationError 
@@ -10,7 +10,7 @@ from strawberry.types import Info
 from django.core.exceptions import ObjectDoesNotExist
 from accounts.schema import RouteType
 from django.core.exceptions import ValidationError as DjangoValidationError
-from dairy_project.graphql_types import MilkTransferType, VehicleInput, VehicleType, DistributorType
+from dairy_project.graphql_types import MilkTransferType, VehicleInput, VehicleType, DistributorType, VehicleDriverInput, VehicleDriverType, CIPRecord, CIPRecordInput, CIPRecordType, CIPRecordUpdateInput
 from django.utils import timezone
 from decimal import Decimal
 
@@ -45,6 +45,10 @@ class Query:
     @strawberry.field
     def all_vehicles(self) -> List[VehicleType]:
         return Vehicle.objects.select_related('distributor', 'route').all()
+    
+    @strawberry.field
+    def all_drivers(self) -> List[VehicleDriverType]:
+        return VehicleDriver.objects.all()
     
     @strawberry.field
     def all_routes(self) -> List[RouteType]:
@@ -93,6 +97,21 @@ class Query:
             return MilkTransfer.objects.get(id=id)
         except MilkTransfer.DoesNotExist:
             return None
+        
+    @strawberry.field
+    def latest_cip_record(self, vehicle_id: int) -> Optional[CIPRecordType]:
+        print(vehicle_id)
+        return (
+            CIPRecord.objects
+            .filter(vehicle_id=vehicle_id)
+            .select_related("vehicle")
+            .order_by("-finished_at")
+            .first()
+        )
+    
+    @strawberry.field
+    def cip_records_by_vehicle(self, vehicle_id: int) -> List["CIPRecordType"]:
+        return CIPRecord.objects.filter(vehicle_id=vehicle_id).order_by("-started_at")
 
 
 
@@ -197,6 +216,63 @@ class Mutation:
             return transfer
         except MilkTransfer.DoesNotExist:
             return None
+        
+    @strawberry.mutation
+    def add_driver(self, input: VehicleDriverInput) -> VehicleDriverType:
+        route = None
+        if input.route_id:
+            route = Route.objects.filter(id=input.route_id).first()
+
+        driver = VehicleDriver.objects.create(
+            name=input.name,
+            mobile=input.mobile,
+            licence_no=input.licence_no,
+            licence_expiry=input.licence_expiry,
+            route=route,
+            is_active=input.is_active,
+        )
+
+        return VehicleDriverType(
+            id=driver.id,
+            name=driver.name,
+            mobile=driver.mobile,
+            licence_no=driver.licence_no,
+            licence_expiry=driver.licence_expiry,
+            route=RouteType(id=route.id, name=route.name) if route else None,
+            is_active=driver.is_active,
+        )
+    
+    @strawberry.mutation
+    def add_cip_record(self, input: CIPRecordInput) -> CIPRecordType:
+        print(input)
+        vehicle = Vehicle.objects.get(id=input.vehicle_id)
+        cip = CIPRecord.objects.create(
+            vehicle=vehicle,
+            certificate_no=input.certificate_no,
+            wash_type=input.wash_type,
+            started_at=input.started_at,
+            finished_at=input.finished_at,
+            expiry_at=input.expiry_at,
+            caustic_temp_c=input.caustic_temp_c,
+            acid_temp_c=input.acid_temp_c,
+            caustic_conc_pct=input.caustic_conc_pct,
+            acid_conc_pct=input.acid_conc_pct,
+            final_rinse_cond_ms=input.final_rinse_cond_ms,
+            operator_code=input.operator_code,
+            passed=input.passed
+        )
+        return cip
+
+
+    @strawberry.mutation
+    def update_cip_record(self, input: CIPRecordUpdateInput) -> CIPRecordType:
+        cip = CIPRecord.objects.get(id=input.id)
+        for field, value in input.__dict__.items():
+            if value is not None and field != "id":
+                setattr(cip, field, value)
+        cip.save()
+        return cip
+    
 
 
 schema = strawberry.Schema(query=Query, mutation= Mutation)

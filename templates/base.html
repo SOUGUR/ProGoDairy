@@ -668,13 +668,19 @@
         <li class="menu-item">
           <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-shipping-fast"></i></span>
-            <span class="menu-text">Vehicles</span>
+            <span class="menu-text">Vehicles and CIP</span>
           </a>
         </li>
         <li class="menu-item">
-          <a href="milk_distribution.html" class="menu-link">
+          <a href="{% url 'distribution:add_get_vehicle_driver' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
+            <span class="menu-text">Add Driver</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'distribution:vehicle_CIP_log' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-route"></i></span>
-            <span class="menu-text">Distribution</span>
+            <span class="menu-text">vehicle CIP logs</span>
           </a>
         </li>
       </ul>

@@ -20,14 +20,20 @@ class Route(models.Model):
 
 class VehicleDriver(models.Model):
     name = models.CharField(max_length=100)
-    mobile = models.CharField(max_length=17, validators=[validate_mobile])
+    mobile = models.CharField(max_length=17, validators=[validate_mobile],unique=True)
     licence_no = models.CharField(max_length=50)
-    licence_expiry = models.DateField()
-    from_date = models.DateField()        # first day this driver is valid
-    to_date = models.DateField(null=True, blank=True)  # NULL = currently active
+    licence_expiry = models.DateField()  
+    route = models.ForeignKey(
+        Route,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='vehicle_drivers'
+    )
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.name} ({self.vehicle.vehicle_id})"
+        return f"{self.name}"
 
 class Distributor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)

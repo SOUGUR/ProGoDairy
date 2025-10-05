@@ -7,10 +7,11 @@ from accounts.schema import RouteType
 from strawberry_django import type as strawberry_django_type
 from accounts.schema import UserType
 from suppliers.models import Supplier, MilkLot, OnFarmTank
-from distribution.models import Vehicle, Distributor
+from distribution.models import Vehicle, Distributor, CIPRecord
 from plants.models import Employee, Role, Silo
 from collection_center.models import BulkCooler
 from milk.models import CompositeSample
+from strawberry import auto
 
 @strawberry.type
 class RouteVolumeStats:
@@ -70,6 +71,27 @@ class EmployeeType:
     role: Optional[RoleType]
     routes: strawberry.auto 
 
+
+@strawberry.type
+class VehicleDriverType:
+    id: int
+    name: str
+    mobile: str
+    licence_no: str
+    licence_expiry: date
+    route: RouteType | None
+    is_active: bool
+
+
+@strawberry.input
+class VehicleDriverInput:
+    name: str
+    mobile: str
+    licence_no: str
+    licence_expiry: date
+    route_id: int | None = None
+    is_active: bool = True  
+
 @strawberry_django_type(Distributor)
 class DistributorType:
     id: int
@@ -89,6 +111,58 @@ class VehicleType:
     @strawberry.field
     def is_occupied(self) -> bool:
         return self.is_available  
+    
+
+@strawberry_django.type(CIPRecord)
+class CIPRecordType:
+    id: auto
+    certificate_no: auto
+    wash_type: auto
+    started_at: auto
+    finished_at: auto
+    expiry_at: auto
+    caustic_temp_c: auto
+    acid_temp_c: auto
+    caustic_conc_pct: auto
+    acid_conc_pct: auto
+    final_rinse_cond_ms: auto
+    operator_code: auto
+    passed: auto
+    vehicle: "VehicleType" 
+
+
+@strawberry.input
+class CIPRecordInput:
+    vehicle_id: str
+    certificate_no: str
+    wash_type: str
+    started_at: datetime
+    finished_at: datetime
+    expiry_at: datetime
+    caustic_temp_c: Optional[float] = None
+    acid_temp_c: Optional[float] = None
+    caustic_conc_pct: Optional[float] = None
+    acid_conc_pct: Optional[float] = None
+    final_rinse_cond_ms: Optional[float] = None
+    operator_code: str
+    passed: bool = True
+
+
+@strawberry.input
+class CIPRecordUpdateInput:
+    id: int
+    certificate_no: Optional[str] = None
+    wash_type: Optional[str] = None
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+    expiry_at: Optional[datetime] = None
+    caustic_temp_c: Optional[float] = None
+    acid_temp_c: Optional[float] = None
+    caustic_conc_pct: Optional[float] = None
+    acid_conc_pct: Optional[float] = None
+    final_rinse_cond_ms: Optional[float] = None
+    operator_code: Optional[str] = None
+    passed: Optional[bool] = None
 
 @strawberry.type
 class PlantType:
