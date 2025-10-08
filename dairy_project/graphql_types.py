@@ -133,7 +133,7 @@ class CIPRecordType:
 
 @strawberry.input
 class CIPRecordInput:
-    vehicle_id: str
+    vehicle_id: int
     certificate_no: str
     wash_type: str
     started_at: datetime
