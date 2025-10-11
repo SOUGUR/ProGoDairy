@@ -14,3 +14,6 @@ def create_milk_transfer(request):
 
 def milk_transfer_list(request):
     return render(request, 'distribution/milk_transfer_list.html')
+
+def gate_pass_tickets(request):
+    return render(request, 'distribution/gate_pass_tickets.html')

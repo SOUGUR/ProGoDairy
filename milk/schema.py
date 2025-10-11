@@ -1,83 +1,17 @@
 import strawberry
 from typing import Optional
 from datetime import datetime
-from dairy_project.graphql_types import BulkCoolerType
-from distribution.schema import VehicleType
-from suppliers.schema import OnFarmTankType
 from suppliers.models import OnFarmTank
 from collection_center.models import BulkCooler
 from distribution.models import Vehicle
 from .models import CompositeSample
 from typing import List
-from dairy_project.graphql_types import UpdateTankerInput, UpdateTankerResponse, MilkPricingConfigType, MilkPricingConfigInput
+from dairy_project.graphql_types import UpdateTankerInput, UpdateTankerResponse, MilkPricingConfigType, MilkPricingConfigInput, CompositeSampleType, CompositeSampleInput, UpdateCompositeSampleInput
 from django.core.exceptions import ObjectDoesNotExist
 from distribution.models import Route
 from milk.models import MilkPricingConfig
-from enum import Enum
-
-@strawberry.enum
-class SampleTypeEnum(Enum):
-    INSTANT_GATE_TESTS = "instant-gate tests"
-    SOCIETY_TEST = "society test"
-
-@strawberry.input
-class CompositeSampleInput:
-    bulk_cooler_id: Optional[int] = None
-    on_farm_tank_id: Optional[int] = None
-    vehicle_id: Optional[str] = None
-    remark: Optional[str] = None
-    sample_volume_ml: Optional[int] = 50
-    temperature_c: Optional[float] = 4.0
-    is_stirred:Optional[bool] = False
-    
-    
-
-@strawberry.input
-class UpdateCompositeSampleInput:
-    id: int
-    received_at_lab: Optional[datetime] = None
-    remark: str | None = None
-    fat_percent: float | None = None
-    snf_percent: float | None = None
-    protein_percent: float | None = None
-    bacterial_count: int | None = None
-    antibiotic_residue: bool | None = None
-    added_water_percent: float | None = None
-    passed: str | None = None   
-
-    sample_type: Optional[str] = None 
-    cob_test: Optional[bool] = None
-    alcohol_test: Optional[bool] = None
-    ph_value: Optional[float] = None
-    mbtr_quick: Optional[int] = None
 
 
-@strawberry.type
-class CompositeSampleType:
-    id: int
-    sample_volume_ml: int
-    collected_at: datetime
-    temperature_c: float
-    received_at_lab: Optional[datetime]
-    remark: Optional[str]
-
-    fat_percent: Optional[float]
-    snf_percent: Optional[float]
-    protein_percent: Optional[float]
-    bacterial_count: Optional[int]
-    antibiotic_residue: bool
-    added_water_percent: float
-    passed: Optional[str]
-
-    cob_test: Optional[bool]
-    alcohol_test: Optional[bool]
-    ph_value: Optional[float]
-    mbtr_quick: Optional[int]
-
-    bulk_cooler: Optional["BulkCoolerType"]
-    on_farm_tank: Optional["OnFarmTankType"]
-    vehicle: Optional["VehicleType"]
-    sample_type: SampleTypeEnum
 
 
 

@@ -275,17 +275,16 @@
   z-index: 1000;
   left: 0;
   top: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
   animation: fadeIn 0.3s ease-out;
   padding: 20px;
   box-sizing: border-box;
-  overflow: auto;
+  overflow: hidden; 
 }
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -300,12 +299,23 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   width: 90%;
   max-width: 500px;
+  max-height: 80vh;     
+  overflow-y: auto;
   border-top: 6px solid #1b10b9;
   animation: slideIn 0.3s ease-out;
   position: relative;
   transform: translateY(20px);
   transition: all 0.3s ease;
 }
+
+#edit-modal > div::-webkit-scrollbar {
+  width: 6px;          
+}
+#edit-modal > div::-webkit-scrollbar-thumb {
+  background: #1e40af;     
+  border-radius: 16px;
+}
+
 
 #edit-modal.show > div {
   transform: translateY(0);
@@ -434,7 +444,7 @@
 }
 
 .btn-primary {
-  background-color: #1b10b9;
+  background-color: #03A9F4;
   color: white;
 }
 
@@ -852,7 +862,7 @@ function openEditModal(id, button) {
   document.getElementById("edit-mbtr-quick").value = button.dataset.mbtr || "";
 
   document.getElementById("edit-modal").style.display = "block";
-  modal.classList.add("show");
+
 }
 
 
@@ -878,6 +888,12 @@ async function saveSampleUpdate() {
     mutation UpdateSample($input: UpdateCompositeSampleInput!) {
       updateCompositeSample(input: $input) {
         id
+        collectedAt
+        sampleVolumeMl
+        sampleType
+        bulkCooler { id name } 
+        onFarmTank { id name supplier { user { username } } } 
+        vehicle { vehicleId name }
         remark
         receivedAtLab
         fatPercent
@@ -886,18 +902,70 @@ async function saveSampleUpdate() {
         bacterialCount
         antibioticResidue
         addedWaterPercent
+        cobTest
+        alcoholTest
+        phValue
+        mbtrQuick
         passed
       }
     }
   `;
 
-  await fetchGraphQL(query, { input });
+  try {
+    const data = await fetchGraphQL(query, { input });
+    const updatedSample = data.updateCompositeSample;
 
-  showNotification(`Composite Sample updated successfully!`, 'success', 1900);;
-  document.getElementById("edit-modal").style.display = "none";
+    // ✅ Update the row in the table
+    if (currentEditingRow && updatedSample) {
+      // Update status badge
+      const statusCell = currentEditingRow.querySelector(".status-badge");
+      if (statusCell) {
+        const newStatus = updatedSample.passed || 'pending';
+        statusCell.className = `status-badge status-${newStatus}`;
+        statusCell.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+      }
+
+      // Update "Received At" column
+      const receivedDateCell = currentEditingRow.querySelectorAll(".received-date")[1]; // second one
+      if (receivedDateCell && updatedSample.receivedAtLab) {
+        const receivedDate = new Date(updatedSample.receivedAtLab);
+        const dateStr = receivedDate.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata' });
+        const timeStr = receivedDate.toLocaleTimeString('en-GB', { 
+          timeZone: 'Asia/Kolkata', 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: true 
+        });
+        receivedDateCell.querySelector(".date").textContent = dateStr;
+        receivedDateCell.querySelector(".time").textContent = timeStr;
+      } else if (receivedDateCell) {
+        receivedDateCell.querySelector(".date").textContent = "-";
+        receivedDateCell.querySelector(".time").textContent = "-";
+      }
+    }
+
+    showNotification(`Composite Sample updated successfully!`, 'success', 1900);
+    document.getElementById("edit-modal").style.display = "none";
+
+
+    currentEditingRow = null;
+  } catch (err) {
+    console.error("Save failed:", err);
+    showNotification("Failed to update sample. Please try again.", 'error', 2500);
+  }
 }
 
+//===================================================== update row of composite sample without any refresh ===================================//
+let currentEditingRow = null; 
 
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".btn-view");
+  if (btn) {
+    const row = btn.closest("tr"); 
+    currentEditingRow = row;       
+    openEditModal(btn.dataset.id, btn);
+  }
+});
 </script>
 
 {% endblock %}

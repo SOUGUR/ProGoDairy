@@ -22,29 +22,32 @@
       }
 
       .controls {
-          display: flex;
-          justify-content: center;
-          gap: 4.7px;
-          flex-wrap: wrap;
-          background: white;
-          padding: 20px;
-          border-radius: 16px;
-          box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
-          margin-bottom: 40px;
-          border: 1px solid #dbeafe;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: nowrap; 
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
+        margin-bottom: 40px;
+        border: 1px solid #dbeafe;
+        overflow-x: auto; 
       }
 
       .control-group {
-          display: flex;
-          flex-direction: column;
-          min-width: 200px;
+        display: flex;
+        flex-direction: column;
+        min-width: 140px; 
       }
 
       label {
-          font-weight: 600;
-          margin-bottom: 8px;
-          color: #1e40af;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #1e40af;
       }
+
 
       select, input, button {
           padding: 12px;
@@ -320,7 +323,7 @@
   async function loadMilkTransfers(plantId) {
     const query = `
       query($plantId: Int!) {
-        getCompletedMilkTransfersByPlant(plantId: $plantId) {
+        getApprovedInstantGateTransfersByPlant(plantId: $plantId) {
           id
           sourceType
           arrivalDatetime
@@ -342,7 +345,7 @@
     });
 
     const result = await response.json();
-    const milkTransfers = result.data.getCompletedMilkTransfersByPlant;
+    const milkTransfers = result.data.getApprovedInstantGateTransfersByPlant;
     const milkTransferSelect = document.getElementById("milk-transfer");
     milkTransferSelect.innerHTML = '<option value="">-- Select Transfer --</option>';
 
@@ -497,16 +500,19 @@
 
     if (createdAt && createdAt !== "-") {
       const date = new Date(createdAt);
-      const formatted = date.toLocaleString('en-GB', {
+      const datePart = date.toLocaleDateString('en-GB', {
         timeZone: 'UTC',
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
+        year: 'numeric'
+      });
+      const timePart = date.toLocaleTimeString('en-GB', {
+        timeZone: 'UTC',
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
       });
-      document.getElementById("silo-created-display").textContent = formatted;
+      document.getElementById("silo-created-display").innerHTML = `${datePart}<br>${timePart}`;
     } else {
       document.getElementById("silo-created-display").textContent = "-";
     }

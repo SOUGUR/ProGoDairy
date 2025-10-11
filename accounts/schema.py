@@ -6,6 +6,7 @@ from strawberry_django import type as strawberry_django_type
 from distribution.models import Route
 from typing import List, Optional
 
+
 @strawberry_django_type(User)
 class UserType:
     id: int

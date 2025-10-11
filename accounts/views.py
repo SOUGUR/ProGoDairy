@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import logout
+
 
 def user_access(request):
     return render(request, "accounts/rights_access.html")
@@ -8,7 +10,10 @@ def user_access(request):
 def user_flow(request):
     return render(request, "accounts/user_flow.html")
 
-
+def logout_view(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return redirect('accounts:login')
 
 def login(request):
     if request.method == 'POST':

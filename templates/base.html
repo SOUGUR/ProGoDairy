@@ -8,6 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Go Pro Dairy MS</title>
   <link rel="icon" href="{% static 'images/favicon.png' %}" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"> 
   <link rel="stylesheet"  href="{% static 'themeToggle/css/themeToggle.css' %}">
   <link rel="stylesheet"  href="{% static 'chatbot/css/chatbot.css' %}">
   <link rel="stylesheet"  href="{% static 'notifications/css/notifications.css' %}">
@@ -245,13 +246,13 @@
         </li>
         <li class="menu-item">
           <a href="{% url 'plants:dashboard' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-file-pdf"></i></span>
+            <span class="menu-icon"><i class="ri-dashboard-fill"></i></span>
             <span class="menu-text">Current Month Activity Dashboard</span>
           </a>
         </li>
         <li class="menu-item">
           <a href="{% url 'milk_market_dashboard' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+            <span class="menu-icon"><i class="ri-discount-percent-line"></i></span>
             <span class="menu-text">Latest Prices and Demand</span>
           </a>
         </li>
@@ -390,8 +391,15 @@
         </li>
 
         <li class="menu-item">
+          <a href="{% url 'distribution:gate_pass_tickets' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-coupon-3-line"></i></span>
+            <span class="menu-text">Generate Gate Passes </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
           <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-shipping-fast"></i></span>
+            <span class="menu-icon"><i class="ri-car-washing-fill"></i></span>
             <span class="menu-text">Vehicles and CIP</span>
           </a>
         </li>
@@ -403,7 +411,7 @@
         </li>
         <li class="menu-item">
           <a href="{% url 'distribution:vehicle_CIP_log' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-route"></i></span>
+            <span class="menu-icon"><i class="ri-car-fill"></i></span>
             <span class="menu-text">vehicle CIP logs</span>
           </a>
         </li>
@@ -428,7 +436,7 @@
 
         <li class="menu-item">
           <a href="{% url 'milk:take_gate_sample' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-torii-gate"></i></span>
+            <span class="menu-icon"><i class="ri-door-closed-fill"></i></span>
             <span class="menu-text">Collect Plant-Gate Sample</span>
           </a>
         </li>
@@ -442,7 +450,7 @@
 
         <li class="menu-item">
           <a href="{% url 'milk:list_composite_samples' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-icon"><i class="ri-virus-fill"></i></span>
             <span class="menu-text">Update Composite Samples Results</span>
           </a>
         </li>
@@ -459,7 +467,7 @@
       <ul class="submenu">
         <li class="menu-item">
           <a href="{% url 'create_payment_bill' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+            <span class="menu-icon"><i class="ri-bill-fill"></i></span>
             <span class="menu-text">Payment Bills</span>
           </a>
         </li>
@@ -477,7 +485,7 @@
       <ul class="submenu">
         <li class="menu-item">
           <a href="{% url 'plants:pump_into_silos' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-water"></i></span>
+            <span class="menu-icon"><i class="ri-building-3-line"></i></span>
             <span class="menu-text">Pump into Silos</span>
           </a>
         </li>
@@ -502,6 +510,12 @@
           <a href="{% url 'milk:milk_route_pricings' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-coins"></i></span>
             <span class="menu-text">Pricing Control Panel</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'accounts:logout' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-logout-circle-line"></i></span>
+            <span class="menu-text">Log Out</span>
           </a>
         </li>
       </ul>

@@ -1,6 +1,6 @@
 import strawberry
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 from .models import Vehicle, Distributor, Route, MilkTransfer, VehicleDriver
 from suppliers.models import OnFarmTank, CanCollection
 from collection_center.models import BulkCooler
@@ -13,8 +13,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from dairy_project.graphql_types import MilkTransferType, VehicleInput, VehicleType, DistributorType, VehicleDriverInput, VehicleDriverType, CIPRecord, CIPRecordInput, CIPRecordType, CIPRecordUpdateInput
 from django.utils import timezone
 from decimal import Decimal
-
-
+from django.db.models import F
 
 
 
@@ -86,7 +85,23 @@ class Query:
     ) -> List[MilkTransferType]:
         milk_transfers = MilkTransfer.objects.filter(status="completed", destination_id=plant_id, silo__isnull=True)
         return milk_transfers
-
+    
+    #get milk transfers with composite sample results passed and samples collected within 2 hours arrival 
+    @strawberry.field
+    def get_approved_instant_gate_transfers_by_plant( 
+        self, 
+        info: Info, 
+        plant_id: int, 
+    ) -> List[MilkTransferType]:
+        approved_transfers = MilkTransfer.objects.filter(
+            destination_id = plant_id,
+            arrival_datetime__isnull=False,
+            vehicle__gateSamples__sample_type='instant-gate tests',
+            vehicle__gateSamples__passed='approved',
+            vehicle__gateSamples__collected_at__gte=F('arrival_datetime'),
+            vehicle__gateSamples__collected_at__lte=F('arrival_datetime') + timedelta(hours=2)
+        ).distinct()
+        return approved_transfers 
 
     @strawberry.field
     def milk_transfer_by_id(
@@ -112,6 +127,29 @@ class Query:
     @strawberry.field
     def cip_records_by_vehicle(self, vehicle_id: int) -> List["CIPRecordType"]:
         return CIPRecord.objects.filter(vehicle_id=vehicle_id).order_by("-started_at")
+    
+
+    @strawberry.field
+    def get_milk_transfers_for_pass(
+        self,
+        info,
+        plant_id: int,
+        vehicle_number: str,
+        status: Optional[str] = None
+    ) -> List[MilkTransferType]:
+
+        transfers = MilkTransfer.objects.filter(
+            destination_id=plant_id,
+            vehicle_id=vehicle_number
+        )
+
+        if status:
+            transfers = transfers.filter(status=status)
+
+
+        transfers = transfers.order_by('-transfer_date')
+
+        return transfers
 
 
 

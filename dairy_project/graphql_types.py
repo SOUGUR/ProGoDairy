@@ -12,6 +12,7 @@ from plants.models import Employee, Role, Silo
 from collection_center.models import BulkCooler
 from milk.models import CompositeSample
 from strawberry import auto
+from enum import Enum
 
 @strawberry.type
 class RouteVolumeStats:
@@ -206,6 +207,89 @@ class MilkTransferType:
             vehicle__transfers__id=self.id
         )
         return samples_qs.count()
+    
+    @strawberry.field
+    def related_composite_samples(self, info) -> List["CompositeSampleType"]:
+        filters = {}
+
+      
+        if self.vehicle:
+            filters["vehicle"] = self.vehicle
+
+        if self.bulk_cooler:
+            filters["bulk_cooler"] = self.bulk_cooler
+        elif self.on_farm_tank:
+            filters["on_farm_tank"] = self.on_farm_tank
+        elif self.can_collection:
+            filters["bulk_cooler__isnull"] = True
+            filters["on_farm_tank__isnull"] = True
+
+        return CompositeSample.objects.filter(**filters)
+
+@strawberry.enum
+class SampleTypeEnum(Enum):
+    INSTANT_GATE_TESTS = "instant-gate tests"
+    SOCIETY_TEST = "society test"
+
+@strawberry.input
+class CompositeSampleInput:
+    bulk_cooler_id: Optional[int] = None
+    on_farm_tank_id: Optional[int] = None
+    vehicle_id: Optional[str] = None
+    remark: Optional[str] = None
+    sample_volume_ml: Optional[int] = 50
+    temperature_c: Optional[float] = 4.0
+    is_stirred:Optional[bool] = False
+    
+    
+
+@strawberry.input
+class UpdateCompositeSampleInput:
+    id: int
+    received_at_lab: Optional[datetime] = None
+    remark: str | None = None
+    fat_percent: float | None = None
+    snf_percent: float | None = None
+    protein_percent: float | None = None
+    bacterial_count: int | None = None
+    antibiotic_residue: bool | None = None
+    added_water_percent: float | None = None
+    passed: str | None = None   
+
+    sample_type: Optional[str] = None 
+    cob_test: Optional[bool] = None
+    alcohol_test: Optional[bool] = None
+    ph_value: Optional[float] = None
+    mbtr_quick: Optional[int] = None
+
+
+@strawberry.type
+class CompositeSampleType:
+    id: int
+    sample_volume_ml: int
+    collected_at: datetime
+    temperature_c: float
+    received_at_lab: Optional[datetime]
+    remark: Optional[str]
+
+    fat_percent: Optional[float]
+    snf_percent: Optional[float]
+    protein_percent: Optional[float]
+    bacterial_count: Optional[int]
+    antibiotic_residue: bool
+    added_water_percent: float
+    passed: Optional[str]
+
+    cob_test: Optional[bool] = None
+    alcohol_test: Optional[bool] = None
+    ph_value: Optional[float] = None
+    mbtr_quick: Optional[int] = None
+
+    bulk_cooler: Optional["BulkCoolerType"]
+    on_farm_tank: Optional["OnFarmTankType"]
+    vehicle: Optional["VehicleType"]
+    sample_type: SampleTypeEnum
+
 
 @strawberry.type
 class CanCollectionType:

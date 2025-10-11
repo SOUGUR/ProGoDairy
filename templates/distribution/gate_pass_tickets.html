@@ -1,0 +1,825 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Generate Gate Passes{% endblock %}
+
+{% block content %}
+
+<style>
+:root {
+    --primary-color: #2363b2;
+    --secondary-color: #ebf8ff;
+    --text-color: #333;
+    --border-color: #e2e8f0;
+    --success-color: #38a169;
+    --warning-color: #d69e2e;
+    --danger-color: #e53e3e;
+    --table-header-bg: var(--secondary-color);
+    --table-header-color: #2b6cb0;
+    --table-row-alt: #f8fafc;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filters-card {
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #4a5568;
+}
+
+.filter-group select {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+}
+
+.filter-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.2);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2b6cb0;
+}
+
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e0;
+}
+
+.passes-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.results-count {
+    color: #718096;
+    font-weight: 500;
+}
+
+.results-count span {
+    color: #2b6cb0;
+    font-weight: 600;
+}
+
+.pass-tickets-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Updated Ticket Styles - More Authentic Ticket Shape */
+.pass-ticket {
+    position: relative;
+    width: 100%;
+    background: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 5 8px 24px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 300px;
+}
+
+/* Left notch (ticket stub) */
+.pass-ticket::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: -10px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border: 2px solid #333;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Right notch (ticket stub) */
+.pass-ticket::after {
+    content: "";
+    position: absolute;
+    top: 15px;
+    right: -10px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border: 2px solid #333;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Center perforation line */
+.pass-ticket .perforation-line {
+    position: absolute;
+    top: 50px;
+    bottom: 60px;
+    left: 50%;
+    width: 2px;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 8px,
+        #333 8px,
+        #333 16px
+    );
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.pass-ticket:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+}
+
+.pass-ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+    position: relative;
+    z-index: 2;
+}
+
+.pass-ticket-id {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1.1em;
+}
+
+.pass-ticket-status {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-scheduled {
+    background-color: #fefcbf;
+    color: #744210;
+    border: 1px solid #d69e2e;
+}
+
+.status-approved {
+    background-color: #c6f6d5;
+    color: #22543d;
+    border: 1px solid #38a169;
+}
+
+.status-rejected {
+    background-color: #fed7d7;
+    color: #742a2a;
+    border: 1px solid #e53e3e;
+}
+
+.pass-ticket-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.95em;
+    position: relative;
+    z-index: 2;
+}
+
+.pass-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.pass-label {
+    font-weight: 500;
+    color: #4a5568;
+}
+
+.pass-value {
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.pass-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+.pass-create-btn {
+    padding: 8px 16px;
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pass-create-btn:hover:not(.disabled) {
+    background-color: #2f855a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.pass-create-btn.disabled {
+    background-color: #e2e8f0;
+    color: #718096;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pass-tickets-container {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="container">
+    <h1>
+        <i class="fas fa-ticket-alt"></i>
+        Generate Gate Passes
+    </h1>
+
+    <!-- Filter Section -->
+    <div class="filters-card">
+        <div class="section-title">Filter Pending Passes</div>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="plantSelect">Select Plant</label>
+                <select id="plantSelect" name="plant">
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="vehicleSelect">Vehicle Number</label>
+                <select id="vehicleSelect" name="vehicle">
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="statusSelect">Status</label>
+                <select id="statusSelect" name="status">
+                </select>
+            </div>
+
+            <!-- Apply & Clear Buttons in same row -->
+            <div class="filter-group action-buttons">
+                <button type="button" class="btn btn-primary">Apply Filters</button>
+                <button type="button" class="btn btn-secondary">Clear Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pass Tickets Section -->
+    <div class="passes-section">
+        <div class="section-header">
+            <h2>Pending Gate Passes</h2>
+            <div class="results-count">Showing <span>4</span> transfers</div>
+        </div>
+
+        <div class="pass-tickets-container">
+
+            <!-- Ticket 1 -->
+            <div class="pass-ticket" id="pass-ticket-1001">
+                <div class="perforation-line"></div>
+                <div class="pass-ticket-header">
+                    <div class="pass-ticket-id">Milk Transfer #MT-04251</div>
+                    <div class="pass-ticket-status status-scheduled" id="pass-status-1001">SCHEDULED</div>
+                </div>
+                <div class="pass-ticket-body">
+                    <div class="pass-field">
+                        <span class="pass-label">Vehicle:</span>
+                        <span class="pass-value" id="pass-vehicle-1001">KA-23-T-4455</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Driver:</span>
+                        <span class="pass-value" id="pass-driver-1001">Ramesh</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Pool Vol:</span>
+                        <span class="pass-value" id="pass-volume-1001">9,880 L</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Fat %:</span>
+                        <span class="pass-value" id="pass-fat-1001">4.2%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">SNF %:</span>
+                        <span class="pass-value" id="pass-snf-1001">8.5%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Test Result:</span>
+                        <span class="pass-value" id="pass-test-result-1001">Approved</span>
+                    </div>
+                </div>
+                <div class="pass-actions">
+                    <button class="pass-create-btn" id="create-pass-btn-1001">+ Create Gate Pass</button>
+                </div>
+            </div>
+
+            <!-- Ticket 2 -->
+            <div class="pass-ticket" id="pass-ticket-1002">
+                <div class="perforation-line"></div>
+                <div class="pass-ticket-header">
+                    <div class="pass-ticket-id">Milk Transfer #MT-04252</div>
+                    <div class="pass-ticket-status status-approved" id="pass-status-1002">APPROVED</div>
+                </div>
+                <div class="pass-ticket-body">
+                    <div class="pass-field">
+                        <span class="pass-label">Vehicle:</span>
+                        <span class="pass-value" id="pass-vehicle-1002">KA-23-T-4456</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Driver:</span>
+                        <span class="pass-value" id="pass-driver-1002">Suresh</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Pool Vol:</span>
+                        <span class="pass-value" id="pass-volume-1002">8,500 L</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Fat %:</span>
+                        <span class="pass-value" id="pass-fat-1002">4.5%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">SNF %:</span>
+                        <span class="pass-value" id="pass-snf-1002">8.8%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Test Result:</span>
+                        <span class="pass-value" id="pass-test-result-1002">Approved</span>
+                    </div>
+                </div>
+                <div class="pass-actions">
+                    <button class="pass-create-btn" id="create-pass-btn-1002">+ Create Gate Pass</button>
+                </div>
+            </div>
+
+            <!-- Ticket 3 -->
+            <div class="pass-ticket" id="pass-ticket-1003">
+                <div class="perforation-line"></div>
+                <div class="pass-ticket-header">
+                    <div class="pass-ticket-id">Milk Transfer #MT-04253</div>
+                    <div class="pass-ticket-status status-rejected" id="pass-status-1003">REJECTED</div>
+                </div>
+                <div class="pass-ticket-body">
+                    <div class="pass-field">
+                        <span class="pass-label">Vehicle:</span>
+                        <span class="pass-value" id="pass-vehicle-1003">KA-23-T-4457</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Driver:</span>
+                        <span class="pass-value" id="pass-driver-1003">Anil</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Pool Vol:</span>
+                        <span class="pass-value" id="pass-volume-1003">7,200 L</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Fat %:</span>
+                        <span class="pass-value" id="pass-fat-1003">3.8%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">SNF %:</span>
+                        <span class="pass-value" id="pass-snf-1003">7.9%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Test Result:</span>
+                        <span class="pass-value" id="pass-test-result-1003">Rejected</span>
+                    </div>
+                </div>
+                <div class="pass-actions">
+                    <button class="pass-create-btn disabled" id="create-pass-btn-1003">+ Create Gate Pass</button>
+                </div>
+            </div>
+
+            <!-- Ticket 4 -->
+            <div class="pass-ticket" id="pass-ticket-1004">
+                <div class="perforation-line"></div>
+                <div class="pass-ticket-header">
+                    <div class="pass-ticket-id">Milk Transfer #MT-04254</div>
+                    <div class="pass-ticket-status status-scheduled" id="pass-status-1004">SCHEDULED</div>
+                </div>
+                <div class="pass-ticket-body">
+                    <div class="pass-field">
+                        <span class="pass-label">Vehicle:</span>
+                        <span class="pass-value" id="pass-vehicle-1004">KA-23-T-4458</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Driver:</span>
+                        <span class="pass-value" id="pass-driver-1004">Vijay</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Pool Vol:</span>
+                        <span class="pass-value" id="pass-volume-1004">10,200 L</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Fat %:</span>
+                        <span class="pass-value" id="pass-fat-1004">4.1%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">SNF %:</span>
+                        <span class="pass-value" id="pass-snf-1004">8.3%</span>
+                    </div>
+                    <div class="pass-field">
+                        <span class="pass-label">Test Result:</span>
+                        <span class="pass-value" id="pass-test-result-1004">Pending</span>
+                    </div>
+                </div>
+                <div class="pass-actions">
+                    <button class="pass-create-btn disabled" id="create-pass-btn-1004">+ Create Gate Pass</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+//=============================================================== Utility: fetch from GraphQL====================================================== //
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+  const result = await response.json();
+  if (result.errors) {
+    console.error("GraphQL Error:", result.errors);
+    throw new Error(result.errors[0].message);
+  }
+  return result.data;
+}
+
+// ======================================================================== Load Plants ============================================================//
+async function loadPlants() {
+  try {
+    const query = `
+      query {
+        plants {
+          id
+          name
+        }
+      }
+    `;
+    const data = await fetchGraphQL(query);
+    const select = document.getElementById("plantSelect");
+    select.innerHTML = '<option value="">-- Select Plant --</option>';
+    data.plants.forEach(plant => {
+      const option = document.createElement("option");
+      option.value = plant.id;
+      option.textContent = plant.name;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Failed to load plants:", err);
+  }
+}
+
+//========================================================= Load Vehicles =====================================================================
+async function loadVehicles() {
+  try {
+    const query = `
+      query {
+        allVehicles {
+          id
+          vehicleId  
+          name       
+        }
+      }
+    `;
+    const data = await fetchGraphQL(query);
+    const select = document.getElementById("vehicleSelect");
+    select.innerHTML = '<option value="">-- Select Vehicle --</option>';
+    data.allVehicles.forEach(vehicle => {
+      const option = document.createElement("option");
+      option.value = vehicle.id; 
+      const displayText = `${vehicle.vehicleId || ''} ${vehicle.name || ''}`.trim() || `Vehicle ${vehicle.id}`;
+      option.textContent = displayText;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Failed to load vehicles:", err);
+  }
+}
+
+// 3. Load Statuses (static)
+function loadStatuses() {
+  const statuses = [
+    { value: "scheduled", label: "Scheduled" },
+    { value: "in_transit", label: "In Transit" },
+    { value: "completed", label: "Completed" }
+  ];
+  const select = document.getElementById("statusSelect");
+  select.innerHTML = '<option value="">-- Select Status --</option>';
+  statuses.forEach(status => {
+    const option = document.createElement("option");
+    option.value = status.value;
+    option.textContent = status.label;
+    select.appendChild(option);
+  });
+}
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", () => {
+  loadPlants();
+  loadVehicles();
+  loadStatuses();
+});
+
+//==========================================================================================================//
+async function fetchAndRenderTransfers(plantId, vehicleNumber, status = null) {
+  const query = `
+    query GetTransfers($plantId: Int!, $vehicleNumber: String!, $status: String) {
+      getMilkTransfersForPass(
+        plantId: $plantId,
+        vehicleNumber: $vehicleNumber,
+        status: $status
+      ) {
+        id
+        status
+        totalVolume
+        remarks
+        arrivalDatetime
+        vehicle {
+          vehicleId
+          name
+        }
+        destination {
+          name
+        }
+        relatedCompositeSamples {
+          fatPercent
+          snfPercent
+          passed
+          sampleType
+        }
+      }
+    }
+  `;
+
+  try {
+    const variables = { plantId: parseInt(plantId), vehicleNumber, status };
+    const data = await fetchGraphQL(query, variables);
+    const transfers = data.getMilkTransfersForPass || [];
+
+    renderTickets(transfers);
+  } catch (err) {
+    console.error("Failed to fetch transfers:", err);
+    document.querySelector(".pass-tickets-container").innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:40px; color:#718096;">
+        <p> Failed to load transfers. Please try again.</p>
+      </div>
+    `;
+  }
+}
+
+// ======================
+// Render Tickets
+// ======================
+function renderTickets(transfers) {
+  const container = document.querySelector(".pass-tickets-container");
+  const countEl = document.querySelector(".results-count span");
+
+  if (!transfers || transfers.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:40px; color:#718096;">
+        <p>📭 No milk transfers found for the selected filters.</p>
+      </div>
+    `;
+    countEl.textContent = "0";
+    return;
+  }
+
+  countEl.textContent = transfers.length;
+  container.innerHTML = "";
+
+  transfers.forEach(transfer => {
+    // === Filter only "society test" samples ===
+    const societySamples = (transfer.relatedCompositeSamples || [])
+      .filter(s => s.sampleType === "SOCIETY_TEST");
+
+    // === Compute averages ===
+    let avgFat = null;
+    let avgSNF = null;
+    let testResult = "Pending";
+
+    if (societySamples.length > 0) {
+      const fats = societySamples.map(s => s.fatPercent).filter(v => v !== null);
+      const snfs = societySamples.map(s => s.snfPercent).filter(v => v !== null);
+
+      avgFat = fats.length ? (fats.reduce((a, b) => a + b, 0) / fats.length).toFixed(1) : null;
+      avgSNF = snfs.length ? (snfs.reduce((a, b) => a + b, 0) / snfs.length).toFixed(1) : null;
+
+      // Determine overall test result
+      const allApproved = societySamples.every(s => s.passed === "approved");
+      const anyRejected = societySamples.some(s => s.passed === "rejected");
+      testResult = allApproved ? "Approved" : anyRejected ? "Rejected" : "Pending";
+    }
+
+    // === Determine button state ===
+    const isApproved = testResult === "Approved";
+    const btnClass = isApproved ? "pass-create-btn" : "pass-create-btn disabled";
+
+    // === Format volume ===
+    const volumeText = transfer.totalVolume ? `${Math.round(transfer.totalVolume).toLocaleString()} L` : "N/A";
+
+    // === Generate unique IDs ===
+    const ticketId = `pass-ticket-${transfer.id}`;
+    const statusId = `pass-status-${transfer.id}`;
+    const vehicleId = `pass-vehicle-${transfer.id}`;
+    const driverId = `pass-driver-${transfer.id}`;
+    const volumeId = `pass-volume-${transfer.id}`;
+    const fatId = `pass-fat-${transfer.id}`;
+    const snfId = `pass-snf-${transfer.id}`;
+    const testResultId = `pass-test-result-${transfer.id}`;
+    const btnId = `create-pass-btn-${transfer.id}`;
+
+    // === Status badge class ===
+    let statusClass = "status-scheduled";
+    if (transfer.status === "completed") statusClass = "status-approved";
+    else if (transfer.status === "in_transit") statusClass = "status-scheduled";
+    // Note: "rejected" status comes from sample, not transfer
+
+    // Create ticket HTML with authentic ticket design
+    const ticketHtml = `
+      <div class="pass-ticket" id="${ticketId}">
+        <div class="perforation-line"></div>
+        <div class="pass-ticket-header">
+          <div class="pass-ticket-id">Milk Transfer #MT-${transfer.id}</div>
+          <div class="pass-ticket-status ${statusClass}" id="${statusId}">
+            ${transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
+          </div>
+        </div>
+        <div class="pass-ticket-body">
+          <div class="pass-field">
+            <span class="pass-label">Vehicle:</span>
+            <span class="pass-value" id="${vehicleId}">${transfer.vehicle?.vehicleId || "N/A"}</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-label">Driver:</span>
+            <span class="pass-value" id="${driverId}">${transfer.vehicle?.name || "N/A"}</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-label">Pool Vol:</span>
+            <span class="pass-value" id="${volumeId}">${volumeText}</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-label">Fat %:</span>
+            <span class="pass-value" id="${fatId}">${avgFat !== null ? avgFat + '%' : "N/A"}</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-label">SNF %:</span>
+            <span class="pass-value" id="${snfId}">${avgSNF !== null ? avgSNF + '%' : "N/A"}</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-label">Test Result:</span>
+            <span class="pass-value" id="${testResultId}">${testResult}</span>
+          </div>
+        </div>
+        <div class="pass-actions">
+          <button class="${btnClass}" id="${btnId}">+ Create Gate Pass</button>
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML("beforeend", ticketHtml);
+  });
+}
+
+// ======================
+// Event Listeners
+// ======================
+document.addEventListener("DOMContentLoaded", () => {
+  loadPlants();
+  loadVehicles();
+  loadStatuses();
+
+  // Apply Filters
+  document.querySelector(".btn-primary").addEventListener("click", () => {
+    const plantId = document.getElementById("plantSelect").value;
+    const vehicleNumber = document.getElementById("vehicleSelect").value;
+    const status = document.getElementById("statusSelect").value;
+
+    if (!plantId || !vehicleNumber) {
+      alert("Please select both Plant and Vehicle.");
+      return;
+    }
+
+    fetchAndRenderTransfers(plantId, vehicleNumber, status || null);
+  });
+
+  // Clear Filters
+  document.querySelector(".btn-secondary").addEventListener("click", () => {
+    document.getElementById("plantSelect").value = "";
+    document.getElementById("vehicleSelect").value = "";
+    document.getElementById("statusSelect").value = "";
+    document.querySelector(".pass-tickets-container").innerHTML = "";
+    document.querySelector(".results-count span").textContent = "0";
+  });
+});
+</script>
+{% endblock %}
