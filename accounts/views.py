@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import logout
 
 
+
 def user_access(request):
     return render(request, "accounts/rights_access.html")
 
@@ -31,6 +32,9 @@ def login(request):
             return render(request, "accounts/error_page.html", {'error': 'Invalid credentials'})
         
     return render(request, "homePage.html")
+
+
+
 
 
 

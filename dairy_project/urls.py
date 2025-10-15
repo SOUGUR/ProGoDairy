@@ -13,6 +13,7 @@ urlpatterns = [
     path("plants/", include("plants.urls")),
     path("accounts/", include("accounts.urls")),
     path("milk/", include("milk.urls")),
+    path("accounting/", include("accounting.urls")),
     path("__reload__/", include("django_browser_reload.urls")),
 ]
 

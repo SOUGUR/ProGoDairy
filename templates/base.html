@@ -12,9 +12,11 @@
   <link rel="stylesheet"  href="{% static 'themeToggle/css/themeToggle.css' %}">
   <link rel="stylesheet"  href="{% static 'chatbot/css/chatbot.css' %}">
   <link rel="stylesheet"  href="{% static 'notifications/css/notifications.css' %}">
+  <link rel="stylesheet"  href="{% static 'accounts/css/recent_pages.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{% static 'themeToggle/js/themeToggle.js' %}"></script>
+  <script src="{% static 'accounts/js/recent_pages.js' %}"></script>
   
 
   <style>
@@ -507,6 +509,12 @@
           </a>
         </li>
         <li class="menu-item">
+          <a href="{% url 'accounting:accounting_base' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-currency-fill"></i></span>
+            <span class="menu-text">Balance Sheets</span>
+          </a>
+        </li>
+        <li class="menu-item">
           <a href="{% url 'milk:milk_route_pricings' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-coins"></i></span>
             <span class="menu-text">Pricing Control Panel</span>
@@ -530,6 +538,20 @@
       {% endblock %}
     </div>
   </div>
+
+  <!-- Always visible toggle button -->
+<div id="recent-pages-toggle" title="Recent Pages">
+  <i class="fas fa-history"></i>
+</div>
+
+<!-- Hidden list (shown on click) -->
+<div id="recent-pages-list">
+  {% for page in recent_pages %}
+    <a href="{{ page.url }}" class="recent-page-item">
+      {{ page.title|default:"Untitled Page"|truncatechars:35 }}
+    </a>
+  {% endfor %}
+</div>
 
 <!------------------------------------------------------ Floating Notification Button ---------------------------------------------------->
   <button id="notification-button" class="notification-button">

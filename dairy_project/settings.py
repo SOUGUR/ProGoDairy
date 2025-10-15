@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     "collection_center",
     "strawberry.django",
     "channels",
-    "notifications"
+    "notifications",
+    "accounting"
 ]
 
 MIDDLEWARE = [
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "accounts.middleware.PageVisitMiddleware",
 ]
 
 ROOT_URLCONF = "dairy_project.urls"
@@ -75,6 +77,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                'accounts.context_processors.recent_pages'
             ],
         },
     },

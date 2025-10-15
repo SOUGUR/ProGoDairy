@@ -1,0 +1,59 @@
+
+/* Toggle button: always visible, bottom-right */
+#recent-pages-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1050;
+  background: rgba(52, 152, 219, 0.9);
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  cursor: pointer;
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+
+#recent-pages-toggle:hover {
+  transform: scale(1.1);
+  background: rgba(41, 128, 185, 0.95);
+}
+
+#recent-pages-list {
+  position: fixed;
+  bottom: 72px; 
+  right: 20px;
+  z-index: 1040;
+  display: none; 
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.recent-page-item {
+  display: block;
+  padding: 10px 14px;
+  color: #2c3e50;
+  text-decoration: none;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s;
+}
+.recent-page-item:hover {
+  background: #eef7ff;
+}
+.recent-page-item:not(:last-child) {
+  border-bottom: 1px solid #eee;
+}
