@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Assign Bulk Cooler to Milk Lots{% endblock %}
 
@@ -121,9 +122,11 @@
   </div>
 </div>
 
+
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
 
-//--------------------------------------------------populate routes and associated Bulk Coolers---------------------------------------------//
+//---------------------------------------------------populate routes and associated Bulk Coolers---------------------------------------------------//
 document.addEventListener("DOMContentLoaded", async () => {
   const routeSelect = document.getElementById("route");
   const coolerSelect = document.getElementById("cooler");
@@ -213,46 +216,80 @@ document.addEventListener("DOMContentLoaded", async () => {
         option.textContent = `${cooler.name} (${cooler.route.name}) (${createdDate})`;
         coolerSelect.appendChild(option);
       });
-    } catch (error) {
+    }
+    catch (error) {
       console.error("Error fetching coolers:", error);
     }
   });
 
   coolerSelect.addEventListener("change", function () {
-    const selectedCooler = coolersCache.find(c => c.id === parseInt(this.value));
-    if (selectedCooler) {
-      const totalCapacity = selectedCooler.capacityLiters;
-      const currentVolume = selectedCooler.currentVolumeLiters;
-      const availableSpace = totalCapacity - currentVolume;
-
-      function formatToDatetimeLocal(isoString) {
-      if (!isoString) return '';
-      const d = new Date(isoString);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}`;
-    }
-    document.getElementById("last_cleaned").value = formatToDatetimeLocal(selectedCooler.lastCleanedAt);
-    document.getElementById("last_sanitized").value = formatToDatetimeLocal(selectedCooler.lastSanitizedAt);
-    document.getElementById("last_calibrated").value = formatToDatetimeLocal(selectedCooler.lastCalibrationDate);
-    document.getElementById("last_serviced").value = formatToDatetimeLocal(selectedCooler.lastServicedAt);
-
-    document.getElementById("service_interval").value = selectedCooler.serviceIntervalDays || 90;
-    } else {
-      totalCapacityEl.textContent = "0";
-    currentVolumeEl.textContent = "0";
-    availableSpaceEl.textContent = "0";
-    
-    ["last_cleaned", "last_sanitized", "last_calibrated", "last_serviced"].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    document.getElementById("service_interval").value = '90';
-    document.getElementById("temperature").value = '4.0';
-    }
+  const selectedCooler = coolersCache.find(c => c.id === parseInt(this.value));
+  
+  // Reset fields
+  totalCapacityEl.textContent = "0";
+  currentVolumeEl.textContent = "0";
+  availableSpaceEl.textContent = "0";
+  ["last_cleaned", "last_sanitized", "last_calibrated", "last_serviced"].forEach(id => {
+    document.getElementById(id).value = '';
   });
+  document.getElementById("service_interval").value = '90';
+  document.getElementById("temperature").value = '4.0';
+
+  if (!selectedCooler) {
+    document.getElementById("assign-btn").disabled = true;
+    return;
+  }
+
+  const totalCapacity = selectedCooler.capacityLiters;
+  const currentVolume = selectedCooler.currentVolumeLiters;
+  const availableSpace = totalCapacity - currentVolume;
+
+  totalCapacityEl.textContent = totalCapacity;
+  currentVolumeEl.textContent = currentVolume;
+  availableSpaceEl.textContent = availableSpace;
+
+  function formatToDatetimeLocal(isoString) {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  document.getElementById("last_cleaned").value = formatToDatetimeLocal(selectedCooler.lastCleanedAt);
+  document.getElementById("last_sanitized").value = formatToDatetimeLocal(selectedCooler.lastSanitizedAt);
+  document.getElementById("last_calibrated").value = formatToDatetimeLocal(selectedCooler.lastCalibrationDate);
+  document.getElementById("last_serviced").value = formatToDatetimeLocal(selectedCooler.lastServicedAt);
+  document.getElementById("service_interval").value = selectedCooler.serviceIntervalDays || 90;
+
+  const MAX_AGE_HOURS = 96;
+  const lastSanitizedAt = selectedCooler.lastSanitizedAt;
+
+  const assignBtn = document.getElementById("assign-btn");
+  assignBtn.disabled = false; 
+
+  if (!lastSanitizedAt) {
+    showNotification(`Bulk Cooler ${selectedCooler.name} has no sanitization record.`, 'error', 4000);
+    assignBtn.disabled = true;
+    return;
+  }
+
+  const now = new Date();
+  const sanitizedDate = new Date(lastSanitizedAt);
+  const ageInHours = (now - sanitizedDate) / (1000 * 60 * 60);
+
+  if (ageInHours > MAX_AGE_HOURS) {
+    const daysAgo = Math.floor(ageInHours / 24);
+    const message = `Bulk Cooler ${selectedCooler.name} was last sanitized ${daysAgo} day(s) ago. Sanitation must be within ${MAX_AGE_HOURS} hours.`;
+    showNotification(message, 'error', 5000);
+    assignBtn.disabled = true;
+  } else {
+    showNotification(`You have selected Cooler ${selectedCooler.name} for pooling.`, 'success', 2000);
+  }
+});
 });
 
 
@@ -383,7 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
   assignBtn.addEventListener("click", async () => {
     const coolerId = parseInt(document.getElementById("cooler").value);
     if (!coolerId) {
-      alert("Please select a bulk cooler first.");
+      showNotification("Please select a bulk cooler first", 'error', 2000);
       return;
     }
 
@@ -393,7 +430,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ).map(cb => parseInt(cb.value));
 
     if (selectedLotIds.length === 0) {
-      alert("Please select at least one milk lot.");
+      showNotification("Please select at least one milk lot", 'error', 2000);
       return;
     }
 
@@ -452,10 +489,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await res.json();
       if (data.errors) {
-        alert("Error: " + data.errors[0].message);
+        showNotification(data.errors[0].message, 'error', 2000);
       } else {
-        alert(data.data.assignMilkLotsToCooler.message);
-        location.reload();
+        showNotification(data.data.assignMilkLotsToCooler.message, 'info', 2000);
       }
     } catch (err) {
       console.error("Mutation error:", err);

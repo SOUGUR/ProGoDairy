@@ -818,7 +818,7 @@ async function assignMilkLotsToCanCollection() {
     if (payload.success) {
       alert(payload.message);
     } else {
-      alert("Assignment failed: " + payload.message);
+      showNotification(`"Assignment failed: " + ${payload.message}'}`, 'error', 3000);
     }
 
   } catch (error) {

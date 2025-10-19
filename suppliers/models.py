@@ -252,7 +252,7 @@ class OnFarmTank(models.Model):
         candidates = [
             lot
             for lot in milk_lots
-            if lot.status == "approved" and lot.on_farm_tank_id is None
+            if lot.status == "pending" and lot.on_farm_tank_id is None
         ]
 
         proposed_volume = sum(lot.volume_l for lot in candidates)
@@ -308,7 +308,7 @@ class CanCollection(models.Model):
         candidates = [
             lot
             for lot in milk_lots
-            if lot.status == "approved" and lot.can_collection_id is None
+            if lot.status == "pending" and lot.can_collection_id is None
         ]
         total_volume = 0
         for lot in candidates:
@@ -321,39 +321,6 @@ class CanCollection(models.Model):
 
         return len(candidates)
 
-    def create_daily_log(self):
-        CanCollectionLog.objects.create(can_collection=self, log_date=self.created_at)
-
     def __str__(self):
         return f"Can Collection - {self.name} {self.created_at} ({self.route.name})"
 
-
-class CanCollectionLog(models.Model):
-    can_collection = models.ForeignKey(
-        "suppliers.CanCollection", on_delete=models.CASCADE, related_name="logs"
-    )
-    log_date = models.DateTimeField()
-
-    def __str__(self):
-        return f"{self.parameter}: {self.value}{self.unit} on {self.log_date:%Y-%m-%d %H:%M}"
-
-
-class OnFarmTankLog(models.Model):
-    on_farm_tank = models.ForeignKey(
-        "suppliers.OnFarmTank", on_delete=models.CASCADE, related_name="daily_logs"
-    )
-    log_date = models.DateTimeField()
-    volume_liters = models.FloatField()
-    temperature_celsius = models.FloatField(null=True, blank=True)
-    filled_at = models.DateTimeField(null=True, blank=True)
-    emptied_at = models.DateTimeField(null=True, blank=True)
-    last_cleaned_at = models.DateTimeField(null=True, blank=True)
-    last_sanitized_at = models.DateTimeField(null=True, blank=True)
-    last_stirred_at = models.DateTimeField(null=True, blank=True)
-    last_serviced_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        unique_together = ("on_farm_tank", "log_date")
-
-    def __str__(self):
-        return f"{self.on_farm_tank.name} – {self.log_date}"

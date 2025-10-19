@@ -417,6 +417,9 @@ class Mutation:
         can_collection_id: int,
         milk_lot_ids: List[int],
     ) -> AssignCanCollectionPayload:
+        print("==="*34)
+        print(can_collection_id, milk_lot_ids)
+        print("==="*34)
         try:
             collection = CanCollection.objects.get(id=can_collection_id)
             lots = list(MilkLot.objects.filter(id__in=milk_lot_ids))

@@ -27,7 +27,7 @@ def login(request):
         
         if user is not None:
             auth_login(request, user)
-            return redirect('supplier_list') 
+            return redirect('accounts:user_flow') 
         else:
             return render(request, "accounts/error_page.html", {'error': 'Invalid credentials'})
         

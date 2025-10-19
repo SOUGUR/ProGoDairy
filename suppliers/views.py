@@ -6,6 +6,7 @@ from io import BytesIO
 
 @login_required
 def supplier_list(request):
+    request._page_title = "Suppliers Record"
     allowed_groups = ['suppliers']
     if request.user.is_superuser or request.user.groups.filter(name__in=allowed_groups).exists():
         return render(request, "suppliers/supplier_list.html")

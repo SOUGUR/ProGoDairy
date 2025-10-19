@@ -167,19 +167,19 @@ class Mutation:
                 f"A Bulk Cooler for {original_cooler.name} has already been created today."
             )
 
-        MAX_AGE_HOURS = 96 
+        # MAX_AGE_HOURS = 96 
 
         if original_cooler.last_sanitized_at is None:
             raise Exception(f"Bulk Cooler {original_cooler.name} has no sanitization record.")
 
-        age = datetime.now(timezone.utc) - original_cooler.last_sanitized_at
-        if age > timedelta(hours=MAX_AGE_HOURS):
-            if not confirm:
-                raise Exception(
-                    f"Bulk Cooler {original_cooler.name} was last sanitized {age.days} day(s) ago. "
-                    f"Sanitation must be within {MAX_AGE_HOURS} hours. "
-                    f"Please re-sanitize before use or confirm override."
-                )
+        # age = datetime.now(timezone.utc) - original_cooler.last_sanitized_at
+        # if age > timedelta(hours=MAX_AGE_HOURS):
+        #     if not confirm:
+        #         raise Exception(
+        #             f"Bulk Cooler {original_cooler.name} was last sanitized {age.days} day(s) ago. "
+        #             f"Sanitation must be within {MAX_AGE_HOURS} hours. "
+        #             f"Please re-sanitize before use or confirm override."
+        #         )
             
         new_cooler = BulkCooler.objects.create(
             route=original_cooler.route,

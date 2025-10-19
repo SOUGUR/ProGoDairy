@@ -65,8 +65,8 @@ class BulkCooler(models.Model):
                                 if lot.bulk_cooler_id == self.id]
         if already_in_this_cooler:
             raise ValueError(
-                f"Cannot add {len(already_in_this_cooler)} milk lots: "
-                "they are already assigned to this bulk cooler."
+                "Cannot add same milk lots twice "
+                "you have already assigned selected milk lot to the bulk cooler."
             )
 
         candidates = [
