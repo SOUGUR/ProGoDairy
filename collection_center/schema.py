@@ -1,6 +1,6 @@
 import strawberry
 from typing import Optional
-from datetime import datetime, timedelta, date, timezone
+from datetime import datetime, date
 from .models import BulkCooler
 from strawberry.permission import BasePermission
 from strawberry.types import Info

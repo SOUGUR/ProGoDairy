@@ -22,39 +22,34 @@ document.getElementById('chatbot-user-input').addEventListener('keypress', funct
 async function sendMessage() {
   const input = document.getElementById('chatbot-user-input');
   const message = input.value.trim();
-  
+
   if (!message) return;
 
   addMessage(message, 'user');
   input.value = '';
 
   try {
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("accounts/api/chat/", {  
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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"  
       },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "user", content: message }
-        ],
-        temperature: 0.7,
-        max_tokens: 1024
-      })
+      body: JSON.stringify({ message: message }) 
     });
 
     const data = await response.json();
+
     if (!response.ok || data.error) {
-      console.error("API Error:", data.error?.message);
-      addMessage("⚠️ " + (data.error?.message || "Request failed."), "bot");
+      console.error("Proxy Error:", data.error);
+      addMessage("⚠️ " + (data.error || "Request failed."), "bot");
       return;
     }
-    const botReply = data.choices[0].message.content;
+
+    const botReply = data.reply;  
     addMessage(botReply, 'bot');
+
   } catch (error) {
-    console.error("AI API Error:", error);
+    console.error("Chat Error:", error);
     addMessage("Sorry, I couldn't reach the AI. Try again later.", "bot");
   }
 }
