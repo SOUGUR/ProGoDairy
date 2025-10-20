@@ -1,0 +1,360 @@
+<!-- templates/accounting/accounting_base.html -->
+ {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}GoProDairy - Accounting Portal{% endblock %}</title>
+  <link rel="icon" href="{% static 'images/favicon.png' %}" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      color: #333;
+      transition: margin-left 0.3s ease-in-out;
+      font-size: 14px; 
+    }
+
+    .sidebar {
+      position: fixed;
+      width: 80px;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      background-color: #2c3e50;
+      color: #ecf0f1;
+      transition: width 0.3s ease-in-out;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    .sidebar.hover {
+      width: 220px; 
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background-color: #34495e;
+      font-size: 1.15rem;
+      font-weight: bold;
+    }
+
+    .sidebar-header h3 {
+      margin: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 1.05rem;     
+      font-weight: 900;       
+      letter-spacing: 1px;     
+      color: #fffffffe;             
+      text-shadow: 0 1px 2px rgba(0,0,0,0.06); 
+    }
+
+    .toggle-btn, .full-sidebar-btn {
+      background: none;
+      border: none;
+      color: #ecf0f1;
+      cursor: pointer;
+      margin-left: auto;
+      font-size: 1rem;
+    }
+
+    .toggle-btn:hover, .full-sidebar-btn:hover {
+      color: #3498db;
+    }
+
+    .sidebar.collapsed .sidebar-header h3,
+    .sidebar.collapsed .menu-text {
+      display: none;
+    }
+
+    .sidebar .menu-text {
+      transition: opacity 0.2s;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+    }
+
+    .menu-item {
+      padding: 0;
+    }
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1rem;
+      color: #ecf0f1;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .menu-link:hover {
+      background-color: #34495e;
+    }
+
+    .menu-link.active {
+      background-color: #3498db;
+      font-weight: bold;
+    }
+
+    .menu-icon {
+      width: 24px;
+      text-align: left;
+      margin-right: 1rem;
+    }
+
+    .main-content {
+      margin-left: 220px; 
+      transition: margin-left 0.3s ease-in-out;
+    }
+
+    .sidebar.collapsed ~ .main-content {
+      margin-left: 100px; 
+    }
+
+    .page-container {
+      max-width: 2000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .menu-category {
+      margin-bottom: 5px;
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      cursor: pointer;
+      background-color: #3e6288;
+      border-radius: 4px;
+    }
+    
+    .category-header:hover {
+      background-color: #2f8f8f;
+    }
+    
+    .category-header .menu-icon {
+      margin-right: 10px;
+      font-size: 14px;
+    }
+    
+    .category-header .menu-text {
+      flex-grow: 1;
+      font-weight: 600;
+    }
+    
+    .category-toggle {
+      transition: transform 0.1s ease;
+      font-size: 12px;
+    }
+    
+    .submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.1s ease;
+      padding-left: 20px;
+    }
+    
+    .submenu.active {
+      max-height: 1000px; 
+    }
+
+    /* Responsive */
+    @media (max-width: 576px) {
+      .main-content {
+        margin-left: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebar-hotzone"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>GoProDairy</h3>
+    <button class="toggle-btn" id="toggle-btn" title="Toggle Sidebar">
+      <img src="{% static 'images/favicon.png' %}" alt="Toggle Sidebar" width="30" height="30">
+    </button>
+    <button class="full-sidebar-btn" id="full-sidebar-btn"></button>
+  </div>
+
+  <ul class="sidebar-menu">
+
+    <!-- Reports -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-chart-bar"></i></span>
+        <span class="menu-text">Financial Reports</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'accounting:accounting_dashboard' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+            <span class="menu-text">Balance Sheets</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-file-alt"></i></span>
+            <span class="menu-text">Profit & Loss Statements</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-cash-register"></i></span>
+            <span class="menu-text">Cash Flow Reports</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Ledgers -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-book"></i></span>
+        <span class="menu-text">Ledgers</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-user-friends"></i></span>
+            <span class="menu-text">Supplier Ledger</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-truck"></i></span>
+            <span class="menu-text">Transporter Ledger</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-industry"></i></span>
+            <span class="menu-text">Plant Expense Ledger</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Milk Logistics Finance -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-dolly"></i></span>
+        <span class="menu-text">Milk Logistics Finance</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-oil-can"></i></span>
+            <span class="menu-text">Tanker Fuel & Maintenance Costs</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'accounting:billing_and_payment' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-hand-holding-usd"></i></span>
+            <span class="menu-text">Supplier Milk Payment Settlements</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="#" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-receipt"></i></span>
+            <span class="menu-text">Logistics Billing Records</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Back to Main App -->
+    <li class="menu-item">
+      <a href="{% url 'accounts:user_flow' %}" target="_self" class="menu-link">
+        <span class="menu-icon"><i class="fas fa-arrow-left"></i></span>
+        <span class="menu-text">Back to Main Dashboard</span>
+      </a>
+    </li>
+
+  </ul>
+</div>
+
+<div class="main-content" id="main-content">
+  <div class="page-container">
+    {% block accounting_content %}
+      <!-- Default content will be replaced by child templates -->
+    {% endblock %}
+  </div>
+</div>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const hotzone = document.getElementById('sidebar-hotzone');
+
+  sidebar.classList.add('collapsed');
+
+  hotzone.addEventListener('mouseenter', () => {
+    sidebar.classList.remove('collapsed');
+    sidebar.classList.add('hover');
+  });
+
+  sidebar.addEventListener('mouseleave', () => {
+    if (!sidebar.classList.contains('pinned')) {
+      sidebar.classList.remove('hover');
+      setTimeout(() => {
+        if (!sidebar.matches(':hover') && !hotzone.matches(':hover')) {
+          sidebar.classList.add('collapsed');
+        }
+      }, 100);
+    }
+  });
+
+  sidebar.addEventListener('mouseenter', () => {
+    sidebar.classList.add('hover');
+    sidebar.classList.remove('collapsed');
+  });
+
+  const fullSidebarBtn = document.getElementById('full-sidebar-btn');
+  fullSidebarBtn.addEventListener('click', () => {
+    if (sidebar.classList.contains('pinned')) {
+      sidebar.classList.remove('pinned');
+      sidebar.classList.remove('hover');
+      sidebar.classList.add('collapsed');
+    } else {
+      sidebar.classList.add('pinned');
+      sidebar.classList.remove('collapsed');
+      sidebar.classList.add('hover');
+    }
+  });
+
+  // Toggle submenus
+  document.querySelectorAll('.category-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const submenu = header.nextElementSibling;
+      const toggleIcon = header.querySelector('.category-toggle');
+      submenu.classList.toggle('active');
+      toggleIcon.classList.toggle('fa-chevron-down');
+      toggleIcon.classList.toggle('fa-chevron-up');
+    });
+  });
+</script>
+
+</body>
+</html>

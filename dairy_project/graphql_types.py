@@ -482,3 +482,13 @@ class SiloType:
     @strawberry.field
     def completed_transfers(self) -> List["MilkTransferType"]:
         return self.incoming_transfers.filter(status="completed")
+    
+
+@strawberry.type
+class InvoiceType:
+    supplier_name: str
+    route_name: Optional[str]
+    last_supply_date: date
+    total_due: float
+    amount_paid: float
+    status: str

@@ -104,7 +104,7 @@ class Query:
         try:
             milk_lots = MilkLot.objects.select_related("supplier", "bill").order_by(
                 "-date_created"
-            )
+            ) 
             return milk_lots
         except Supplier.DoesNotExist:
             raise GraphQLError("Supplier profile not found.")
