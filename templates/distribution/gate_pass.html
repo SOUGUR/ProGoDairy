@@ -240,18 +240,18 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--primary-color);
+    color: white;
     font-weight: 500;
     cursor: pointer;
     padding: 0.5rem 1rem;
-    background-color: white;
+    background-color: #2b6cb0;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     transition: background-color 0.2s;
 }
 
 .add-seal-button:hover {
-    background-color: #f8fafc;
+    background-color: #1c4d83;
 }
 
 /* Samples Table */
@@ -471,9 +471,7 @@ body {
                 <!-- Seal inputs will be added here -->
             </div>
             <button type="button" id="addSealButton" class="add-seal-button">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <i class="ri-add-circle-line"></i>
                 Add Seal
             </button>
         </div>
@@ -803,7 +801,7 @@ body {
           </div>
           <div>
             <span class="font-medium">Final Rinse Conductivity:</span>
-            <span>${cip.finalRinseConductivity} µS/cm</span>
+            <span>${cip.finalRinseCondMs} µS/cm</span>
           </div>
           <div>
             <span class="font-medium">Expected Arrival:</span>
