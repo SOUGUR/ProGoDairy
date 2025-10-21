@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import vehicle_list, create_milk_transfer, milk_transfer_list, add_get_vehicle_driver, vehicle_CIP_log, gate_pass_tickets
+from .views import vehicle_list, create_milk_transfer, milk_transfer_list, add_get_vehicle_driver, vehicle_CIP_log, gate_pass_tickets, gate_pass
 
 app_name = "distribution"
 
@@ -10,4 +10,5 @@ urlpatterns = [
     path('create_milk_transfer/', create_milk_transfer, name='create_milk_transfer'),
     path('milk_transfer_list/', milk_transfer_list, name='milk_transfer_list'),
     path('gate_pass_tickets/', gate_pass_tickets, name='gate_pass_tickets'),
+    path('gate_pass/', gate_pass, name='gate_pass'),
 ]

@@ -84,8 +84,6 @@ h1 {
 }
 
 .action-buttons {
-    display: flex;
-    gap: 12px;
     justify-content: flex-start;
     align-items: flex-end;
 }
@@ -366,11 +364,14 @@ h1 {
                 </select>
             </div>
 
-            <!-- Apply & Clear Buttons in same row -->
-            <div class="filter-group action-buttons">
-                <button type="button" class="btn btn-primary">Apply Filters</button>
-                <button type="button" class="btn btn-secondary">Clear Filters</button>
-            </div>
+            <!-- Apply & Clear Buttons  -->
+            <div class="filter-group">
+              <label>&nbsp;</label> <!-- Invisible label to maintain alignment -->
+              <div class="action-buttons">
+                  <button type="button" class="btn btn-primary">Apply Filters</button>
+                  <button type="button" class="btn btn-secondary">Clear Filters</button>
+              </div>
+          </div>
         </div>
     </div>
 
@@ -611,7 +612,6 @@ function loadStatuses() {
   const statuses = [
     { value: "scheduled", label: "Scheduled" },
     { value: "in_transit", label: "In Transit" },
-    { value: "completed", label: "Completed" }
   ];
   const select = document.getElementById("statusSelect");
   select.innerHTML = '<option value="">-- Select Status --</option>';
@@ -641,12 +641,14 @@ async function fetchAndRenderTransfers(plantId, vehicleNumber, status = null) {
       ) {
         id
         status
+        transferDate
         totalVolume
         remarks
         arrivalDatetime
         vehicle {
           vehicleId
           name
+          capacityLiters
         }
         destination {
           name
@@ -687,7 +689,7 @@ function renderTickets(transfers) {
   if (!transfers || transfers.length === 0) {
     container.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:40px; color:#718096;">
-        <p>📭 No milk transfers found for the selected filters.</p>
+        <p> No milk transfers found for the selected filters.</p>
       </div>
     `;
     countEl.textContent = "0";
@@ -700,8 +702,9 @@ function renderTickets(transfers) {
   transfers.forEach(transfer => {
     // === Filter only "society test" samples ===
     const societySamples = (transfer.relatedCompositeSamples || [])
-      .filter(s => s.sampleType === "SOCIETY_TEST");
+  
 
+    const numSamples = societySamples.length;
     // === Compute averages ===
     let avgFat = null;
     let avgSNF = null;
@@ -726,13 +729,28 @@ function renderTickets(transfers) {
 
     // === Format volume ===
     const volumeText = transfer.totalVolume ? `${Math.round(transfer.totalVolume).toLocaleString()} L` : "N/A";
+    const capacityText = transfer.vehicle?.capacityLiters ? `${Math.round(transfer.vehicle.capacityLiters).toLocaleString()} L` : "N/A";
 
+    let transferDate = "N/A";
+    if (transfer.transferDate) {
+      const date = new Date(transfer.transferDate);
+      transferDate = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
     // === Generate unique IDs ===
     const ticketId = `pass-ticket-${transfer.id}`;
     const statusId = `pass-status-${transfer.id}`;
     const vehicleId = `pass-vehicle-${transfer.id}`;
     const driverId = `pass-driver-${transfer.id}`;
+    const capacityId = `pass-capacity-${transfer.id}`;
+    const dateId = `pass-date-${transfer.id}`;
     const volumeId = `pass-volume-${transfer.id}`;
+    const samplesId = `pass-samples-${transfer.id}`;
     const fatId = `pass-fat-${transfer.id}`;
     const snfId = `pass-snf-${transfer.id}`;
     const testResultId = `pass-test-result-${transfer.id}`;
@@ -760,12 +778,24 @@ function renderTickets(transfers) {
             <span class="pass-value" id="${vehicleId}">${transfer.vehicle?.vehicleId || "N/A"}</span>
           </div>
           <div class="pass-field">
+            <span class="pass-label">Transfer Date:</span>
+            <span class="pass-value" id="${dateId}">${transferDate}</span>
+          </div>
+          <div class="pass-field">
             <span class="pass-label">Driver:</span>
             <span class="pass-value" id="${driverId}">${transfer.vehicle?.name || "N/A"}</span>
           </div>
           <div class="pass-field">
+            <span class="pass-label">Veh. Capacity:</span>
+            <span class="pass-value" id="${capacityId}">${capacityText}</span>
+          </div>
+          <div class="pass-field">
             <span class="pass-label">Pool Vol:</span>
             <span class="pass-value" id="${volumeId}">${volumeText}</span>
+          </div>
+          <div class="pass-field">
+            <span class="pass-label">Samples Collected:</span>
+            <span class="pass-value" id="${samplesId}">${numSamples}</span>
           </div>
           <div class="pass-field">
             <span class="pass-label">Fat %:</span>
@@ -781,7 +811,9 @@ function renderTickets(transfers) {
           </div>
         </div>
         <div class="pass-actions">
-          <button class="${btnClass}" id="${btnId}">+ Create Gate Pass</button>
+          <a href="/distribution/gate_pass/?transfer_id={{ transfer.id }}">
+        <button class="${btnClass}" id="${btnId}">+ Create Gate Pass</button>
+    </a>
         </div>
       </div>
     `;

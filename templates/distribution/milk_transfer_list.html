@@ -500,10 +500,6 @@
     <span id="closeUpdateModal" class="close">&times;</span>
     <h2>Update Milk Transfer</h2>
     <form id="editForm">
-      <input type="hidden" id="transferId" />
-      <label for="arrivalDatetime">Arrival DateTime:</label>
-      <input type="datetime-local" id="arrivalDatetime" required />
-      
       <label for="departureWeight">Departure Weight (kg)</label>
       <input 
         type="number" 
@@ -512,6 +508,10 @@
         min="0"
         placeholder="e.g. 1250.50"
       />
+
+      <input type="hidden" id="transferId" />
+      <label for="arrivalDatetime">Arrival DateTime:</label>
+      <input type="datetime-local" id="arrivalDatetime" required />
 
       <label for="arrivalWeight">Arrival Weight (kg)</label>
       <input 
@@ -636,6 +636,7 @@ function populateTable(transfers) {
 
     const vehicle = t.vehicle ? `${t.vehicle.name} (${t.vehicle.vehicleId})` : "Unassigned";
     const destination = t.destination?.name || "-";
+    const milkTransferStatus = t.status || "-";
     const volume = t.totalVolume?.toFixed(2) || "0.00";
     function formatUTCDateTime(isoString) {
       if (!isoString) return "-";
@@ -668,8 +669,8 @@ function populateTable(transfers) {
         <td>${vehicle}</td>
         <td>${destination}</td>
         <td>${volume} L</td>
-        <td>${status}</td>
-        <td>${t.remarks}</td>
+        <td>${milkTransferStatus}</td>
+        <td>${t.remarks || "-"}</td>
         <td>${transferDate}</td>
         <td>${arrivalTime}</td>
         <td>

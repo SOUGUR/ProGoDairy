@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Milk Tanker Gate Pass{% endblock %}
+
+{% block content %}
+
+<style>
+:root {
+    --primary-color: #2363b2;
+    --secondary-color: #ebf8ff;
+    --text-color: #333;
+    --border-color: #e2e8f0;
+    --success-color: #38a169;
+    --warning-color: #d69e2e;
+    --danger-color: #e53e3e;
+    --ticket-bg: #ffffff;
+    --ticket-border: #333;
+    --section-header-bg: var(--secondary-color);
+    --section-header-color: #2b6cb0;
+    --table-header-bg: var(--secondary-color);
+    --table-header-color: #2b6cb0;
+    --table-row-alt: #f8fafc;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f5f8fb;
+    padding: 20px;
+}
+
+/* Main Container - Ticket Style */
+.gate-pass-container {
+    position: relative;
+    background: #ebf8ff;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border:None;
+}
+
+/* Notch on left and right sides */
+.gate-pass-container::before,
+.gate-pass-container::after {
+    content: "";
+    position: absolute;
+    top: 15px;
+    width: 20px;
+    height: 20px;
+    background: var(--ticket-bg);
+    border: 2px solid var(--ticket-border);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.gate-pass-container::before {
+    left: -10px;
+}
+
+.gate-pass-container::after {
+    right: -10px;
+}
+
+/* Header Section */
+.header-section {
+    background-color: #296da4;
+    color: white;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 2;
+}
+
+.header-section h1 {
+    color:white;
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.header-section p {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    margin: 0;
+    color: white
+}
+
+/* Form Content */
+.form-content {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* Section Styling */
+.section {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.2em;
+}
+
+/* Grid for Transfer Details */
+.transfer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.field-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+.field-group input,
+.field-group select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: white;
+}
+
+.field-group input:focus,
+.field-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.2);
+}
+
+/* CIP Card */
+.cip-card {
+    background-color: #eaf3ff;
+    border-left: 4px solid var(--primary-color);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+}
+
+.cip-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2b6cb0;
+}
+
+.cip-card .cip-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.cip-info div {
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+}
+
+.cip-info span.font-medium {
+    color: #4a5568;
+}
+
+.cip-info span.text-red-600 {
+    color: #e53e3e;
+    font-weight: bold;
+}
+
+/* Seals Section */
+.seals-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.seal-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.seal-row input,
+.seal-row select {
+    flex-grow: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.seal-row button.remove-seal-btn {
+    padding: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #e53e3e;
+    transition: color 0.2s;
+}
+
+.seal-row button.remove-seal-btn:hover {
+    color: #c53030;
+}
+
+.add-seal-button {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.add-seal-button:hover {
+    background-color: #f8fafc;
+}
+
+/* Samples Table */
+.samples-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.samples-table th,
+.samples-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.samples-table th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-color);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.samples-table tr:hover {
+    background-color: var(--table-row-alt);
+}
+
+.samples-table .status-tag {
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-ready {
+    background-color: #c6f6d5;
+    color: #22543d;
+    border: 1px solid #38a169;
+}
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #744210;
+    border: 1px solid #d69e2e;
+}
+
+.status-in-transit {
+    background-color: #bee3f8;
+    color: #2b6cb0;
+    border: 1px solid #3182ce;
+}
+
+/* Submit Button */
+.submit-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.7rem 0.6rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    align-self: flex-end;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.submit-button:hover {
+    background-color: #fc0000;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 50;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2d3748;
+}
+
+.modal-body {
+    margin-bottom: 1.5rem;
+    color: #4a5568;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modal-button-cancel {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+.modal-button-cancel:hover {
+    background-color: #cbd5e0;
+}
+
+.modal-button-confirm {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.modal-button-confirm:hover {
+    background-color: #2b6cb0;
+}
+</style>
+
+<div class="gate-pass-container">
+    
+    <div class="header-section">
+        <div>
+            <h1>New Milk Tanker Gate Pass (GP-Draft)</h1>
+            <h4><p>Initiating pass for outgoing transfer</p></h4>
+        </div>
+    </div>
+
+    <form id="gatePassForm" class="form-content">
+        <!-- PART 1: MAIN DETAILS, WEIGHTS, & CIP CARD -->
+        <div class="section">
+            <div class="section-header">1. Transfer & Weighing Details</div>
+            <div class="transfer-grid">
+                <div class="field-group">
+                    <label for="driver">Driver</label>
+                    <input type="text" id="driver" name="driver" value="Jagat Singh (DRV-004)" readonly>
+                </div>
+                <div class="field-group">
+                    <label for="route">Route</label>
+                    <input type="text" id="route" name="route" value="Route 101 (Rural to Plant)" readonly>
+                </div>
+                <div class="field-group">
+                    <label for="vehicle">Vehicle</label>
+                    <input type="text" id="vehicle" name="vehicle" value="Tanker KA01AB1234" readonly>
+                </div>
+                <div class="field-group">
+                    <label for="gate_pass_status">Gate Pass Status</label>
+                    <select id="gate_pass_status" name="gate_pass_status" class="status-select">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label for="empty_tare_kg">Empty Tare (kg)</label>
+                    <input type="number" id="empty_tare_kg" name="empty_tare_kg" placeholder="e.g., 8500.00" step="0.01" required>
+                </div>
+                <div class="field-group">
+                    <label for="net_volume_l">Net Volume (L)</label>
+                    <input type="number" id="net_volume_l" name="net_volume_l" placeholder="Calculated/Manual" step="0.01" required>
+                </div>
+                <div class="field-group">
+                    <label for="density_kg_per_l">Density (kg/L)</label>
+                    <input type="number" id="density_kg_per_l" name="density_kg_per_l" value="1.0320" step="0.0001" required>
+                </div>
+            </div>
+
+            <!-- CIP Record Card -->
+            <div class="cip-card">
+                <h3>Associated CIP Record: CIPR-1209</h3>
+                <div class="cip-info">
+                    <div>
+                        <span class="font-medium">Started At:</span>
+                        <span>2025-10-20 18:00</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">CIP Expiry:</span>
+                        <span class="text-red-600 font-bold">2025-10-25 18:00</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Final Rinse Conductivity:</span>
+                        <span>1.5 uS/cm</span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Expected Arrival:</span>
+                        <span>2025-10-21 17:30</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PART 2: SEALS -->
+        <div class="section">
+            <div class="section-header">2. Security Seals</div>
+            <div id="sealsContainer" class="seals-container">
+                <!-- Seal inputs will be added here -->
+            </div>
+            <button type="button" id="addSealButton" class="add-seal-button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Add Seal
+            </button>
+        </div>
+
+        <!-- PART 3: ASSOCIATED QC SAMPLES -->
+        <div class="section">
+            <div class="section-header">3. Associated Composite Samples (Society QC)</div>
+            <div class="overflow-x-auto">
+                <table class="samples-table">
+                    <thead>
+                        <tr>
+                            <th>Sample ID</th>
+                            <th>Primary</th>
+                            <th>Volume (ml)</th>
+                            <th>Collected At</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="samplesTableBody">
+                        <!-- Samples will be rendered here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Form Submission Button -->
+        <button type="submit" class="submit-button">
+            Create & Print Gate Pass
+        </button>
+    </form>
+</div>
+
+<!-- Custom Confirmation Modal -->
+<div id="confirmationModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">Confirm Gate Pass Creation</div>
+        <div class="modal-body">Are you sure you want to finalize and create this Gate Pass? This action issues the pass and links all associated seals and samples.</div>
+        <div class="modal-footer">
+            <button id="cancelModalButton" type="button" class="modal-button modal-button-cancel">Cancel</button>
+            <button id="confirmPassButton" type="button" class="modal-button modal-button-confirm">Confirm Create</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const PASS_STATUS = [
+        { value: "draft", label: "Draft" },
+        { value: "open", label: "Open" },
+        { value: "completed", label: "Completed" },
+        { value: "cancelled", label: "Cancelled" },
+    ];
+
+    const SEAL_POSITIONS = [
+        { value: "top-man", label: "Top Man-hole" },
+        { value: "outlet", label: "Outlet Valve" },
+        { value: "pump-hatch", label: "Pump Hatch" },
+        { value: "instrument-cabinet", label: "Instrument Cabinet" },
+        { value: "sample-cock", label: "Sample Cock" },
+    ];
+
+    // Initialize empty arrays for dynamic data
+    let mockInitialSeals = [];
+    let mockSamples = [];
+
+    let nextSealId = 1;
+
+    // --- Utility Functions ---
+
+    /** Renders the Seal input fields based on current data. */
+    function renderSeals() {
+        const sealsContainer = document.getElementById('sealsContainer');
+        sealsContainer.innerHTML = '';
+
+        if (mockInitialSeals.length === 0) {
+            // If no seals, show an empty row to start with
+            mockInitialSeals.push({ id: nextSealId++, seal_no: '', position: '' });
+        }
+
+        mockInitialSeals.forEach(seal => {
+            const sealRow = document.createElement('div');
+            sealRow.className = 'seal-row';
+            sealRow.setAttribute('data-seal-id', seal.id);
+
+            // Seal Number Input
+            const sealNoInput = document.createElement('input');
+            sealNoInput.type = 'text';
+            sealNoInput.value = seal.seal_no;
+            sealNoInput.placeholder = 'e.g., A-12345';
+            sealNoInput.required = true;
+            sealNoInput.className = 'seal-number-input';
+
+            // Position Select
+            const positionSelect = document.createElement('select');
+            positionSelect.required = true;
+            positionSelect.className = 'seal-position-select';
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Select Position --';
+            positionSelect.appendChild(defaultOption);
+
+            SEAL_POSITIONS.forEach(pos => {
+                const option = document.createElement('option');
+                option.value = pos.value;
+                option.textContent = pos.label;
+                if (seal.position === pos.value) option.selected = true;
+                positionSelect.appendChild(option);
+            });
+
+            // Delete Button
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'remove-seal-btn';
+            deleteButton.setAttribute('data-seal-id', seal.id);
+            deleteButton.disabled = mockInitialSeals.length <= 1;
+            deleteButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            `;
+
+            // Append elements to row
+            sealRow.appendChild(sealNoInput);
+            sealRow.appendChild(positionSelect);
+            sealRow.appendChild(deleteButton);
+
+            sealsContainer.appendChild(sealRow);
+        });
+
+        // Add event listeners for removal
+        document.querySelectorAll('.remove-seal-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const idToRemove = parseInt(e.currentTarget.getAttribute('data-seal-id'));
+                if (mockInitialSeals.length > 1) {
+                    const index = mockInitialSeals.findIndex(s => s.id === idToRemove);
+                    if (index !== -1) {
+                        mockInitialSeals.splice(index, 1);
+                        renderSeals();
+                    }
+                }
+            });
+        });
+    }
+
+    /** Renders the QC Samples table body. */
+    function renderSamples() {
+        const tableBody = document.getElementById('samplesTableBody');
+        tableBody.innerHTML = '';
+
+        mockSamples.forEach(sample => {
+            const row = document.createElement('tr');
+
+            const primaryTag = sample.is_primary
+                ? '<span class="status-tag status-primary">Primary</span>'
+                : '<span class="status-tag status-secondary">No</span>';
+
+            let statusClass = 'status-pending';
+            if (sample.status === 'Ready for Test') statusClass = 'status-ready';
+            else if (sample.status === 'In Transit') statusClass = 'status-in-transit';
+
+            const statusTag = `<span class="status-tag ${statusClass}">${sample.status}</span>`;
+
+            row.innerHTML = `
+                <td>CS-${sample.id}</td>
+                <td>${primaryTag}</td>
+                <td>${sample.volume}</td>
+                <td>${sample.collected_at}</td>
+                <td>${statusTag}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    /** Populates the Gate Pass Status dropdown. */
+    function populateStatusDropdown() {
+        const select = document.getElementById('gate_pass_status');
+        select.innerHTML = PASS_STATUS.map(status =>
+            `<option value="${status.value}" ${status.value === 'draft' ? 'selected' : ''}>${status.label}</option>`
+        ).join('');
+    }
+
+    // --- Event Handlers ---
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        // Show custom modal instead of alert/confirm
+        document.getElementById('confirmationModal').classList.remove('hidden');
+    }
+
+    function handleAddSeal() {
+        mockInitialSeals.push({ id: nextSealId++, seal_no: '', position: '' });
+        renderSeals();
+    }
+
+    function handleConfirmPass() {
+        // Placeholder for actual submission logic
+        console.log('Gate Pass Confirmed and Submitted!');
+        document.getElementById('confirmationModal').classList.add('hidden');
+        // For demo: show a success message in the console
+        console.log('Gate Pass Data:', {
+            status: document.getElementById('gate_pass_status').value,
+            tare: document.getElementById('empty_tare_kg').value,
+            volume: document.getElementById('net_volume_l').value,
+            density: document.getElementById('density_kg_per_l').value,
+            seals: mockInitialSeals.filter(s => s.seal_no !== ''), // Only save seals with a number
+            samplesCount: mockSamples.length
+        });
+
+        // Visually change the button/header to indicate submission (optional)
+        document.querySelector('h1').textContent = 'Gate Pass GP-789 Created!';
+        document.querySelector('.gate-pass-container').classList.add('border-green-500');
+    }
+
+    // --- Initialization ---
+
+    window.onload = function() {
+        populateStatusDropdown();
+        renderSeals();
+        renderSamples();
+
+        // Setup Event Listeners
+        document.getElementById('gatePassForm').addEventListener('submit', handleFormSubmit);
+        document.getElementById('addSealButton').addEventListener('click', handleAddSeal);
+
+        // Modal Listeners
+        document.getElementById('cancelModalButton').addEventListener('click', () => {
+            document.getElementById('confirmationModal').classList.add('hidden');
+        });
+        document.getElementById('confirmPassButton').addEventListener('click', handleConfirmPass);
+    };
+</script>
+
+{% endblock %}
