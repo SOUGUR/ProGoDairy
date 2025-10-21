@@ -817,42 +817,43 @@ function formatDateTimeLocal(isoString) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-// Handle Add CIP Form Submit
-// Handle Add CIP Form Submit
 document.getElementById('addCipForm')?.addEventListener('submit', function(e) {
   e.preventDefault();
   const formData = new FormData(this);
   
-  // Map snake_case (HTML names) → camelCase (GraphQL fields)
-  const snakeToCamel = {
-    vehicle_id: 'vehicleId',
-    certificate_no: 'certificateNo',
-    wash_type: 'washType',
-    started_at: 'startedAt',
-    finished_at: 'finishedAt',
-    expiry_at: 'expiryAt',
-    caustic_temp_c: 'causticTempC',
-    acid_temp_c: 'acidTempC',
-    caustic_conc_pct: 'causticConcPct',
-    acid_conc_pct: 'acidConcPct',
-    final_rinse_cond_ms: 'finalRinseCondMs',
-    operator_code: 'operatorCode',
-    passed: 'passed'
+  // Build input object with proper field names
+  const input = {
+    vehicleId: parseInt(formData.get('vehicle_id')),
+    certificateNo: formData.get('certificate_no'),
+    washType: formData.get('wash_type'),
+    startedAt: formData.get('started_at'),
+    finishedAt: formData.get('finished_at'),
+    expiryAt: formData.get('expiry_at'),
+    operatorCode: formData.get('operator_code'),
+    passed: formData.get('passed') === 'true'
   };
 
-  const input = {};
-  for (let [key, value] of formData.entries()) {
-    const gqlKey = snakeToCamel[key];
-    if (!gqlKey) continue;
+  // Handle optional numeric fields
+  const optionalFields = [
+    'caustic_temp_c',
+    'acid_temp_c', 
+    'caustic_conc_pct',
+    'acid_conc_pct',
+    'final_rinse_cond_ms'
+  ];
 
-    if (key === 'passed') {
-      input[gqlKey] = value === 'true';
-    } else if (value === '') {
-      input[gqlKey] = null;
-    } else {
-      input[gqlKey] = value;
+  optionalFields.forEach(field => {
+    const value = formData.get(field);
+    if (value && value.trim() !== '') {
+      const camelCaseField = field
+        .split('_')
+        .map((word, index) => 
+          index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join('');
+      input[camelCaseField] = parseFloat(value);
     }
-  }
+  });
 
   fetch("/graphql/", {
     method: "POST",
@@ -871,7 +872,10 @@ document.getElementById('addCipForm')?.addEventListener('submit', function(e) {
   })
   .then(res => res.json())
   .then(data => {
-    if (data.errors) throw data.errors;
+    if (data.errors) {
+      console.error("GraphQL errors:", data.errors);
+      throw data.errors;
+    }
     showNotification("CIP record added successfully!", 'success', 2000);
     closeModal('addCipModal');
     this.reset();
@@ -882,41 +886,64 @@ document.getElementById('addCipForm')?.addEventListener('submit', function(e) {
   });
 });
 
-// Handle Update CIP Form Submit
+// Handle Update CIP Form Submit - FIXED VERSION
 document.getElementById('updateCipForm')?.addEventListener('submit', function(e) {
   e.preventDefault();
   const formData = new FormData(this);
-  const snakeToCamel = {
-    id: 'id',
-    vehicle_id: 'vehicleId',
-    certificate_no: 'certificateNo',
-    wash_type: 'washType',
-    started_at: 'startedAt',
-    finished_at: 'finishedAt',
-    expiry_at: 'expiryAt',
-    caustic_temp_c: 'causticTempC',
-    acid_temp_c: 'acidTempC',
-    caustic_conc_pct: 'causticConcPct',
-    acid_conc_pct: 'acidConcPct',
-    final_rinse_cond_ms: 'finalRinseCondMs',
-    operator_code: 'operatorCode',
-    passed: 'passed'
+  
+  // Build update input - only include fields that have values
+  const input = {
+    id: parseInt(formData.get('id'))
   };
 
-  const input = { id: formData.get('id') }; // id is required
-  for (let [key, value] of formData.entries()) {
-    if (key === 'id') continue;
-    const gqlKey = snakeToCamel[key];
-    if (!gqlKey) continue;
+  // Define all possible fields with their mappings
+  const fieldMappings = {
+    'certificate_no': 'certificateNo',
+    'wash_type': 'washType', 
+    'started_at': 'startedAt',
+    'finished_at': 'finishedAt',
+    'expiry_at': 'expiryAt',
+    'operator_code': 'operatorCode',
+    'passed': 'passed'
+  };
 
-    if (key === 'passed') {
-      input[gqlKey] = value === 'true';
-    } else if (value === '') {
-      input[gqlKey] = null;
-    } else {
-      input[gqlKey] = value;
+  // Handle string/date fields
+  Object.entries(fieldMappings).forEach(([formField, graphqlField]) => {
+    const value = formData.get(formField);
+    if (value && value.trim() !== '') {
+      if (formField === 'passed') {
+        input[graphqlField] = value === 'true';
+      } else {
+        input[graphqlField] = value;
+      }
     }
-  }
+  });
+
+  // Handle optional numeric fields
+  const numericFields = [
+    'caustic_temp_c',
+    'acid_temp_c',
+    'caustic_conc_pct', 
+    'acid_conc_pct',
+    'final_rinse_cond_ms'
+  ];
+
+  numericFields.forEach(field => {
+    const value = formData.get(field);
+    const camelCaseField = field
+      .split('_')
+      .map((word, index) => 
+        index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+      )
+      .join('');
+    
+    if (value && value.trim() !== '') {
+      input[camelCaseField] = parseFloat(value);
+    } else {
+      // Explicitly set to None for update
+      input[camelCaseField] = null;
+    }
+  });
 
   fetch("/graphql/", {
     method: "POST",
@@ -930,21 +957,24 @@ document.getElementById('updateCipForm')?.addEventListener('submit', function(e)
           }
         }
       `,
-      variables: { input }
+      variables: { input } 
     })
   })
   .then(res => res.json())
   .then(data => {
-    if (data.errors) throw data.errors;
+    if (data.errors) {
+      console.error("GraphQL errors:", data.errors);
+      throw data.errors;
+    }
     showNotification("CIP record updated successfully!", 'success', 2000);
     closeModal('updateCipModal');
-    this.reset();
   })
   .catch(err => {
     console.error("Update CIP error:", err);
     showNotification("Failed to update CIP record.", 'error', 2000);
   });
 });
+
 // Close modal when clicking outside
 window.onclick = function(event) {
   if (event.target.classList.contains('modal')) {
