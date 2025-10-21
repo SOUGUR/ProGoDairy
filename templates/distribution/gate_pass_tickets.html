@@ -811,8 +811,10 @@ function renderTickets(transfers) {
           </div>
         </div>
         <div class="pass-actions">
-          <a href="/distribution/gate_pass/?transfer_id={{ transfer.id }}">
-        <button class="${btnClass}" id="${btnId}">+ Create Gate Pass</button>
+          <a href="/distribution/gate_pass/${transfer.id}/">
+            <button class="${btnClass}" id="${btnId}">+ Create Gate Pass</button>
+          </a>
+        </div>
     </a>
         </div>
       </div>

@@ -18,5 +18,7 @@ def milk_transfer_list(request):
 def gate_pass_tickets(request):
     return render(request, 'distribution/gate_pass_tickets.html')
 
-def gate_pass(request):
-    return render(request, 'distribution/gate_pass.html')
+def gate_pass(request, milk_transfer_id):
+    return render(request, 'distribution/gate_pass.html', {
+        'milk_transfer_id': milk_transfer_id
+    })
