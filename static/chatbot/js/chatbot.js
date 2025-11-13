@@ -29,7 +29,7 @@ async function sendMessage() {
   input.value = '';
 
   try {
-    const response = await fetch("accounts/api/chat/", {  
+    const response = await fetch("/accounts/api/chat/", {  
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Milk Logistics Dashboard{% endblock %}
@@ -10,7 +9,7 @@
         <h1>Current Month Insight</h1>
         <div class="header-controls">
             <div class="date-filter">
-                <span id="current-date">September 2023</span>
+                <span id="current-date">September 2023</span> 
                 <i class="dropdown-icon">▼</i>
             </div>
         </div>
@@ -40,7 +39,7 @@
     </div>
 
     <div class="graphs-grid">
-        <div class="graph-card large">
+        <div class="graph-card large" data-graph-id="milkVolumeChart">
             <div class="graph-header">
                 <h3>Daily Collection Volume</h3>
                 <button class="graph-option">⋮</button>
@@ -50,7 +49,7 @@
             </div>
         </div>
         
-        <div class="graph-card">
+        <div class="graph-card" data-graph-id="routeVolumeChart">
             <div class="graph-header">
                 <h3>Collection by Region</h3>
                 <button class="graph-option">⋮</button>
@@ -60,17 +59,17 @@
             </div>
         </div>
         
-        <div class="graph-card">
+        <div class="graph-card" data-graph-id="qualityMetricsChart">
             <div class="graph-header">
                 <h3>Quality Metrics</h3>
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                 <canvas id="qualityMetricsChart"></canvas>
+                <canvas id="qualityMetricsChart"></canvas>
             </div>
         </div>
         
-        <div class="graph-card">
+        <div class="graph-card" data-graph-id="supplierChart">
             <div class="graph-header">
                 <h3>Supplier Performance</h3>
                 <button class="graph-option">⋮</button>
@@ -80,240 +79,427 @@
             </div>
         </div>
         
-        <div class="graph-card large">
+        <div class="graph-card large" data-graph-id="routeEfficiencyMap">
             <div class="graph-header">
                 <h3>Collection Route Efficiency</h3>
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                <!-- Graph 5 will be inserted here -->
-                <div class="graph-mock">Map Visualization</div>
+                <div class="graph-mock" id="routeEfficiencyMap">Map Visualization</div>
             </div>
         </div>
         
-        <div class="graph-card">
+        <div class="graph-card" data-graph-id="vehicleUtilization">
             <div class="graph-header">
                 <h3>Vehicle Utilization</h3>
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                <!-- Graph 6 will be inserted here -->
-                <div class="graph-mock">Gauge Chart</div>
+                <div class="graph-mock" id="vehicleUtilization">Gauge Chart</div>
             </div>
         </div>
         
-        <div class="graph-card">
+        <div class="graph-card" data-graph-id="temperatureMonitoring">
             <div class="graph-header">
                 <h3>Temperature Monitoring</h3>
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                <!-- Graph 7 will be inserted here -->
-                <div class="graph-mock">Line Graph</div>
+                <div class="graph-mock" id="temperatureMonitoring">Line Graph</div>
             </div>
         </div>
         
-        <div class="graph-card">
+        <div class="graph-card" data-graph-id="paymentStatusChart">
             <div class="graph-header">
                 <h3>Payment Status</h3>
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                <!-- Graph 8 will be inserted here -->
                 <canvas id="paymentStatusChart"></canvas>
             </div>
         </div>
         
-        <div class="graph-card">
+        <div class="graph-card" data-graph-id="collectionForecast">
             <div class="graph-header">
                 <h3>Collection Forecast</h3>
                 <button class="graph-option">⋮</button>
             </div>
             <div class="graph-placeholder">
-                <!-- Graph 9 will be inserted here -->
-                <div class="graph-mock">Area Chart</div>
+                <div class="graph-mock" id="collectionForecast">Area Chart</div>
             </div>
         </div>
     </div>
 </div>
-<!--====================================== Load all necessary graphs ==============================================-->
+
+<div id="graph-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-btn">&times;</button>
+        <div id="modal-title"></div>
+        <div id="modal-graph-body">
+            </div>
+    </div>
+</div>
+
 <script src="{% static 'plants/js/MilkCollectionVolume.js' %}"></script>
 <script src="{% static 'plants/js/MilkCollectionVolumeRoute.js' %}"></script>
 <script src="{% static 'plants/js/MilkQualityMetrics.js' %}"></script>
 <script src="{% static 'plants/js/supplier_performance.js' %}"></script>
 <script src="{% static 'plants/js/payment_status_chart.js' %}"></script>
 
-<!--================================================= add current date and day =======================================================-->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dateSpan = document.getElementById('current-date');
-        const now = new Date();
-        const day = now.getDate();
-        const daySuffix = getDaySuffix(day);
-        const monthName = now.toLocaleString('default', { month: 'long' });
-        const year = now.getFullYear();
-        const dayName = now.toLocaleString('default', { weekday: 'long' });
-        dateSpan.textContent = `${day}${daySuffix} ${monthName} ${year}, ${dayName}`;
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    const dateSpan = document.getElementById('current-date');
+    const now = new Date();
+    const day = now.getDate();
+    const daySuffix = getDaySuffix(day);
+    const monthName = now.toLocaleString('default', { month: 'long' });
+    const year = now.getFullYear();
+    const dayName = now.toLocaleString('default', { weekday: 'long' });
+    // Update the date display to the current date/day
+    dateSpan.textContent = `${day}${daySuffix} ${monthName} ${year}, ${dayName}`; 
 
-    function getDaySuffix(day) {
-        if (day > 3 && day < 21) return 'th';
-        switch (day % 10) {
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
-            default: return 'th';
-        }
+    setupGraphEnlargement();
+});
+
+function getDaySuffix(day) {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
     }
-</script>
-<style>
-.dashboard-container {
-    padding: 20px;
-    background-color: #f5f7f9;
-    min-height: 100vh;
 }
 
+function setupGraphEnlargement() {
+    const graphCards = document.querySelectorAll('.graph-card');
+    const modal = document.getElementById('graph-modal');
+    const modalBody = document.getElementById('modal-graph-body');
+    const modalTitle = document.getElementById('modal-title');
+    const closeBtn = modal.querySelector('.close-btn');
+
+    graphCards.forEach(card => {
+        const placeholder = card.querySelector('.graph-placeholder');
+        placeholder.style.cursor = 'pointer'; 
+
+        placeholder.addEventListener('click', () => {
+            const title = card.querySelector('h3').textContent;
+            const originalElement = placeholder.firstElementChild;
+
+            modalBody.innerHTML = "";       
+            modalTitle.textContent = title; 
+
+            if (originalElement.tagName === "CANVAS") {
+                try {
+                    const img = document.createElement('img');
+                    img.src = originalElement.toDataURL('image/png'); 
+                    img.alt = title + " Enlarged View";
+                    img.classList.add('enlarged-content'); // New class for styling
+                    modalBody.appendChild(img);
+                } catch (e) {
+                    // Fallback for cases where canvas is empty or conversion fails
+                    console.error("Canvas conversion failed. Displaying mock view.", e);
+                    const mockDiv = document.createElement('div');
+                    mockDiv.className = 'graph-mock enlarged-content';
+                    mockDiv.textContent = title + " (Enlarged View Mock)";
+                    modalBody.appendChild(mockDiv);
+                }
+
+            } else {
+                // 2. Handle Mock DIVs (e.g., Map, Gauge)
+                const cloned = originalElement.cloneNode(true);
+                cloned.classList.add('enlarged-content');
+                modalBody.appendChild(cloned);
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Disable background scroll
+        });
+    });
+
+    // Close Modal Logic
+    const closeModal = () => {
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; 
+        modalBody.innerHTML = "";
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    // Close when clicking outside the modal content
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); }); 
+    // Close when pressing the Escape key
+    document.addEventListener('keydown', e => { if (e.key === "Escape" && modal.classList.contains('active')) closeModal(); });
+}
+</script>
+
+<style>
+
+.dashboard-container {
+    padding: 30px; 
+    background-color: #ecf0f1; 
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 30px; 
 }
 
 .dashboard-header h1 {
     color: #2c3e50;
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px; 
+    font-weight: 700;
 }
 
-.header-controls {
-    display: flex;
-    align-items: center;
-}
-
+/* Date Filter (Control) */
 .date-filter {
     display: flex;
     align-items: center;
     background: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    font-size: 14px;
+    padding: 10px 15px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    font-size: 15px;
     color: #5a677d;
+    transition: all 0.2s ease;
+    border: 1px solid #e0e6e8;
+}
+
+.date-filter:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); 
 }
 
 .dropdown-icon {
-    margin-left: 8px;
+    margin-left: 10px;
     font-size: 10px;
+    color: #a0aec0;
 }
 
+/* Metrics Summary Cards */
 .metrics-summary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 25px; 
+    margin-bottom: 35px;
 }
 
 .metric-card {
-    background: white;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: linear-gradient(145deg, #ffffff, #f7f7f7); 
+    border-radius: 12px; 
+    padding: 25px; 
+    box-shadow: 0 8px 15px -5px rgba(0, 0, 0, 0.1), 0 2px 5px -1px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease-in-out;
+    border: 1px solid #e0e6e8; 
+}
+
+.metric-card:hover {
+    transform: translateY(-4px); 
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
 }
 
 .metric-value {
-    font-size: 24px;
-    font-weight: 700;
-    color: #2c3e50;
+    font-size: 32px; 
+    font-weight: 800;
+    color: #34495e; 
+    line-height: 1.2;
 }
 
 .metric-label {
-    font-size: 14px;
+    font-size: 15px;
     color: #7f8c8d;
-    margin: 4px 0;
+    margin: 6px 0 10px 0; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .metric-trend {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 15px; 
+    display: inline-block;
 }
 
 .metric-trend.positive {
-    color: #27ae60;
+    color: #1e8449; 
+    background-color: #e8f5e9;
 }
 
 .metric-trend.negative {
-    color: #e74c3c;
+    color: #c0392b; 
+    background-color: #fce4e4;
 }
 
+/* Graphs Grid */
 .graphs-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 30px; 
 }
 
 .graph-card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08); 
     overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.graph-card:hover {
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
 }
 
 .graph-card.large {
-    grid-column: span 2;
+    grid-column: span 1; 
 }
 
+/* Graph Header */
 .graph-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #edf2f7;
+    padding: 18px 20px; 
+    border-bottom: 1px solid #f0f4f7;
+    background-color: #fcfcfc; 
 }
 
 .graph-header h3 {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #34495e;
     margin: 0;
 }
 
 .graph-option {
-    background: none;
-    border: none;
+    background: #f7f9fb;
+    border: 1px solid #dfe4e8;
     font-size: 18px;
-    color: #a0aec0;
+    color: #7f8c8d;
     cursor: pointer;
     padding: 0;
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%; 
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background 0.2s;
+}
+
+.graph-option:hover {
+    background: #e0e0e0;
 }
 
 .graph-placeholder {
-    height: 300px;
-    padding: 16px;
+    height: 350px; 
+    padding: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .graph-mock {
-    color: #cbd5e0;
-    font-size: 16px;
+    color: #a0aec0;
+    font-size: 18px;
     font-weight: 500;
+    padding: 15px 30px;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+}
+
+/* --- MODAL STYLES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); 
+    display: none; 
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 90%; 
+    max-width: 1000px; 
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e6e8;
+}
+
+#modal-graph-body {
+    width: 100%;
+    height: 65vh; /* Increased height for better enlarged view */
+    max-height: 700px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#modal-graph-body .enlarged-content {
+    
+    width: 100% !important; 
+    height: 100% !important;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    object-fit: contain; 
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 30px;
+    color: #95a5a6;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #c0392b;
 }
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
     .metrics-summary {
         grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
     }
     
     .graphs-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
     }
 }
 
@@ -326,17 +512,18 @@
         grid-template-columns: 1fr;
     }
     
-    .graph-card.large {
-        grid-column: span 1;
-    }
-    
     .dashboard-header {
         flex-direction: column;
         align-items: flex-start;
     }
     
     .header-controls {
-        margin-top: 12px;
+        margin-top: 15px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 15px;
     }
 }
 </style>
