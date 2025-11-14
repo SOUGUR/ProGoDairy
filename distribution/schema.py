@@ -8,9 +8,8 @@ from django.core.exceptions import ValidationError
 from plants.models import Plant
 from strawberry.types import Info
 from django.core.exceptions import ObjectDoesNotExist
-from accounts.schema import RouteType
 from django.core.exceptions import ValidationError as DjangoValidationError
-from dairy_project.graphql_types import MilkTransferType, VehicleInput, VehicleType, DistributorType, VehicleDriverInput, VehicleDriverType, CIPRecord, CIPRecordInput, CIPRecordType, CIPRecordUpdateInput
+from dairy_project.graphql_types import RouteType, MilkTransferType, VehicleInput, VehicleType, DistributorType, VehicleDriverInput, VehicleDriverType, CIPRecord, CIPRecordInput, CIPRecordType, CIPRecordUpdateInput
 from django.utils import timezone
 from decimal import Decimal
 from django.db.models import F

@@ -3,16 +3,38 @@ import strawberry_django
 from typing import Optional, List
 from decimal import Decimal
 from datetime import date, datetime
-from accounts.schema import RouteType
+from django.contrib.auth.models import User
 from strawberry_django import type as strawberry_django_type
-from accounts.schema import UserType
 from suppliers.models import Supplier, MilkLot, OnFarmTank
-from distribution.models import Vehicle, Distributor, CIPRecord
+from distribution.models import Vehicle, Distributor, CIPRecord, Route
 from plants.models import Employee, Role, Silo
 from collection_center.models import BulkCooler
 from milk.models import CompositeSample
 from strawberry import auto
 from enum import Enum
+
+@strawberry.type
+class TokenResponse:
+    access_token: str
+    message: str
+
+@strawberry_django_type(Route)
+class RouteType:
+    id: int
+    name: str
+
+@strawberry_django_type(User)
+class UserType:
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    is_staff: bool
+    is_superuser: bool
+
+    @strawberry.field
+    def groups(self, info) -> List[str]:
+        return [group.name for group in self.groups.all()]
 
 @strawberry.type
 class RouteVolumeStats:

@@ -1,30 +1,14 @@
 import strawberry
 from strawberry.types import Info
 from django.contrib.auth.models import User, Group
-from django.contrib.auth import authenticate, login
-from strawberry_django import type as strawberry_django_type
-from distribution.models import Route
+from django.contrib.auth import authenticate
+from .utils import create_access_token, create_refresh_token, decode_token
 from typing import List, Optional
+from dairy_project.graphql_types import TokenResponse, UserType
 
 
-@strawberry_django_type(User)
-class UserType:
-    id: int
-    username: str
-    email: str
-    is_active: bool
-    is_staff: bool
-    is_superuser: bool
-
-    @strawberry.field
-    def groups(self, info) -> List[str]:
-        return [group.name for group in self.groups.all()]
 
 
-@strawberry_django_type(Route)
-class RouteType:
-    id: int
-    name: str
 
 @strawberry.input
 class UserRightsInput:
@@ -50,11 +34,11 @@ class Mutation:
     def register(
         self,
         info: Info,
-        username: str,                         
-        password: str,                       
-        first_name: str | None = None,          
-        last_name: str | None = None,           
-        email: str | None = None,               
+        username: str,
+        password: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        email: str | None = None,
     ) -> str:
         user = User.objects.create_user(
             username=username,
@@ -66,13 +50,53 @@ class Mutation:
         return f"User {user.username} registered successfully."
 
     @strawberry.mutation
-    def login_user(self, info: Info, username: str, password: str) -> str:
+    def login_user(self, info: Info, username: str, password: str) -> TokenResponse:
         request = info.context.request
+        response = info.context.response
+
         user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            return f"Welcome, {user.username}!"
-        return "Invalid credentials."
+
+        if not user:
+            return TokenResponse(access_token="", message="Invalid credentials.")
+
+        access = create_access_token(user)
+        refresh = create_refresh_token(user)
+
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh,
+            httponly=True,
+            secure=True,
+            samesite="Strict",
+            max_age=60 * 60 * 24 * 30  
+        )
+
+        return TokenResponse(
+            access_token=access,
+            message=f"Welcome {user.username}! Redirecting..."
+        )
+
+    @strawberry.mutation
+    def refresh_access(self, info: Info) -> TokenResponse:
+        request = info.context.request
+        refresh = request.COOKIES.get("refresh_token")
+
+        if not refresh:
+            return TokenResponse(access_token="", message="Refresh token missing.")
+
+        try:
+            payload = decode_token(refresh)
+
+            if payload["type"] != "refresh":
+                return TokenResponse(access_token="", message="Invalid refresh token type.")
+
+            user = User.objects.get(id=payload["user_id"])
+            new_access = create_access_token(user)
+
+            return TokenResponse(access_token=new_access, message="Token refreshed.")
+
+        except Exception:
+            return TokenResponse(access_token="", message="Refresh token expired or invalid.")
     
     @strawberry.mutation
     def update_user_rights(self, info, input: UserRightsInput) -> UserType:
