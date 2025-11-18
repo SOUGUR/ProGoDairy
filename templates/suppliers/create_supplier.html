@@ -226,130 +226,142 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-        const userSelect = document.querySelector("select[name='user_id']");
-        const graphqlEndpoint = "/graphql/";
+document.addEventListener("DOMContentLoaded", async () => {
 
-        // Initialize Select2
-        $('#userSelect').select2({
-            placeholder: "Select a user",
-            allowClear: true,
-            width: '100%',
+    // 1️⃣ Ensure user has access token (via refresh cookie)
+    const ok = await initializeAccessToken();
+    if (!ok) {
+        window.location.href = "/";
+        return;
+    }
+
+    const userSelect = document.querySelector("select[name='user_id']");
+
+    // ------------------- Initialize Select2 -------------------
+    $('#userSelect').select2({
+        placeholder: "Select a user",
+        allowClear: true,
+        width: '100%',
+    });
+
+    // ------------------- Fetch Users (SECURED) -------------------
+    const usersQuery = `
+        query {
+            users {
+                id
+                username
+            }
+        }
+    `;
+
+    try {
+        const usersRes = await securedGraphQL(usersQuery);
+
+        if (usersRes.errors) {
+            console.error("Error loading users:", usersRes.errors);
+            return;
+        }
+
+        const users = usersRes.data.users;
+
+        users.forEach(user => {
+            const opt = document.createElement("option");
+            opt.value = user.id;
+            opt.textContent = `${user.id} — ${user.username}`;
+            userSelect.appendChild(opt);
         });
 
-        const usersQuery = `
-            query {
-                users {
+        $('#userSelect').trigger('change');
+
+    } catch (err) {
+        console.error("Network error while loading users:", err);
+    }
+
+
+    // ------------------- FORM SUBMIT (SECURED) -------------------
+    const form = document.getElementById("supplier-form");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const userId = formData.get("user_id");
+
+        if (!userId) {
+            alert("Please select a user");
+            return;
+        }
+
+        const mutation = `
+            mutation CreateSupplier(
+                $id: Int!,
+                $phoneNumber: String!,
+                $email: String!,
+                $dailyCapacity: Float!,
+                $totalDairyCows: Int!,
+                $annualOutput: Float!,
+                $distanceFromPlant: Float!,
+                $aadharNumber: String!,
+                $address: String!,
+                $bankAccountNumber: String!,
+                $bankName: String!,
+                $ifscCode: String!
+            ) {
+                createSupplier(
+                    id: $id,
+                    phoneNumber: $phoneNumber,
+                    email: $email,
+                    dailyCapacity: $dailyCapacity,
+                    totalDairyCows: $totalDairyCows,
+                    annualOutput: $annualOutput,
+                    distanceFromPlant: $distanceFromPlant,
+                    aadharNumber: $aadharNumber,
+                    address: $address,
+                    bankAccountNumber: $bankAccountNumber,
+                    bankName: $bankName,
+                    ifscCode: $ifscCode
+                ) {
                     id
-                    username
+                    phoneNumber
+                    email
+                    user { username }
                 }
             }
         `;
 
+        const variables = {
+            id: parseInt(userId),
+            phoneNumber: formData.get("phone_number"),
+            email: formData.get("email"),
+            dailyCapacity: parseFloat(formData.get("daily_capacity")),
+            totalDairyCows: parseInt(formData.get("total_dairy_cows")),
+            annualOutput: parseFloat(formData.get("annual_output")),
+            distanceFromPlant: parseFloat(formData.get("distance_from_plant")),
+            aadharNumber: formData.get("aadhar_number"),
+            address: formData.get("address"),
+            bankAccountNumber: formData.get("bank_account_number"),
+            bankName: formData.get("bank_name"),
+            ifscCode: formData.get("ifsc_code"),
+        };
+
         try {
-            const usersRes = await fetch(graphqlEndpoint, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ query: usersQuery })
-            });
+            const result = await securedGraphQL(mutation, variables);
 
-            const usersData = await usersRes.json();
-            
-            if (usersData.data && usersData.data.users) {
-                usersData.data.users.forEach(user => {
-                    const opt = document.createElement("option");
-                    opt.value = user.id;
-                    opt.textContent = `${user.id} — ${user.username}`;
-                    userSelect.appendChild(opt);
-                });
-                
-                // Refresh Select2 to show new options
-                $('#userSelect').trigger('change');
-            }
-        } catch (error) {
-            console.error("Error fetching users:", error);
-        }
-
-        // Form submission handler
-        const form = document.getElementById("supplier-form");
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            const userId = formData.get("user_id");
-            
-            if (!userId) {
-                alert("Please select a user");
+            if (result.errors) {
+                alert("Error: " + result.errors[0].message);
                 return;
             }
 
-            const mutation = `
-                mutation {
-                    createSupplier(
-                        id: ${userId},
-                        phoneNumber: "${formData.get("phone_number")}",
-                        email: "${formData.get("email")}",
-                        dailyCapacity: ${parseFloat(formData.get("daily_capacity"))},
-                        totalDairyCows: ${parseInt(formData.get("total_dairy_cows"))},
-                        annualOutput: ${parseFloat(formData.get("annual_output"))},
-                        distanceFromPlant: ${parseFloat(formData.get("distance_from_plant"))},
-                        aadharNumber: "${formData.get("aadhar_number")}",
-                        address: """${formData.get("address")}""",
-                        bankAccountNumber: "${formData.get("bank_account_number")}",
-                        bankName: "${formData.get("bank_name")}",
-                        ifscCode: "${formData.get("ifsc_code")}"
-                    ) {
-                        id
-                        phoneNumber
-                        email
-                        user {
-                            username
-                        }
-                    }
-                }
-            `;
+            alert("Supplier created successfully for " + result.data.createSupplier.email);
+            window.location.href = "/suppliers/";
 
-            try {
-                const res = await fetch(graphqlEndpoint, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": getCookie("csrftoken"),
-                    },
-                    body: JSON.stringify({ query: mutation })
-                });
-
-                const data = await res.json();
-                
-                if (data.errors) {
-                    alert("Error: " + data.errors[0].message);
-                } else {
-                    alert("Supplier created successfully for " + data.data.createSupplier.email);
-                    window.location.href = "/suppliers/";
-                }
-            } catch (error) {
-                console.error("Error creating supplier:", error);
-                alert("An error occurred while creating the supplier. Please try again.");
-            }
-        });
-
-        // CSRF token helper function
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== "") {
-                const cookies = document.cookie.split(";");
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.startsWith(name + "=")) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
+        } catch (err) {
+            console.error("Error creating supplier:", err);
+            alert("An error occurred. Please try again.");
         }
     });
-  </script>
+
+});
+</script>
+
 {% endblock %}

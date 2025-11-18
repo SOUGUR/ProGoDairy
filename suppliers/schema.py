@@ -19,13 +19,29 @@ from django.db.models import Max
 from django.utils.timezone import make_aware
 from dairy_project.graphql_types import MilkLotType,PaymentBillType, SupplierType,OnFarmTankType, CanCollectionType,AssignCanCollectionPayload
 from django.db import transaction
+from accounts.utils import get_authenticated_user
 
 class IsAuthenticated(BasePermission):
-    message = "User is not authenticated"
+    message = "Authentication required"
 
     def has_permission(self, source, info: Info, **kwargs):
-        return info.context.request.user.is_authenticated
+        user = get_authenticated_user(info)
+        info.context.request.user = user
+        return True
 
+@strawberry.input
+class PaginationInput:
+    page: int = 1
+    per_page: int = 30   
+
+
+@strawberry.type
+class MilkLotPage:
+    items: List["MilkLotType"]
+    total_items: int
+    total_pages: int
+    current_page: int
+    per_page: int
 
 
 @strawberry.input
@@ -100,14 +116,33 @@ class Query:
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_list(
         self,
-    ) -> List[MilkLotType]:
-        try:
-            milk_lots = MilkLot.objects.select_related("supplier", "bill").order_by(
-                "-date_created"
-            ) 
-            return milk_lots
-        except Supplier.DoesNotExist:
-            raise GraphQLError("Supplier profile not found.")
+        info,
+        pagination: PaginationInput = PaginationInput()
+    ) -> MilkLotPage:
+
+        qs = MilkLot.objects.select_related("supplier", "bill").order_by("-date_created")
+
+        # Pagination variables
+        page = pagination.page
+        per_page = pagination.per_page
+
+        total_items = qs.count()
+        total_pages = (total_items + per_page - 1) // per_page   # Ceiling division
+
+        # Slice queryset
+        start = (page - 1) * per_page
+        end = start + per_page
+
+        items = qs[start:end]
+
+        return MilkLotPage(
+            items=items,
+            total_items=total_items,
+            total_pages=total_pages,
+            current_page=page,
+            per_page=per_page,
+        )
+
 
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_by_id(self, info: Info, id: int) -> Optional[MilkLotType]:

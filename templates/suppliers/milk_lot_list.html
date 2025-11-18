@@ -288,6 +288,42 @@
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 12px 0;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 2px solid #043365;
+  background-color: #f8fafc;
+  color: #2b6cb0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #0678eb;
+  color: #f8f8f8;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  min-width: 120px;
+  text-align: center;
+  color: #4a5568;
+}
 </style>
 
 </head>
@@ -319,6 +355,9 @@
       <tbody>
       </tbody>
     </table>
+    <div class="pagination" style="margin-top: 20px; text-align: center; font-size: 14px;">
+      <!--================= Pagination buttons will be injected here by JS ======================-->
+    </div>
   </div>
   <!-------------------------------------------------- Modal for view MilkLot ---------------------------------------------------------------->
   <div id="milkLotModal" class="modal" style="display: none;">
@@ -346,304 +385,320 @@
     </div>
   </div>
 <script>
-//===================================function to gather all Milk Lots and associated information ====================================================//
 document.addEventListener("DOMContentLoaded", async () => {
-  const tableBody = document.querySelector(".milk-lot-table tbody");
 
-  const query = `
-    query {
-      milkLotList {
-        id
-        volumeL
-        fatPercent
-        proteinPercent
-        bacterialCount
-        status
-        totalPrice
-        dateCreated
-        supplier {
-          id
-          email
+    // =============================Initialize Access Token (refresh → access)=======================================
+    const ok = await initializeAccessToken();
+    if (!ok) {
+        console.warn("No refresh token — redirecting to login");
+        window.location.href = "/";
+        return;
+    }
+
+    const tableBody = document.querySelector(".milk-lot-table tbody");
+    function renderPaginationControls(data) {
+        const paginationDiv = document.querySelector(".pagination");
+
+        paginationDiv.innerHTML = `
+            <button ${data.currentPage === 1 ? "disabled" : ""}
+                onclick="loadMilkLots(${data.currentPage - 1})">Prev</button>
+
+            <span> Page ${data.currentPage} of ${data.totalPages} </span>
+
+            <button ${data.currentPage === data.totalPages ? "disabled" : ""}
+                onclick="loadMilkLots(${data.currentPage + 1})">Next</button>
+        `;
+    }
+
+    function renderMilkLotTable(items) {
+        tableBody.innerHTML = ""; 
+
+        if (!items.length) {
+            tableBody.innerHTML = `<tr><td colspan="10">No milk lots found</td></tr>`;
+            return;
         }
-      }
+
+        items.forEach(lot => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${lot.dateCreated}</td>
+                <td>${lot.id}</td>
+                <td>${lot.volumeL}</td>
+                <td>${lot.fatPercent}%</td>
+                <td>${lot.bacterialCount}</td>
+                <td>${lot.proteinPercent}%</td>
+                <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
+                <td class="price-cell">₹${lot.totalPrice}</td>
+                <td>${lot.supplier.id} - ${lot.supplier.email}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="#" class="btn btn-view" data-id="${lot.id}">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" class="btn btn-edit" data-id="${lot.id}">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="#" class="btn btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
     }
-  `;
 
-  try {
-    const res = await fetch("/graphql/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query })
-    });
+  
+    window.loadMilkLots = async function(page = 1, perPage = 30) {
+        const query = `
+            query GetMilkLots($page: Int!, $perPage: Int!) {
+                milkLotList(pagination: { page: $page, perPage: $perPage }) {
+                    items {
+                        id
+                        volumeL
+                        fatPercent
+                        proteinPercent
+                        bacterialCount
+                        status
+                        totalPrice
+                        dateCreated
+                        supplier { id email }
+                    }
+                    totalItems
+                    totalPages
+                    currentPage
+                    perPage
+                }
+            }
+        `;
 
-    const json = await res.json();
+        const variables = { page, perPage };
+        const result = await securedGraphQL(query, variables);
 
-    if (json.errors) {
-      console.error("GraphQL errors:", json.errors);
-      tableBody.innerHTML = `<tr><td colspan="10">Error loading data</td></tr>`;
-      return;
-    }
+        if (result.errors) {
+            console.error("GraphQL Error:", result.errors);
+            return;
+        }
 
-    const milkLots = json.data.milkLotList;
+        const data = result.data.milkLotList;
+        renderMilkLotTable(data.items);
+        renderPaginationControls(data);
+    };
 
-    if (milkLots.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="10" class="empty-state">No milk lot entries found.</td></tr>`;
-      return;
-    }
 
-    milkLots.forEach(lot => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${lot.dateCreated}</td>
-        <td>${lot.id}</td>
-        <td>${lot.volumeL}</td>
-        <td>${lot.fatPercent}%</td>
-        <td>${lot.bacterialCount}</td>
-        <td>${lot.proteinPercent}%</td>
-        <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
-        <td class="price-cell">₹${lot.totalPrice}</td>
-        <td>${lot.supplier.id} - ${lot.supplier.email}</td>
-        <td>
-        <div class="action-buttons">
-          <a href="#" class="btn btn-view" data-id="${lot.id}">
-            <i class="fas fa-eye"></i>
-          </a>
-          <a href="#" class="btn btn-edit" data-id="${lot.id}">
-              <i class="fas fa-edit"></i>
-          </a>
-          <a href="" class="btn btn-delete">
-            <i class="fas fa-trash"></i>
-          </a>
-        </div>
-      </td>
+    loadMilkLots();
 
-      `;
-      tableBody.appendChild(row);
-    });
-  } catch (err) {
-    console.error("Error fetching milk lots:", err);
-    tableBody.innerHTML = `<tr><td colspan="10">Error loading data</td></tr>`;
-  }
-});
+}); 
 
-//============================================= modal view function to dispaly Milk Lot Information =================================================//
 function getAnomalyStyle(anomalyText) {
-  if (anomalyText.includes("Normal")) {
-    return { bg: "#d4edda", color: "#155724" }; // green
-  } else if (
-    anomalyText.includes("Low") ||
-    anomalyText.includes("High") ||
-    anomalyText.includes("Excess") ||
-    anomalyText.includes("Below") ||
-    anomalyText.includes("Above") ||
-    anomalyText.includes("Deviation") ||
-    anomalyText.includes("risk") ||
-    anomalyText.includes("concern") ||
-    anomalyText.includes("adulteration")
-  ) {
-    return { bg: "#f8d7da", color: "#721c24" }; // red
-  } else {
-    return { bg: "#fff3cd", color: "#856404" }; // yellow (fallback)
-  }
+    if (anomalyText.includes("Normal")) {
+        return { bg: "#d4edda", color: "#155724" }; // green
+    } else if (
+        anomalyText.includes("Low") ||
+        anomalyText.includes("High") ||
+        anomalyText.includes("Excess") ||
+        anomalyText.includes("Below") ||
+        anomalyText.includes("Above") ||
+        anomalyText.includes("Deviation") ||
+        anomalyText.includes("risk") ||
+        anomalyText.includes("concern") ||
+        anomalyText.includes("adulteration")
+    ) {
+        return { bg: "#f8d7da", color: "#721c24" }; // red
+    } else {
+        return { bg: "#fff3cd", color: "#856404" }; // yellow (fallback)
+    }
 }
 
-// Helper to apply style to an anomaly cell
 function applyAnomalyStyle(cellId, anomalyText) {
-  const cell = document.getElementById(cellId);
-  if (!cell) return;
+    const cell = document.getElementById(cellId);
+    if (!cell) return;
 
-  cell.textContent = anomalyText;
-
-  const style = getAnomalyStyle(anomalyText);
-  cell.style.backgroundColor = style.bg;
-  cell.style.color = style.color;
-  cell.style.padding = "8px";
-  cell.style.borderRadius = "4px";
-  cell.style.fontWeight = "500";
+    cell.textContent = anomalyText;
+    const style = getAnomalyStyle(anomalyText);
+    cell.style.backgroundColor = style.bg;
+    cell.style.color = style.color;
+    cell.style.padding = "8px";
+    cell.style.borderRadius = "4px";
+    cell.style.fontWeight = "500";
 }
+
 
 document.addEventListener("click", async function (e) {
-  const viewBtn = e.target.closest(".btn-view");
-  if (!viewBtn) return;
 
-  e.preventDefault();
+    // ----------------------- VIEW BUTTON -----------------------
+    const viewBtn = e.target.closest(".btn-view");
+    if (viewBtn) {
+        e.preventDefault();
+        const lotId = parseInt(viewBtn.dataset.id);
 
-  const standards = {
-    fatPercent: 3.5,
-    proteinPercent: 3.0,
-    lactosePercent: 4.6,
-    totalSolids: 12.5,
-    snf: 8.5,
-    ureaNitrogen: { min: 15, max: 40 },
-    bacterialCount: 50000,
-    addedWaterPercent: 3
-  };
+        const standards = {
+            fatPercent: 3.5,
+            proteinPercent: 3.0,
+            lactosePercent: 4.6,
+            totalSolids: 12.5,
+            snf: 8.5,
+            ureaNitrogen: { min: 15, max: 40 },
+            bacterialCount: 50000,
+            addedWaterPercent: 3
+        };
 
-  const lotId = parseInt(viewBtn.dataset.id);
+        const fetchMilkLotQuery = `
+            query GetMilkLotById($id: Int!) {
+                milkLotById(id: $id) {
+                    id
+                    supplier { id email }
+                    status
+                    volumeL
+                    fatPercent
+                    proteinPercent
+                    lactosePercent
+                    totalSolids
+                    snf
+                    pricePerLitre
+                    totalPrice
+                    ureaNitrogen
+                    bacterialCount
+                    addedWaterPercent
+                    dateCreated
+                }
+            }
+        `;
 
-  const fetchMilkLotQuery = `
-    query GetMilkLotById($id: Int!) {
-      milkLotById(id: $id) {
-        id
-        supplier { id email }
-        status
-        volumeL
-        fatPercent
-        proteinPercent
-        lactosePercent
-        totalSolids
-        snf
-        pricePerLitre
-        totalPrice
-        ureaNitrogen
-        bacterialCount
-        addedWaterPercent
-        dateCreated
-      }
+        try {
+            const result = await securedGraphQL(fetchMilkLotQuery, { id: lotId });
+            if (result.errors) {
+                alert(result.errors[0].message);
+                return;
+            }
+
+            const lot = result.data.milkLotById;
+
+            const anomalyCells = document.querySelectorAll('[id$="Anomaly"]');
+            anomalyCells.forEach(cell => {
+                cell.style.backgroundColor = "";
+                cell.style.color = "";
+                cell.style.padding = "";
+                cell.style.borderRadius = "";
+                cell.style.fontWeight = "";
+            });
+
+            // Populate basic fields
+            document.getElementById("modal-id").textContent = lot.id;
+            document.getElementById("modal-dateCreated").textContent = lot.dateCreated;
+            document.getElementById("modal-volumeL").textContent = `${lot.volumeL} L`;
+
+            const statusCell = document.getElementById("modal-status");
+            statusCell.textContent = lot.status;
+            statusCell.className = `status-${lot.status.toLowerCase()}`;
+
+            // === Fat ===
+            const fat = lot.fatPercent;
+            const fatStd = standards.fatPercent;
+            const fatAnomaly = fat < fatStd ? `Low (below ${fatStd}%) – potential dilution` : `Normal`;
+            document.getElementById("modal-fatPercent").textContent = `${fat}%`;
+            document.getElementById("modal-fatStandard").textContent = `${fatStd}%`;
+            applyAnomalyStyle("modal-fatAnomaly", fatAnomaly);
+
+            // === Protein ===
+            const protein = lot.proteinPercent;
+            const proteinStd = standards.proteinPercent;
+            const proteinAnomaly = protein < proteinStd ? `Low (below ${proteinStd}%) – poor quality or adulteration` : `Normal`;
+            document.getElementById("modal-proteinPercent").textContent = `${protein}%`;
+            document.getElementById("modal-proteinStandard").textContent = `${proteinStd}%`;
+            applyAnomalyStyle("modal-proteinAnomaly", proteinAnomaly);
+
+            // === Lactose ===
+            const lactose = lot.lactosePercent;
+            const lactoseStd = standards.lactosePercent;
+            const lactoseAnomaly = Math.abs(lactose - lactoseStd) > 0.5 ? `Deviation detected – possible adulteration` : `Normal`;
+            document.getElementById("modal-lactosePercent").textContent = `${lactose}%`;
+            document.getElementById("modal-lactoseStandard").textContent = `${lactoseStd}%`;
+            applyAnomalyStyle("modal-lactoseAnomaly", lactoseAnomaly);
+
+            // === Total Solids ===
+            const ts = lot.totalSolids;
+            const tsStd = standards.totalSolids;
+            const tsAnomaly = ts < tsStd ? `Low – potential water addition` : `Normal`;
+            document.getElementById("modal-totalSolids").textContent = ts;
+            document.getElementById("modal-totalSolidsStandard").textContent = `${tsStd}%`;
+            applyAnomalyStyle("modal-totalSolidsAnomaly", tsAnomaly);
+
+            // === SNF ===
+            const snf = lot.snf;
+            const snfStd = standards.snf;
+            const snfAnomaly = snf < snfStd ? `Below standard – quality concern` : `Normal`;
+            document.getElementById("modal-snf").textContent = snf;
+            document.getElementById("modal-snfStandard").textContent = `${snfStd}%`;
+            applyAnomalyStyle("modal-snfAnomaly", snfAnomaly);
+
+            // === Urea Nitrogen ===
+            const urea = lot.ureaNitrogen;
+            let ureaAnomaly = "Normal";
+            if (urea < standards.ureaNitrogen.min) {
+                ureaAnomaly = `Below min – possible adulteration`;
+            } else if (urea > standards.ureaNitrogen.max) {
+                ureaAnomaly = `Above max – excessive urea addition`;
+            }
+            document.getElementById("modal-ureaNitrogen").textContent = urea;
+            document.getElementById("modal-ureaNitrogenStandard").textContent = `${standards.ureaNitrogen.min} – ${standards.ureaNitrogen.max} mg/dL`;
+            applyAnomalyStyle("modal-ureaNitrogenAnomaly", ureaAnomaly);
+
+            // === Bacterial Count ===
+            const bac = lot.bacterialCount;
+            const bacStd = standards.bacterialCount;
+            const bacAnomaly = bac > bacStd ? `High – microbiological risk` : `Normal`;
+            document.getElementById("modal-bacterialCount").textContent = bac;
+            document.getElementById("modal-bacterialCountStandard").textContent = bacStd.toLocaleString();
+            applyAnomalyStyle("modal-bacterialCountAnomaly", bacAnomaly);
+
+            // === Added Water ===
+            const water = lot.addedWaterPercent;
+            const waterStd = standards.addedWaterPercent;
+            const waterAnomaly = water > waterStd ? `Excess water detected` : `Normal`;
+            document.getElementById("modal-addedWaterPercent").textContent = `${water}%`;
+            document.getElementById("modal-addedWaterStandard").textContent = `${waterStd}%`;
+            applyAnomalyStyle("modal-addedWaterAnomaly", waterAnomaly);
+
+            // Pricing & Supplier
+            document.getElementById("modal-totalPrice").textContent = `₹${lot.totalPrice}`;
+            document.getElementById("modal-pricePerLitre").textContent = `₹${lot.pricePerLitre}`;
+            document.getElementById("modal-supplier").textContent = `${lot.supplier.id} - ${lot.supplier.email}`;
+
+            // Show modal
+            document.getElementById("milkLotModal").style.display = "block";
+
+            // Attach close handler (in case reused)
+            const closeBtn = document.querySelector("#milkLotModal .close");
+            if (closeBtn) {
+                closeBtn.onclick = () => {
+                    document.getElementById("milkLotModal").style.display = "none";
+                };
+            }
+
+        } catch (error) {
+            console.error("Network error:", error);
+            alert("Failed to load milk lot details.");
+        }
+
+        return;
     }
-  `;
 
-  try {
-    const res = await fetch("/graphql/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: fetchMilkLotQuery, variables: { id: lotId } })
-    });
-    const result = await res.json();
-    if (result.errors) {
-      alert(result.errors[0].message);
-      return;
-    }
-
-    const lot = result.data.milkLotById;
-
-    // Reset anomaly cell styles (in case modal is reused)
-    const anomalyCells = document.querySelectorAll('[id$="Anomaly"]');
-    anomalyCells.forEach(cell => {
-      cell.style.backgroundColor = "";
-      cell.style.color = "";
-      cell.style.padding = "";
-      cell.style.borderRadius = "";
-      cell.style.fontWeight = "";
-    });
-
-    // Basic fields
-    document.getElementById("modal-id").textContent = lot.id;
-    document.getElementById("modal-dateCreated").textContent = lot.dateCreated;
-    document.getElementById("modal-volumeL").textContent = lot.volumeL + " L";
-
-    // Status (use your existing CSS classes)
-    const statusCell = document.getElementById("modal-status");
-    statusCell.textContent = lot.status;
-    statusCell.className = `status-${lot.status.toLowerCase()}`;
-
-    // === Fat ===
-    const fat = lot.fatPercent;
-    const fatStd = standards.fatPercent;
-    const fatAnomaly = fat < fatStd ? `Low (below ${fatStd}%) – potential dilution` : `Normal`;
-    document.getElementById("modal-fatPercent").textContent = fat + "%";
-    document.getElementById("modal-fatStandard").textContent = fatStd + "%";
-    applyAnomalyStyle("modal-fatAnomaly", fatAnomaly);
-
-    // === Protein ===
-    const protein = lot.proteinPercent;
-    const proteinStd = standards.proteinPercent;
-    const proteinAnomaly = protein < proteinStd ? `Low (below ${proteinStd}%) – poor quality or adulteration` : `Normal`;
-    document.getElementById("modal-proteinPercent").textContent = protein + "%";
-    document.getElementById("modal-proteinStandard").textContent = proteinStd + "%";
-    applyAnomalyStyle("modal-proteinAnomaly", proteinAnomaly);
-
-    // === Lactose ===
-    const lactose = lot.lactosePercent;
-    const lactoseStd = standards.lactosePercent;
-    const lactoseAnomaly = Math.abs(lactose - lactoseStd) > 0.5 ? `Deviation detected – possible adulteration` : `Normal`;
-    document.getElementById("modal-lactosePercent").textContent = lactose + "%";
-    document.getElementById("modal-lactoseStandard").textContent = lactoseStd + "%";
-    applyAnomalyStyle("modal-lactoseAnomaly", lactoseAnomaly);
-
-    // === Total Solids ===
-    const ts = lot.totalSolids;
-    const tsStd = standards.totalSolids;
-    const tsAnomaly = ts < tsStd ? `Low – potential water addition` : `Normal`;
-    document.getElementById("modal-totalSolids").textContent = ts;
-    document.getElementById("modal-totalSolidsStandard").textContent = tsStd + "%";
-    applyAnomalyStyle("modal-totalSolidsAnomaly", tsAnomaly);
-
-    // === SNF ===
-    const snf = lot.snf;
-    const snfStd = standards.snf;
-    const snfAnomaly = snf < snfStd ? `Below standard – quality concern` : `Normal`;
-    document.getElementById("modal-snf").textContent = snf;
-    document.getElementById("modal-snfStandard").textContent = snfStd + "%";
-    applyAnomalyStyle("modal-snfAnomaly", snfAnomaly);
-
-    // === Urea Nitrogen ===
-    const urea = lot.ureaNitrogen;
-    let ureaAnomaly = "Normal";
-    if (urea < standards.ureaNitrogen.min) {
-      ureaAnomaly = `Below min – possible adulteration`;
-    } else if (urea > standards.ureaNitrogen.max) {
-      ureaAnomaly = `Above max – excessive urea addition`;
-    }
-    document.getElementById("modal-ureaNitrogen").textContent = urea;
-    document.getElementById("modal-ureaNitrogenStandard").textContent = `${standards.ureaNitrogen.min} – ${standards.ureaNitrogen.max} mg/dL`;
-    applyAnomalyStyle("modal-ureaNitrogenAnomaly", ureaAnomaly);
-
-    // === Bacterial Count ===
-    const bac = lot.bacterialCount;
-    const bacStd = standards.bacterialCount;
-    const bacAnomaly = bac > bacStd ? `High – microbiological risk` : `Normal`;
-    document.getElementById("modal-bacterialCount").textContent = bac;
-    document.getElementById("modal-bacterialCountStandard").textContent = bacStd.toLocaleString();
-    applyAnomalyStyle("modal-bacterialCountAnomaly", bacAnomaly);
-
-    // === Added Water ===
-    const water = lot.addedWaterPercent;
-    const waterStd = standards.addedWaterPercent;
-    const waterAnomaly = water > waterStd ? `Excess water detected` : `Normal`;
-    document.getElementById("modal-addedWaterPercent").textContent = water + "%";
-    document.getElementById("modal-addedWaterStandard").textContent = waterStd + "%";
-    applyAnomalyStyle("modal-addedWaterAnomaly", waterAnomaly);
-
-    // Pricing
-    document.getElementById("modal-totalPrice").textContent = `₹${lot.totalPrice}`;
-    document.getElementById("modal-pricePerLitre").textContent = `₹${lot.pricePerLitre}`;
-
-    // Supplier
-    document.getElementById("modal-supplier").textContent = `${lot.supplier.id} - ${lot.supplier.email}`;
-
-    // Show modal
-    document.getElementById("milkLotModal").style.display = "block";
-
-    // Close button
-    const closeBtn = document.querySelector("#milkLotModal .close");
-    if (closeBtn) {
-      closeBtn.onclick = () => {
-        document.getElementById("milkLotModal").style.display = "none";
-      };
-    }
-
-  } catch (error) {
-    console.error("Network error:", error);
-    alert("Failed to load milk lot details.");
-  }
-});
-
-// Close modal when clicking outside
-window.addEventListener("click", function (e) {
-  const modal = document.getElementById("milkLotModal");
-  if (e.target === modal) {
-    modal.style.display = "none";
-  }
-});
-
-//=========================================== get and move to Milk Lot by ID url =======================================================//
-document.addEventListener("click", function (e) {
+    // ----------------------- EDIT BUTTON -----------------------
     const editBtn = e.target.closest(".btn-edit");
-    if (!editBtn) return;
-    e.preventDefault(); 
-    const lotId = editBtn.dataset.id;
-    window.location.href = `/milk-lot/edit/${lotId}/`;
+    if (editBtn) {
+        e.preventDefault();
+        const id = editBtn.dataset.id;
+        window.location.href = `/milk-lot/edit/${id}/`;
+    }
+});
+
+
+window.addEventListener("click", function (e) {
+    const modal = document.getElementById("milkLotModal");
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
 });
 </script>
 {% endblock %}
