@@ -387,7 +387,14 @@
 <script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
 //------------------------------------------CREATE Milk Lot if lot_Id not present, else UPDATE Milk Lot-------------------------------------//
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const ok = await initializeAccessToken();
+  if (!ok) {
+      console.warn("No refresh token — redirecting to login");
+      window.location.href = "/";
+      return;
+  }
+
   const milkTestBtn = document.getElementById("milk-test-btn");
   const lotId = "{{ lot_id|default:'' }}";
 
@@ -430,19 +437,11 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
 
     try {
-      const res = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: graphqlQuery,
-          variables: {
-            input,
-            lotId: lotId ? parseInt(lotId) : null
-          }
-        })
+      const result = await securedGraphQL(graphqlQuery, {
+          input,
+          lotId: lotId ? parseInt(lotId) : null
       });
 
-      const result = await res.json();
       if (result.errors) {
         console.error("GraphQL Error:", result.errors);
         alert("Error: " + result.errors[0].message);
@@ -478,19 +477,11 @@ async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTester
         }
     }`;
 
-    const supplierRes = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: supplierQuery })
-    });
-    const suppliers = (await supplierRes.json()).data.suppliers;
+    const supplierResult = await securedGraphQL(supplierQuery);
+    const suppliers = supplierResult.data.suppliers;
 
-    const testerRes = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: employeeTesterQuery })
-    });
-    const testers = (await testerRes.json()).data.testers;
+    const testerResult = await securedGraphQL(employeeTesterQuery);
+    const testers = testerResult.data.testers;
 
     const supplierSelect = document.querySelector("select[name='supplier_id']");
     const testerSelect = document.querySelector("select[name='tester_id']");
@@ -559,13 +550,7 @@ async function fetchMilkLotAndFillForm(lotId) {
         }
     `;
 
-    const res = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, variables: { id: parseInt(lotId) } })
-    });
-
-    const result = await res.json();
+    const result = await securedGraphQL(query, { id: parseInt(lotId) });
     const lot = result.data.milkLotById;
     if (!lot) return;
 

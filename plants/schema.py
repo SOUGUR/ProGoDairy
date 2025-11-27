@@ -1,18 +1,24 @@
-import strawberry
-from typing import List
-from strawberry_django import field
-from plants.models import Employee, Plant, Silo
-from django.db.models import Max
-from distribution.models import MilkTransfer
-from suppliers.models import MilkLot, PaymentBill
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from strawberry.types import Info
-from graphql import GraphQLError
-from django.utils import timezone
-from dairy_project.graphql_types import PlantType, EmployeeType, SiloType, MilkLotVolumeStatType, RouteVolumeStats, SupplierVolumeStatType,BillSummaryType
-from django.db.models import Sum
-from datetime import date
 import calendar
+from datetime import date
+from typing import List
+
+import strawberry
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Max, Sum
+from django.utils import timezone
+from graphql import GraphQLError
+from strawberry.types import Info
+from strawberry_django import field
+
+from dairy_project.graphql_types.billing import BillSummaryType
+from dairy_project.graphql_types.employees import EmployeeType
+from dairy_project.graphql_types.milk import MilkLotVolumeStatType
+from dairy_project.graphql_types.plants import PlantType, SiloType
+from dairy_project.graphql_types.routes import RouteVolumeStats
+from dairy_project.graphql_types.suppliers import SupplierVolumeStatType
+from distribution.models import MilkTransfer
+from plants.models import Employee, Plant, Silo
+from suppliers.models import MilkLot, PaymentBill
 
 
 @strawberry.type

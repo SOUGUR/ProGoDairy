@@ -1,15 +1,23 @@
-import strawberry
-from typing import Optional
 from datetime import datetime
-from suppliers.models import OnFarmTank
-from collection_center.models import BulkCooler
-from distribution.models import Vehicle
-from .models import CompositeSample
-from typing import List
-from dairy_project.graphql_types import UpdateTankerInput, UpdateTankerResponse, MilkPricingConfigType, MilkPricingConfigInput, CompositeSampleType, CompositeSampleInput, UpdateCompositeSampleInput
+from typing import List, Optional
+
+import strawberry
 from django.core.exceptions import ObjectDoesNotExist
-from distribution.models import Route
+
+from collection_center.models import BulkCooler
+from dairy_project.graphql_types.collection import UpdateTankerInput, UpdateTankerResponse
+from dairy_project.graphql_types.milk import (
+    CompositeSampleInput,
+    CompositeSampleType,
+    MilkPricingConfigInput,
+    MilkPricingConfigType,
+    UpdateCompositeSampleInput,
+)
+from distribution.models import Route, Vehicle
 from milk.models import MilkPricingConfig
+from suppliers.models import OnFarmTank
+
+from .models import CompositeSample
 
 
 

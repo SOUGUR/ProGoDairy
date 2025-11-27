@@ -1,18 +1,32 @@
-import strawberry
-from typing import Optional, List
 from datetime import datetime, timedelta
-from .models import Vehicle, Distributor, Route, MilkTransfer, VehicleDriver
-from suppliers.models import OnFarmTank, CanCollection
-from collection_center.models import BulkCooler
-from django.core.exceptions import ValidationError 
-from plants.models import Plant
-from strawberry.types import Info
+from decimal import Decimal
+from typing import List, Optional
+
+import strawberry
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
-from dairy_project.graphql_types import RouteType, MilkTransferType, VehicleInput, VehicleType, DistributorType, VehicleDriverInput, VehicleDriverType, CIPRecord, CIPRecordInput, CIPRecordType, CIPRecordUpdateInput
-from django.utils import timezone
-from decimal import Decimal
+from django.core.exceptions import ValidationError
 from django.db.models import F
+from django.utils import timezone
+from strawberry.types import Info
+
+from collection_center.models import BulkCooler
+from dairy_project.graphql_types.distribution import (
+    CIPRecordInput,
+    CIPRecordType,
+    CIPRecordUpdateInput,
+    DistributorType,
+    VehicleDriverInput,
+    VehicleDriverType,
+    VehicleInput,
+    VehicleType,
+)
+from dairy_project.graphql_types.milk import MilkTransferType
+from dairy_project.graphql_types.routes import RouteType
+from plants.models import Plant
+from suppliers.models import CanCollection, OnFarmTank
+
+from .models import CIPRecord, Distributor, MilkTransfer, Route, Vehicle, VehicleDriver
 
 
 

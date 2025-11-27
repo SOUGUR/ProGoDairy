@@ -28,7 +28,7 @@
     
     h2 {
       color: #2c5282;
-      margin-bottom: 25px;
+      margin-bottom: 10px;
       font-weight: 600;
       border-bottom: 2px solid #ebf2f7;
       padding-bottom: 10px;
@@ -138,41 +138,31 @@
       background-color: #f8fafc;
       border-radius: 4px;
     }
-    
-  .floating-btn {
-    position: fixed;
-    right: 50px;
-    z-index: 999;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 8px;
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    transition: background-color 0.3s, transform 0.2s;
-    text-decoration: none;     
-    display: inline-block;     
-  }
+    .create-btn {
+      display: inline-block;
+      margin: 15px 0 25px;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #007bff;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: background-color 0.3s, transform 0.2s;
+    }
 
-  
-  #create-milk-lot-btn {
-    bottom: 540px;      
-    right:10px       
-  }
+    .create-btn:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
 
+    .create-btn:active {
+      transform: translateY(0);
+    }
 
-  .floating-btn:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-  }
-
-
-  .floating-btn:active {
-    transform: translateY(0);
-  }
 
 
 /* Modal Styles */
@@ -332,8 +322,8 @@
    
     <h2>Milk Lot Entries</h2>
     
-    <a href="{% url 'create_milk_lot' %}" id="create-milk-lot-btn" class="floating-btn">
-      + Create New Milk Lot
+    <a href="{% url 'create_milk_lot' %}" class="create-btn">
+    + Create New Milk Lot
     </a>
 
     

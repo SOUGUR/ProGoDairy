@@ -1,25 +1,33 @@
-import strawberry
-from strawberry_django import field
-from suppliers.models import Supplier, MilkLot, PaymentBill, OnFarmTank, CanCollection
-from django.contrib.auth.models import User
-from typing import List
-from strawberry.types import Info
-from strawberry.permission import BasePermission
-from typing import Optional
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from graphql import GraphQLError
-from datetime import date, datetime,timedelta, timezone
-from accounts.schema import UserType
-from distribution.models import Route
-from collection_center.schema import AssignLotsPayload
-from django.core.exceptions import ValidationError
-from channels.layers import get_channel_layer
+from typing import List, Optional
+
+import strawberry
 from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Max
 from django.utils.timezone import make_aware
-from dairy_project.graphql_types import MilkLotType,PaymentBillType, SupplierType,OnFarmTankType, CanCollectionType,AssignCanCollectionPayload
-from django.db import transaction
+from graphql import GraphQLError
+from strawberry.permission import BasePermission
+from strawberry.types import Info
+from strawberry_django import field
+
+from accounts.schema import UserType
 from accounts.utils import get_authenticated_user
+from collection_center.schema import AssignLotsPayload
+from dairy_project.graphql_types.billing import PaymentBillType
+from dairy_project.graphql_types.collection import (
+    AssignCanCollectionPayload,
+    CanCollectionType,
+    OnFarmTankType,
+)
+from dairy_project.graphql_types.milk import MilkLotType
+from dairy_project.graphql_types.suppliers import SupplierType
+from distribution.models import Route
+from suppliers.models import CanCollection, MilkLot, OnFarmTank, PaymentBill, Supplier
 
 class IsAuthenticated(BasePermission):
     message = "Authentication required"

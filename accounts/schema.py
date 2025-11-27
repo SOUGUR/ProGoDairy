@@ -1,10 +1,13 @@
-import strawberry
-from strawberry.types import Info
-from django.contrib.auth.models import User, Group
-from django.contrib.auth import authenticate
-from .utils import create_access_token, create_refresh_token, decode_token
 from typing import List, Optional
-from dairy_project.graphql_types import TokenResponse, UserType
+
+import strawberry
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import Group, User
+from strawberry.types import Info
+
+from dairy_project.graphql_types.auth import TokenResponse, UserType
+
+from .utils import create_access_token, create_refresh_token, decode_token
 
 
 

@@ -1,15 +1,17 @@
+from datetime import date, datetime
+from typing import List, Optional
+
 import strawberry
-from typing import Optional
-from datetime import datetime, date
-from .models import BulkCooler
-from strawberry.permission import BasePermission
-from strawberry.types import Info
-from graphql import GraphQLError
-from typing import List
-from suppliers.models import MilkLot
-from dairy_project.graphql_types import BulkCoolerType
 from django.db.models import Max
 from django.utils.timezone import make_aware
+from graphql import GraphQLError
+from strawberry.permission import BasePermission
+from strawberry.types import Info
+
+from dairy_project.graphql_types.collection import BulkCoolerType
+from suppliers.models import MilkLot
+
+from .models import BulkCooler
 
 
 class IsAuthenticated(BasePermission):
