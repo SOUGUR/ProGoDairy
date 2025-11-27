@@ -167,4 +167,4 @@ env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # FireCrawl API Key
-FIRECRAWL_API_KEY = env('FIRECRAWL_API_KEY')
+FIRECRAWL_API_KEY = env('FIRECRAWL_API_KEY', default=None)
