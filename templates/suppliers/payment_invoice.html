@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milk Payment Bill - GoProDairy</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --accent: #4a6fa5;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --success: #27ae60;
+      --warning: #f39c12;
+      --danger: #e74c3c;
+      --gray: #7f8c8d;
+      --light-gray: #f8f9fa;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f4f6f9;
+      color: #333;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .invoice-container {
+      width: 100%;
+      max-width: 800px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    
+    .invoice-header {
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      color: white;
+      padding: 25px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .company-info h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+    
+    .company-info p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .invoice-title {
+      text-align: right;
+    }
+    
+    .invoice-title h2 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+    
+    .invoice-title .badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+    
+    .badge-paid {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .badge-pending {
+      background-color: var(--warning);
+      color: white;
+    }
+    
+    .invoice-body {
+      padding: 30px;
+    }
+    
+    .bill-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: var(--light-gray);
+      border-radius: 8px;
+    }
+    
+    .detail-item {
+      margin-bottom: 10px;
+    }
+    
+    .detail-item strong {
+      display: inline-block;
+      width: 140px;
+      color: var(--dark);
+    }
+    
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .summary-card {
+      background: linear-gradient(135deg, var(--light), #fff);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .summary-card h3 {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 10px;
+    }
+    
+    .summary-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .summary-card.total {
+      border-left: 4px solid var(--success);
+    }
+    
+    .summary-card.total .value {
+      color: var(--success);
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    thead {
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      color: white;
+    }
+    
+    th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    tbody tr {
+      transition: background-color 0.2s;
+    }
+    
+    tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+    
+    .status {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    
+    .status-delivered {
+      background-color: rgba(39, 174, 96, 0.15);
+      color: var(--success);
+    }
+    
+    .status-pending {
+      background-color: rgba(243, 156, 18, 0.15);
+      color: var(--warning);
+    }
+    
+    .invoice-footer {
+      padding: 20px 30px;
+      background-color: var(--light-gray);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .actions button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-print {
+      background: linear-gradient(to bottom, var(--secondary), #2980b9);
+      color: white;
+    }
+    
+    .btn-print:hover {
+      background: linear-gradient(to bottom, #2980b9, #2573a7);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    }
+    
+    .invoice-meta {
+      text-align: right;
+      font-size: 12px;
+      color: var(--gray);
+    }
+    
+    @media print {
+      body {
+        padding: 0;
+        background: white;
+      }
+      
+      .invoice-container {
+        box-shadow: none;
+        max-width: 100%;
+      }
+      
+      .actions {
+        display: none;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .invoice-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      
+      .invoice-title {
+        text-align: center;
+      }
+      
+      .bill-details {
+        grid-template-columns: 1fr;
+      }
+      
+      .invoice-footer {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      
+      .invoice-meta {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <div class="invoice-header">
+      <div class="company-info">
+        <h1>GoProDairy MS</h1>
+        <p>Milk Logistics & Distribution</p>
+        <p>123 Dairy Road, Milk City</p>
+      </div>
+      <div class="invoice-title">
+        <h2>PAYMENT BILL</h2>
+        <div id="status-badge" class="badge badge-paid">PAID</div>
+      </div>
+    </div>
+    
+    <div class="invoice-body">
+      <div class="bill-details" id="billDetails">
+        <!-- Bill details will be inserted here -->
+      </div>
+      
+      <div class="summary-cards">
+        <div class="summary-card">
+          <h3>TOTAL VOLUME</h3>
+          <div id="total-volume" class="value">0 L</div>
+        </div>
+        <div class="summary-card">
+          <h3>PRICE PER LITRE</h3>
+          <div id="avg-price" class="value">₹0.00</div>
+        </div>
+        <div class="summary-card total">
+          <h3>TOTAL AMOUNT</h3>
+          <div id="total-amount" class="value">₹0.00</div>
+        </div>
+      </div>
+      
+      <div class="table-container">
+        <table id="lotTable">
+          <thead>
+            <tr>
+              <th>Lot ID</th>
+              <th>Volume (L)</th>
+              <th>Price/Litre</th>
+              <th>Total Price</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="lotTableBody">
+            <!-- Table rows will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="invoice-footer">
+      <div class="qr-section">
+        <h4>Scan to View Bill Details</h4>
+        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+      </div>
+      <div class="actions">
+        <button class="btn-print" onclick="window.print()">
+          <i class="fas fa-print"></i> Print Bill
+        </button>
+      </div>
+      <div class="invoice-meta">
+        <p>Generated on: <span id="generation-date"></span></p>
+        <p>© 2023 GoProDairy Milk Systems. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set generation date
+    document.getElementById('generation-date').textContent = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    async function fetchBill(bill_ID) {
+      
+      const query = `
+        query MilkLotsByBill($billId: Int!) {
+          milkLotsByBill(billId: $billId) {
+            id
+            volumeL
+            totalPrice
+            pricePerLitre
+            dateCreated
+            status
+            bill {
+              id
+              totalVolumeL
+              totalValue
+              isPaid
+              paymentDate
+            }
+          }
+        }
+      `;
+
+      try {
+        const response = await fetch("/graphql/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ query, variables: { billId: parseInt(bill_ID, 10) } })
+        });
+
+        const result = await response.json();
+        const lots = result.data.milkLotsByBill;
+        if (!lots || !lots.length) {
+          document.getElementById('lotTableBody').innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 20px; color: var(--gray);">
+                <i class="fas fa-info-circle"></i> No milk lots found for this bill.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        const bill = lots[0].bill;
+
+        // Update status badge
+        const statusBadge = document.getElementById('status-badge');
+        statusBadge.className = bill.isPaid ? 'badge badge-paid' : 'badge badge-pending';
+        statusBadge.textContent = bill.isPaid ? 'PAID' : 'PENDING';
+
+        // Update summary cards
+        document.getElementById('total-volume').textContent = `${bill.totalVolumeL} L`;
+        document.getElementById('total-amount').textContent = `₹${bill.totalValue}`;
+        
+        // Calculate average price per liter
+        const avgPrice = bill.totalValue / bill.totalVolumeL;
+        document.getElementById('avg-price').textContent = `₹${avgPrice.toFixed(2)}`;
+
+        // Format and display bill details
+        document.getElementById("billDetails").innerHTML = `
+          <div class="detail-item">
+            <strong>Bill ID:</strong> #${bill.id.toString().padStart(5, '0')}
+          </div>
+          <div class="detail-item">
+            <strong>Generated Date:</strong> ${new Date().toLocaleDateString()}
+          </div>
+          <div class="detail-item">
+            <strong>Payment Status:</strong> ${bill.isPaid ? 'Paid' : 'Pending'}
+          </div>
+          <div class="detail-item">
+            <strong>Payment Date:</strong> ${bill.paymentDate ? new Date(bill.paymentDate).toLocaleDateString() : "—"}
+          </div>
+        `;
+
+        // Populate table with milk lots
+        const tableBody = document.getElementById("lotTableBody");
+        tableBody.innerHTML = "";
+        
+        lots.forEach(lot => {
+          const statusClass = lot.status.toLowerCase().includes('delivered') ? 'status-delivered' : 'status-pending';
+          
+          tableBody.innerHTML += `
+            <tr>
+              <td>#${lot.id.toString().padStart(5, '0')}</td>
+              <td>${lot.volumeL} L</td>
+              <td>₹${lot.pricePerLitre}</td>
+              <td>₹${lot.totalPrice}</td>
+              <td><span class="status ${statusClass}">${lot.status}</span></td>
+              <td>${lot.dateCreated ? new Date(lot.dateCreated).toLocaleDateString() : "—"}</td>
+            </tr>
+          `;
+        });
+      } catch (error) {
+        console.error("Error fetching bill data:", error);
+        document.getElementById('lotTableBody').innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 20px; color: var(--danger);">
+              <i class="fas fa-exclamation-circle"></i> Error loading bill data. Please try again.
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    const billId = "{{ bill_id }}";
+    document.addEventListener('DOMContentLoaded', fetchBill(billId));
+  </script>
+</body>
+</html>

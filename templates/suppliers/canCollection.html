@@ -1,0 +1,832 @@
+{% extends "base.html" %}
+
+{% block title %}Can Collection Management{% endblock %}
+
+{% block content %}
+<style>
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    font-size: 14px; 
+  }
+  
+  h1 {
+    color: #2c5282;
+    font-weight: 600;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #ebf2f7;
+    padding-bottom: 10px;
+  }
+  
+  .setup-card {
+    background-color: #ebf8ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    padding: 10px ;
+  }
+  
+  .form-group {
+    margin-bottom: 5px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+  
+  select, input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+  }
+
+  .form-group button {
+  width: 100%;
+  padding: 12px;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  } 
+
+  .form-group button:hover {
+    background-color: #3182ce;
+  }
+
+  .value-input-group {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .value-input-group input {
+    flex: 2;
+  }
+  
+  .value-input-group select {
+    flex: 1;
+  }
+  
+  .milk-lots-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .selection-stats {
+    display: flex;
+    gap: 30px;
+    background-color: #f0fff4;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #c6f6d5;
+  }
+  
+  .stat-item {
+    text-align: center;
+  }
+  
+  .stat-item span:first-child {
+    color: #4a5568;
+    margin-right: 5px;
+  }
+  
+  .stat-item strong {
+    color: #2b6cb0;
+    font-weight: 600;
+  }
+  
+  .select-all-container {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .milk-lots-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  
+  .milk-lots-table th {
+    background-color: #ebf8ff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+    text-transform: uppercase;
+    font-size: 0.85em;
+  }
+  
+  .milk-lots-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .milk-lots-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .milk-lots-table tr:hover {
+    background-color: #ebf8ff;
+  }
+  
+  .checkbox-cell {
+    text-align: center;
+  }
+  
+  .empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #718096;
+    background-color: #f8fafc;
+    border-radius: 4px;
+  }
+
+  .unassigned {
+    color: #e53e3e;
+    font-weight: 500;
+  }
+
+  .status-pending {
+      color: #d69e2e;
+      font-weight: 500;
+    }
+    
+    .status-approved {
+      color: #38a169;
+      font-weight: 500;
+    }
+    
+    .status-rejected {
+      color: #e53e3e;
+      font-weight: 500;
+    }
+  
+  
+  .action-buttons {
+    text-align: right;
+    margin-top: 20px;
+  }
+  
+  .btn {
+    padding: 12px 24px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn:hover {
+    background-color: #3182ce;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .modal-header h3 {
+    color: #2c5282;
+    margin: 0;
+  }
+  
+  .close-modal {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+  }
+  
+  .close-modal:hover {
+    color: #000;
+  }
+
+  .btn-primary {
+    padding: 12px 24px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .btn-primary:hover {
+    background-color: #3182ce;
+    }
+
+</style>
+<div class="container">
+  <h1>Can Collection Management</h1>
+
+  <div class="setup-card">
+    <div class="section-title">Collection Parameters</div>
+    
+    <div class="form-grid">
+      <!-- Route Selection -->
+      <div class="form-group">
+        <label for="route">Route</label>
+        <select id="route" name="route" required>
+          <option value="">Select Route</option>
+        </select>
+      </div>
+      
+      <!-- Collection Name -->
+      <div class="form-group">
+        <label for="collection_name">Collection Name/Code</label>
+        <select id="collection_name" name="collection_name" required>
+          <option value="" disabled selected>select CanCollections created</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="collection_date">CanCollection Date</label>
+        <input type="date" id="collection_date" name="collection_date" 
+              value="{% now 'Y-m-d' %}">
+      </div>
+
+      <div class="form-group">
+        <label for="collection_volume">Volume (Liters)</label>
+        <input type="number" id="collection_volume" name="collection_volume" 
+              placeholder="CanCollection volume in liters" readonly >
+      </div>
+      
+      <div class="form-group">
+        <label for="CanCollection">Create CanCollection</label>
+        <button id="CanCollection" name="CanCollection">
+          Add CanCollection
+        </button>
+      </div>
+    
+    </div>
+  </div>
+  
+  <!-- Milk Lots Assignment Section -->
+  <div class="milk-lots-section">
+    <div class="section-header">
+      <h2>Approved Milk Lots (Unassigned Cans)</h2>
+      <div class="selection-stats">
+        <div class="stat-item">
+          <span>Selected Volume:</span>
+          <strong id="selected-volume">0</strong> L
+        </div>
+      </div>
+    </div>
+    
+    <div class="select-all-container">
+      <input type="checkbox" id="select-all">
+      <label for="select-all">Select all unassigned cans</label>
+    </div>
+    
+    <table class="milk-lots-table">
+      <thead>
+        <tr>
+          <th>MilkLot ID</th>
+          <th>date collected</th>
+          <th>Supplier</th>
+          <th>Volume (L)</th>
+          <th>Fat %</th>
+          <th>Protein %</th>
+          <th>Added water %</th>
+          <th>SNF %</th>
+          <th>Status</th>
+          <th>Assigned to</th>
+          <th>Select</th>
+        </tr>
+      </thead>
+      <tbody id="milk-lot-body">
+      </tbody>
+    </table>
+    
+    <div class="action-buttons">
+      <button type="button" class="btn btn-primary" id="assign-cancollection-btn">
+        Assign to CanCollection
+      </button>
+    </div>
+  </div>
+</div>
+
+<!--======================================================= HTML for Modal to create CanCollection ================================================-->>
+<div id="canCollectionModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create New Can Collection</h3>
+      <span class="close-modal">&times;</span>
+    </div>
+    <form id="canCollectionForm">
+      <div class="form-group">
+        <label for="modal_route">Route</label>
+        <select id="modal_route" name="route" required>
+          <option value="">Select Route</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="modal_collection_name">Collection Name/Code</label>
+        <input type="text" id="modal_collection_name" name="collection_name" 
+               placeholder="e.g. Morning Route A - {% now 'Y-m-d' %}" required>
+      </div>
+      <button type="submit" class="btn-primary">Create Collection</button>
+    </form>
+  </div>
+</div>
+<script>
+//================================================Populate Routes===================================================//
+async function fetchRoutesmain() {
+  const query = `
+    query {
+      allRoutes {
+        id
+        name
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {  
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+
+    const result = await response.json();
+    const routes = result.data.allRoutes;
+
+    const select = document.getElementById("route")    
+
+    routes.forEach(r => {
+      const option = document.createElement("option");
+      option.value = r.id;
+      option.textContent = r.name;
+      select.appendChild(option);
+    });
+
+
+  } catch (error) {
+    console.error("Error fetching routes:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", fetchRoutesmain);
+
+
+//===================================================Display approved Milk Lots ===============================================//
+ async function fetchApprovedMilkLots() {
+    const query = `
+      query {
+        pendingMilkLotList {
+          id
+          dateCreated
+          volumeL
+          fatPercent
+          proteinPercent
+          addedWaterPercent
+          snf
+          status
+          supplier {
+            user {
+              username
+            }
+          }
+          onFarmTank {
+            id
+            name
+          }
+          bulkCooler {
+            id
+            name
+          }
+          canCollection{
+            id
+            name
+          }
+        }
+      }
+    `;
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      const result = await response.json();
+      const milkLots = result.data.pendingMilkLotList;
+
+      const tbody = document.getElementById("milk-lot-body");
+    
+
+      milkLots.forEach(lot => {
+        const row = document.createElement("tr");
+
+        let assignedStatus = '<span class="unassigned">Unassigned</span>';
+
+        if (lot.onFarmTank) {
+          assignedStatus = `${lot.onFarmTank.name}`;
+        } else if (lot.bulkCooler) {
+          assignedStatus = `${lot.bulkCooler.name}`;
+        }
+        else if (lot.canCollection) {
+          assignedStatus = `${lot.canCollection.name}`;
+        }
+
+        row.innerHTML = `
+          <td>${lot.id}</td>
+          <td>${lot.dateCreated}</td>
+          <td>${lot.supplier.user.username}</td>
+          <td>${lot.volumeL}</td>
+          <td>${lot.fatPercent}</td>
+          <td>${lot.proteinPercent}</td>
+          <td>${lot.addedWaterPercent ?? "-"}</td>
+          <td>${lot.snf}</td>
+          <td class="status-${lot.status.toLowerCase()}">${lot.status}</td>
+          <td>${assignedStatus}</td>
+          <td>
+            <input type="checkbox" class="milk-lot-checkbox"
+                   value="${lot.id}"
+                   data-volume="${lot.volumeL}"
+                   ${lot.onFarmTank || lot.bulkCooler || lot.canCollection? "disabled" : ""}>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+    } catch (error) {
+      console.error("Error fetching milk lots:", error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", fetchApprovedMilkLots);
+  
+//============================================== Show Selected volume from checkboxes ========================================================//
+function setupMilkLotCheckboxListeners() {
+  const checkboxes = document.querySelectorAll(".milk-lot-checkbox");
+  const selectedVolumeDisplay = document.getElementById("selected-volume");
+
+  function updateSelectedVolume() {
+    let total = 0;
+    checkboxes.forEach(cb => {
+      if (cb.checked && !cb.disabled) {
+        total += parseFloat(cb.dataset.volume) || 0;
+      }
+    });
+    selectedVolumeDisplay.textContent = total.toFixed(2); 
+  }
+
+  checkboxes.forEach(cb => {
+    cb.addEventListener("change", updateSelectedVolume);
+  });
+}
+setupMilkLotCheckboxListeners();
+//============================================= Dispaly Modal for adding and creating CanCollection ========================================================//  
+document.addEventListener('DOMContentLoaded', function() {
+  const addCanCollectionBtn = document.getElementById('CanCollection');
+  const modal = document.getElementById('canCollectionModal');
+  const closeBtn = document.querySelector('.close-modal');
+  const form = document.getElementById('canCollectionForm');
+
+  addCanCollectionBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+
+    const routeSelect = document.getElementById('modal_route');
+    routeSelect.innerHTML = '<option value="">Loading routes...</option>';
+    routeSelect.disabled = true;
+
+    try {
+      await fetchRoutes(); 
+    } catch (error) {
+      routeSelect.innerHTML = '<option value="">Failed to load</option>';
+      console.error("Failed to load routes:", error);
+    } finally {
+      routeSelect.disabled = false;
+    }
+
+    modal.style.display = 'block';
+  });
+
+
+  closeBtn.addEventListener('click', function() {
+    modal.style.display = 'none';
+  });
+
+  window.addEventListener('click', function(event) {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const routeSelect = document.getElementById('modal_route');
+    const collectionNameInput = document.getElementById('modal_collection_name');
+
+    const routeId = routeSelect.value;
+    const collectionName = collectionNameInput.value;
+
+    if (!routeId || !collectionName) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const routeIdNum = parseInt(routeId, 10);
+    if (isNaN(routeIdNum)) {
+      alert('Invalid route selected');
+      return;
+    }
+
+    console.log('Creating new CanCollection:', {
+      routeId: routeIdNum,
+      name: collectionName
+    });
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: `
+            mutation CreateCanCollection($routeId: Int!, $name: String!) {
+              createCanCollection(routeId: $routeId, name: $name) {
+                id
+                name
+                createdAt
+                route { id }
+              }
+            }
+          `,
+          variables: { routeId: routeIdNum, name: collectionName }
+        })
+      });
+
+      const result = await response.json();
+      if (result.errors) {
+        alert("Error: " + result.errors[0].message);
+      } else {
+        alert(" Collection created: " + result.data.createCanCollection.name);
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert("Failed to create collection.");
+    }
+
+    modal.style.display = 'none';
+    form.reset();
+  });
+});
+
+async function fetchRoutes() {
+  const query = `
+    query {
+      allRoutes {
+        id
+        name
+      }
+    }
+  `;
+
+  const routeSelect = document.getElementById('modal_route');
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+
+    const result = await response.json();
+    if (result.errors) {
+      routeSelect.innerHTML = '<option value="">Error loading</option>';
+      throw new Error(result.errors[0].message);
+    }
+
+    const routes = result.data.allRoutes;
+
+    routeSelect.innerHTML = '<option value="">Select Route</option>';
+    routes.forEach(route => {
+      const option = document.createElement('option');
+      option.value = route.id;         
+      option.textContent = route.name;
+      routeSelect.appendChild(option);
+    });
+
+    console.log(`✅ Loaded ${routes.length} routes`);
+  } catch (error) {
+    console.error("Error in fetchRoutes():", error);
+    routeSelect.innerHTML = '<option value="">Failed to load routes</option>';
+  }
+}
+
+//=============================================== fetch Collections and display when route or date changes ===========================================//
+async function fetchCanCollections() {
+  const routeSelect = document.getElementById("route");
+  const dateInput = document.getElementById("collection_date");
+  const collectionSelect = document.getElementById("collection_name");
+  const collectionVolume = document.getElementById("collection_volume");
+
+  const routeId = routeSelect.value;
+  const createdDate = dateInput.value;
+
+  if (!routeId || !createdDate) {
+    console.warn("Route and Date are required to fetch CanCollections.");
+    return;
+  }
+
+  const query = `
+    query GetCanCollectionsByDate($routeId: Int!, $date: Date!) {
+      canCollectionsByDate(routeId: $routeId, createdDate: $date) {
+        id
+        name
+        totalVolumeLiters
+        createdAt
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        variables: { routeId: parseInt(routeId), date: createdDate }
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error("GraphQL errors:", result.errors);
+      return;
+    }
+
+    const collections = result.data.canCollectionsByDate;
+
+    collectionSelect.innerHTML = `<option value="" disabled selected>Select CanCollections created</option>`;
+
+    collections.forEach(c => {
+      const option = document.createElement("option");
+      option.value = c.id;
+      option.textContent = `${c.name} (${new Date(c.createdAt).toLocaleDateString()})`;
+      option.dataset.volume = c.totalVolumeLiters;   
+      collectionSelect.appendChild(option);
+    });
+
+    const collectionVolumeInput = document.getElementById("collection_volume");
+      document.getElementById("collection_name").addEventListener("change", function() {
+      const selectedOption = this.options[this.selectedIndex];
+
+      if (selectedOption && selectedOption.value) {
+        collectionVolumeInput.value = selectedOption.dataset.volume || "";
+      } else {
+        collectionVolumeInput.value = "";
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching can collections:", error);
+  }
+}
+
+document.getElementById("route").addEventListener("change", () => {
+  collectionVolumeInput.value = "";
+});
+document.getElementById("route").addEventListener("change", fetchCanCollections);
+document.getElementById("collection_date").addEventListener("change", fetchCanCollections);
+
+
+//========================================= assign selected Milk Lots to selected CanCollections ===================================================//
+async function assignMilkLotsToCanCollection() {
+  const collectionSelect = document.getElementById("collection_name");
+  const canCollectionId = collectionSelect.value;
+
+  if (!canCollectionId) {
+    alert("Please select a CanCollection first.");
+    return;
+  }
+
+  const selectedLotIds = Array.from(
+    document.querySelectorAll(".milk-lot-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selectedLotIds.length === 0) {
+    alert("Please select at least one milk lot to assign.");
+    return;
+  }
+
+  const mutation = `
+    mutation AssignMilkLots($canCollectionId: Int!, $milkLotIds: [Int!]!) {
+      assignMilkLotsToCanCollection(
+        canCollectionId: $canCollectionId,
+        milkLotIds: $milkLotIds
+      ) {
+        success
+        message
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: mutation,
+        variables: {
+          canCollectionId: parseInt(canCollectionId),
+          milkLotIds: selectedLotIds
+        }
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error("GraphQL errors:", result.errors);
+      alert("Error assigning lots: " + result.errors[0].message);
+      return;
+    }
+
+    const payload = result.data.assignMilkLotsToCanCollection;
+    if (payload.success) {
+      alert(payload.message);
+    } else {
+      showNotification(`"Assignment failed: " + ${payload.message}'}`, 'error', 3000);
+    }
+
+  } catch (error) {
+    console.error("Error assigning milk lots:", error);
+    alert("Unexpected error assigning lots.");
+  }
+}
+
+document.getElementById("assign-cancollection-btn").addEventListener("click", assignMilkLotsToCanCollection);
+</script>
+{% endblock %}

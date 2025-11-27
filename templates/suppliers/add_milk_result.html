@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Supplier List{% endblock %}
 
@@ -11,6 +12,7 @@
       margin: 0;
       padding: 20px;
       color: #333;
+      font-size: 14px; 
     }
     
     .container {
@@ -89,7 +91,7 @@
     
     .required-field::after {
       content: " *";
-      color: #e53e3e;
+      color: #e90b0b;
     }
     
     .section-title {
@@ -107,14 +109,11 @@
     }
 
     #milk-test-btn {
-      position: fixed;
       bottom: 20px;      
       right: 20px;       
-      z-index: 999;
-
-      padding: 12px 20px;
-      font-size: 16px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 4px;
       background-color: #007bff; 
       color: white;
       font-weight: bold;
@@ -126,19 +125,107 @@
     }
 
     #milk-test-btn:hover {
-      background-color: #0056b3;
+      background-color: #b30000;
       transform: translateY(-2px);
     }
 
     #milk-test-btn:active {
       transform: translateY(0);
     }
-
-  </style>
+  /* ---------------------------Style for modal reference table of Standard Milk Composition--------------------------- */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+  }
+  
+  .modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    width: 80%;
+    max-width: 900px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  .close-modal {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .close-modal:hover {
+    color: #333;
+  }
+  
+  .standards-table-container {
+    margin-top: 20px;
+    overflow-x: auto;
+  }
+  
+  .standards-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+  }
+  
+  .standards-table th {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  
+  .standards-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .standards-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .standards-table tr:hover {
+    background-color: #ebf8ff;
+  }
+  
+  .btn-info {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-info:hover {
+    background-color: #29dc19;
+    transform: translateY(-2px);
+  }
+</style>
 </head>
 <body>
   <div class="container">
-    <h1>Record Milk Lot Results</h1>
+    <h1>Record Milk Lot Test Result</h1>
     <form id="milkLotForm" method="POST" action="{% if milk_lot %}{% url 'edit_milk_lot' milk_lot.id %}{% else %}{% url 'create_milk_lot' %}{% endif %}">
       {% csrf_token %}
       <div class="section-title">Select Supplier</div>
@@ -162,7 +249,7 @@
       
       <div class="form-group">
         <label class="required-field">Volume (Liters)</label>
-        <input type="number" step="0.01" name="volume_l" value="{% if milk_lot %}{{ milk_lot.volumeL }}{% endif %}" required>
+        <input type="number" step="0.01" name="volume_l" value="" required>
       </div>
       
       <div class="section-title">Composition Analysis</div>
@@ -170,54 +257,150 @@
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">Fat Percentage</label>
-          <input type="number" step="0.01" name="fat_percent" value="{% if milk_lot %}{{ milk_lot.fatPercent }}{% endif %}" required>
+          <input type="number" step="0.01" name="fat_percent" value="" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Protein Percentage</label>
-          <input type="number" step="0.01" name="protein_percent" value="{% if milk_lot %}{{ milk_lot.proteinPercent }}{% endif %}" required>
+          <input type="number" step="0.01" name="protein_percent" value="" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">Lactose Percentage</label>
-          <input type="number" step="0.01" name="lactose_percent" value="{% if milk_lot %}{{ milk_lot.lactosePercent }}{% endif %}" required>
+          <input type="number" step="0.01" name="lactose_percent" value="" required>
         </div>
         
         <div class="form-group">
           <label class="required-field">Total Solids</label>
-          <input type="number" step="0.01" name="total_solids" value="{% if milk_lot %}{{ milk_lot.totalSolids }}{% endif %}" required>
+          <input type="number" step="0.01" name="total_solids" value="" required>
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
           <label class="required-field">SNF (Solids Not Fat)</label>
-          <input type="number" step="0.01" name="snf" value="{% if milk_lot %}{{ milk_lot.snf }}{% endif %}" required>
+          <input type="number" step="0.01" name="snf" value="" required>
         </div>
         
         <div class="form-group">
-          <label class="required-field">Urea Nitrogen</label>
-          <input type="number" step="0.01" name="urea_nitrogen" value="{% if milk_lot %}{{ milk_lot.ureaNitrogen }}{% endif %}" required>
+          <label class="required-field">Urea Nitrogen (mg/dL)</label>
+          <input type="number" step="0.01" name="urea_nitrogen" value="" required>
         </div>
       </div>
       
-      <div class="form-group">
-        <label class="required-field">Bacterial Count (CFU/mL)</label>
-        <input type="number" name="bacterial_count" value="{% if milk_lot %}{{ milk_lot.bacterialCount }}{% endif %}" required>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required-field">Bacterial Count (CFU/mL)</label>
+          <input type="number" name="bacterial_count" value="" required>
+        </div>
+
+        <div class="form-group">
+          <label class="required-field">Added water adulteration (%)</label>
+          <input type="number" name="added_water_percent" value="" required>
+        </div>
       </div>
-      
+      <button id="show-standards-btn" class="btn btn-info">
+        <i class="fas fa-info-circle"></i> Show Quality Standards
+      </button>
     <button type="submit" id="milk-test-btn">Submit Milk Test</button>
   </div>
+<!------------------------------------------------ Modal to display the reference chart of Standard Milk composition-------------------------->
+<div id="quality-standards-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h3>Milk Quality Standards Reference</h3>
+    <div class="standards-table-container">
+      <table class="standards-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Unit</th>
+            <th>India (FSSAI) Limits</th>
+            <th>Global/Codex Range</th>
+            <th>Reject If</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>fat_percent</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 3.5%</strong> (min.)</td>
+            <td>3.3 - 4.5%</td>
+            <td>&lt; 3.5%</td>
+          </tr>
+          <tr>
+            <td><strong>protein_percent</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 3.0%</strong> (min.)</td>
+            <td>2.8 - 3.5%</td>
+            <td>&lt; 2.8%</td>
+          </tr>
+          <tr>
+            <td><strong>lactose_percent</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≈ 4.6 - 5.0%</strong> (typical)</td>
+            <td>4.5 - 5.0%</td>
+            <td>outside ±0.5%</td>
+          </tr>
+          <tr>
+            <td><strong>total_solids</strong></td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 12.5%</strong></td>
+            <td>12.0 - 13.5%</td>
+            <td>&lt; 12.0%</td>
+          </tr>
+          <tr>
+            <td><strong>snf</strong> (Solids-Not-Fat)</td>
+            <td>% (g/100g)</td>
+            <td><strong>≥ 8.5%</strong></td>
+            <td>8.2 - 9.0%</td>
+            <td>&lt; 8.5%</td>
+          </tr>
+          <tr>
+            <td><strong>urea_nitrogen</strong> (MUN)</td>
+            <td>mg/dL</td>
+            <td><strong>15 - 40 mg/dL</strong></td>
+            <td>10 - 45 mg/dL</td>
+            <td>&lt; 10 or > 45</td>
+          </tr>
+          <tr>
+            <td><strong>bacterial_count</strong></td>
+            <td>CFU/mL</td>
+            <td><strong>≤ 50,000 CFU/mL</strong> (raw milk)</td>
+            <td>≤ 100,000 CFU/mL (Codex)</td>
+            <td>> 50,000</td>
+          </tr>
+          <tr>
+            <td><strong>added_water_percent</strong></td>
+            <td>%</td>
+            <td><strong>≤ 3%</strong> (FSSAI tolerance)</td>
+            <td><strong>0%</strong> (Codex ideal)</td>
+            <td>> 3%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
-  
-// create Milk Lot mutation
-document.addEventListener("DOMContentLoaded", () => {
+//------------------------------------------CREATE Milk Lot if lot_Id not present, else UPDATE Milk Lot-------------------------------------//
+document.addEventListener("DOMContentLoaded", async () => {
+  const ok = await initializeAccessToken();
+  if (!ok) {
+      console.warn("No refresh token — redirecting to login");
+      window.location.href = "/";
+      return;
+  }
+
   const milkTestBtn = document.getElementById("milk-test-btn");
+  const lotId = "{{ lot_id|default:'' }}";
 
   milkTestBtn.addEventListener("click", async (e) => {
     e.preventDefault();
+
     const input = {
       supplierId: parseInt(document.querySelector("select[name='supplier_id']").value),
       testerId: parseInt(document.querySelector("select[name='tester_id']").value),
@@ -228,12 +411,13 @@ document.addEventListener("DOMContentLoaded", () => {
       totalSolids: parseFloat(document.querySelector("input[name='total_solids']").value),
       snf: parseFloat(document.querySelector("input[name='snf']").value),
       ureaNitrogen: parseFloat(document.querySelector("input[name='urea_nitrogen']").value),
-      bacterialCount: parseInt(document.querySelector("input[name='bacterial_count']").value)
+      bacterialCount: parseInt(document.querySelector("input[name='bacterial_count']").value),
+      addedWaterPercent: parseFloat(document.querySelector("input[name='added_water_percent']").value)
     };
 
     const graphqlQuery = `
-      mutation CreateMilkLot($input: MilkLotInput!) {
-        createMilkLot(input: $input) {
+      mutation SaveMilkLot($input: MilkLotInput!, $lotId: Int) {
+        updateMilkLot(input: $input, lotId: $lotId) {
           id
           volumeL
           fatPercent
@@ -247,37 +431,36 @@ document.addEventListener("DOMContentLoaded", () => {
           pricePerLitre
           status
           dateCreated
+          addedWaterPercent
         }
       }
     `;
 
     try {
-      const res = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: graphqlQuery,
-          variables: { input }
-        })
+      const result = await securedGraphQL(graphqlQuery, {
+          input,
+          lotId: lotId ? parseInt(lotId) : null
       });
 
-      const result = await res.json();
       if (result.errors) {
         console.error("GraphQL Error:", result.errors);
         alert("Error: " + result.errors[0].message);
         return;
       }
 
-      const milkLot = result.data.createMilkLot;
-      alert(`Milk lot created successfully! ID: ${milkLot.id}`);
-      window.location.href = "/milk-lot/list/";
+      const milkLot = result.data.updateMilkLot;
+      showNotification(`Milk lot of ID: ${milkLot.id} ${lotId ? 'updated' : 'created'} successfully!`, 'success', 2000);
+      setTimeout(() => {
+        window.location.href = "/milk-lot/list/";
+      }, 2000);
     } catch (error) {
       console.error("Request Error:", error);
-      alert("Network error creating milk lot.");
+      alert("Network error saving milk lot.");
     }
   });
 });
 
+//-------------------------------------------------------define functions to load suppliers and testers----------------------------------------------//
 async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTesterId = null) {
     const supplierQuery = `
     query {
@@ -286,7 +469,7 @@ async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTester
             user { username }
         }
     }`;
-    const testerQuery = `
+    const employeeTesterQuery = `
     query {
         testers {
             id
@@ -294,19 +477,11 @@ async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTester
         }
     }`;
 
-    const supplierRes = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: supplierQuery })
-    });
-    const suppliers = (await supplierRes.json()).data.suppliers;
+    const supplierResult = await securedGraphQL(supplierQuery);
+    const suppliers = supplierResult.data.suppliers;
 
-    const testerRes = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: testerQuery })
-    });
-    const testers = (await testerRes.json()).data.testers;
+    const testerResult = await securedGraphQL(employeeTesterQuery);
+    const testers = testerResult.data.testers;
 
     const supplierSelect = document.querySelector("select[name='supplier_id']");
     const testerSelect = document.querySelector("select[name='tester_id']");
@@ -335,7 +510,7 @@ async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTester
     });
 }
 
-
+//-------------------------------use above functions to populate result into dropdowns and result if milk lot ID present -------------------//
 document.addEventListener("DOMContentLoaded", function() {
     const lotId = "{{ lot_id|default:'' }}";
     if (lotId) {
@@ -345,47 +520,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-async function fetchMilkLotAndFillForm(lotId) {
-    const query = `
-        query GetMilkLotById($id: Int!) {
-            milkLotById(id: $id) {
-                id
-                supplier { id user { username } }
-                tester { id user { username } }
-                volumeL
-                fatPercent
-                proteinPercent
-                lactosePercent
-                totalSolids
-                snf
-                ureaNitrogen
-                bacterialCount
-            }
-        }
-    `;
 
-    const res = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, variables: { id: parseInt(lotId) } })
-    });
-
-    const result = await res.json();
-    const lot = result.data.milkLotById;
-
-    // Load dropdowns with preselection
-    await loadSuppliersAndTesters(lot.supplier.id, lot.tester.id);
-
-    // Fill other inputs
-    document.querySelector("input[name='volume_l']").value = lot.volumeL;
-    document.querySelector("input[name='fat_percent']").value = lot.fatPercent;
-    document.querySelector("input[name='protein_percent']").value = lot.proteinPercent;
-    document.querySelector("input[name='lactose_percent']").value = lot.lactosePercent;
-    document.querySelector("input[name='total_solids']").value = lot.totalSolids;
-    document.querySelector("input[name='snf']").value = lot.snf;
-    document.querySelector("input[name='urea_nitrogen']").value = lot.ureaNitrogen;
-    document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
-}
 
 async function fetchMilkLotAndFillForm(lotId) {
     const query = `
@@ -400,6 +535,7 @@ async function fetchMilkLotAndFillForm(lotId) {
                 tester {
                     id
                     user { username }
+                    
                 }
                 volumeL
                 fatPercent
@@ -409,24 +545,18 @@ async function fetchMilkLotAndFillForm(lotId) {
                 snf
                 ureaNitrogen
                 bacterialCount
+                addedWaterPercent
             }
         }
     `;
 
-    const res = await fetch("/graphql/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, variables: { id: parseInt(lotId) } })
-    });
-
-    const result = await res.json();
+    const result = await securedGraphQL(query, { id: parseInt(lotId) });
     const lot = result.data.milkLotById;
     if (!lot) return;
 
-    // Fill dropdowns first
-    await loadSuppliersAndTesters(lot.supplier.id, lot.tester.id);
 
-    // Fill other fields
+    await loadSuppliersAndTesters(lot.supplier.id, lot.tester?.id);
+
     document.querySelector("input[name='volume_l']").value = lot.volumeL;
     document.querySelector("input[name='fat_percent']").value = lot.fatPercent;
     document.querySelector("input[name='protein_percent']").value = lot.proteinPercent;
@@ -435,6 +565,30 @@ async function fetchMilkLotAndFillForm(lotId) {
     document.querySelector("input[name='snf']").value = lot.snf;
     document.querySelector("input[name='urea_nitrogen']").value = lot.ureaNitrogen;
     document.querySelector("input[name='bacterial_count']").value = lot.bacterialCount;
+    document.querySelector("input[name='added_water_percent']").value = lot.addedWaterPercent;
 }
+</script>
+
+<script>
+  // Simple modal control (can be added to your existing JS)
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('quality-standards-modal');
+    const btn = document.getElementById('show-standards-btn');
+    const span = document.querySelector('.close-modal');
+    
+    btn.onclick = function() {
+      modal.style.display = 'block';
+    }
+    
+    span.onclick = function() {
+      modal.style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+  });
 </script>
 {% endblock %}

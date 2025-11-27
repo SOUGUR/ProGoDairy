@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Milk Pricing Configuration{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>
+        <i class="fas fa-money-bill-wave"></i>
+        Milk Pricing Configuration
+    </h1>
+
+    <!-- Route Selection -->
+    <div class="route-selection">
+        <div class="section-title">Select Route</div>
+            <div class="filter-group">
+                <label for="route-select">Route</label>
+                <select id="route-select" name="route">
+                    <option value="">-- Select Route --</option>
+                </select>
+            </div>
+    </div>
+
+
+    <!-- Pricing Configuration Form -->
+    <form id="pricing-config-form">
+        <div class="pricing-configuration">
+            <!-- Base Pricing Section -->
+            <div class="config-section">
+                <h3>
+                    <i class="fas fa-cog"></i>
+                    Base Pricing Configuration
+                </h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="base-price">
+                            Base Price per Liter
+                            <span class="unit">(₹/L)</span>
+                        </label>
+                        <input type="number" id="base-price" name="base_price" step="0.01" min="0" placeholder="0.00" >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="added-water-max">
+                            Maximum Added Water
+                            <span class="unit">(%)</span>
+                        </label>
+                        <input type="number" id="added-water-max" name="added_water_max" step="0.1" min="0" max="100" placeholder="0.0" >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="water-penalty">
+                            Water Penalty per Percent
+                            <span class="unit">(₹/% over limit)</span>
+                            <span class="bonus-indicator penalty-indicator">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Penalty
+                            </span>
+                        </label>
+                        <input type="number" id="water-penalty" name="water_penalty_per_percent" step="0.01" min="0" placeholder="0.00" >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Bonuses Section -->
+            <div class="config-section">
+                <h3>
+                    <i class="fas fa-award"></i>
+                    Quality Bonus Configuration
+                </h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fat-min">
+                            Minimum Fat Content
+                            <span class="unit">(%)</span>
+                        </label>
+                        <input type="number" id="fat-min" name="fat_min" step="0.1" min="0" max="100" placeholder="0.0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fat-bonus">
+                            Fat Bonus per Unit
+                            <span class="unit">(₹/%)</span>
+                            <span class="bonus-indicator bonus-positive">
+                                <i class="fas fa-plus"></i>
+                                Bonus
+                            </span>
+                        </label>
+                        <input type="number" id="fat-bonus" name="fat_bonus" step="0.01" min="0" placeholder="0.00" >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="snf-min">
+                            Minimum SNF Content
+                            <span class="unit">(%)</span>
+                        </label>
+                        <input type="number" id="snf-min" name="snf_min" step="0.1" min="0" max="100" placeholder="0.0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="snf-bonus">
+                            SNF Bonus per Unit
+                            <span class="unit">(₹/%)</span>
+                            <span class="bonus-indicator bonus-positive">
+                                <i class="fas fa-plus"></i>
+                                Bonus
+                            </span>
+                        </label>
+                        <input type="number" id="snf-bonus" name="snf_bonus" step="0.01" min="0" placeholder="0.00" >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Protein & Safety Section -->
+            <div class="config-section">
+                <h3>
+                    <i class="fas fa-flask"></i>
+                    Protein & Safety Standards
+                </h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="protein-min">
+                            Minimum Protein Content
+                            <span class="unit">(%)</span>
+                        </label>
+                        <input type="number" id="protein-min" name="protein_min" step="0.1" min="0" max="100" placeholder="0.0" >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="protein-bonus">
+                            Protein Bonus per Unit
+                            <span class="unit">(₹/%)</span>
+                            <span class="bonus-indicator bonus-positive">
+                                <i class="fas fa-plus"></i>
+                                Bonus
+                            </span>
+                        </label>
+                        <input type="number" id="protein-bonus" name="protein_bonus" step="0.01" min="0" placeholder="0.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="urea-max">
+                            Maximum Urea Nitrogen
+                            <span class="unit">(mg/100ml)</span>
+                        </label>
+                        <input type="number" id="urea-max" name="urea_max" step="0.1" min="0" placeholder="0.0" >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="urea-bonus">
+                            Urea Bonus per Unit
+                            <span class="unit">(₹/mg under limit)</span>
+                            <span class="bonus-indicator bonus-positive">
+                                <i class="fas fa-plus"></i>
+                                Bonus
+                            </span>
+                        </label>
+                        <input type="number" id="urea-bonus" name="urea_bonus" step="0.01" min="0" placeholder="0.00" >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bacterial Standards Section -->
+            <div class="config-section">
+                <h3>
+                    <i class="fas fa-bacteria"></i>
+                    Bacterial Standards
+                </h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bacteria-max">
+                            Maximum Bacterial Count
+                            <span class="unit">(CFU/ml)</span>
+                        </label>
+                        <input type="number" id="bacteria-max" name="bacteria_max" step="1000" min="0" placeholder="0" >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bacteria-bonus">
+                            Bacteria Bonus per Unit
+                            <span class="unit">(₹/1000 CFU under limit)</span>
+                            <span class="bonus-indicator bonus-positive">
+                                <i class="fas fa-plus"></i>
+                                Bonus
+                            </span>
+                        </label>
+                        <input type="number" id="bacteria-bonus" name="bacteria_bonus" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Card -->
+        <div class="info-card">
+            <h4>
+                <i class="fas fa-info-circle"></i>
+                Pricing Configuration Guide
+            </h4>
+            <p>• Base price is the starting price per liter of milk</p>
+            <p>• Quality bonuses (in rupees) are applied when milk exceeds minimum standards</p>
+            <p>• Penalties are deduction in milk price when milk lot fails to meet quality requirements</p>
+            <p>• All bonuses and penalties are calculated per unit above/below set thresholds</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button type="button" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                Save Configuration
+            </button>
+        </div>
+    </form>
+</div>
+<script src="{% static 'notifications/js/notify.js' %}"></script>
+<script>
+async function loadRoutes() {
+    try {
+        const response = await fetch("/graphql/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                query: `
+                  query {
+                    allRoutes {
+                      id
+                      name
+                    }
+                  }
+                `
+            })
+        });
+
+        const result = await response.json();
+        const routes = result.data.allRoutes;
+
+        const select = document.getElementById("route-select");
+
+        routes.forEach(route => {
+            const option = document.createElement("option");
+            option.value = route.id;
+            option.textContent = route.name;
+            select.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error("Error loading routes:", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadRoutes);
+
+document.getElementById("pricing-config-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const routeId = document.getElementById("route-select").value;
+    if (!routeId) {
+        alert("Please select a route first.");
+        return;
+    }
+
+    const inputs = document.querySelectorAll("#pricing-config-form input");
+    const inputObj = { routeId: parseInt(routeId) };
+
+    inputs.forEach(input => {
+    if (input.value !== "") {
+            const value = input.type === "number" ? parseFloat(input.value) : input.value;
+            const camelName = input.name.replace(/_([a-z])/g, g => g[1].toUpperCase());
+            inputObj[camelName] = value;
+        }
+    });
+
+    const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            query: `
+              mutation($input: MilkPricingConfigInput!) {
+                updateMilkPricingConfig(input: $input) {
+                  id
+                  basePrice
+                  updatedAt
+                  route {
+                    name
+                  }
+                }
+              }
+            `,
+            variables: { input: inputObj }
+        })
+    });
+
+    const result = await response.json();
+    if (result.data?.updateMilkPricingConfig) {
+        const route_name = result.data?.updateMilkPricingConfig.route.name
+        showNotification(`Your milk prices have been updated for Route ${route_name}`, 'success', 6000);
+    } else {
+        alert("Error updating config.");
+        console.error(result);
+    }
+});
+
+
+async function loadConfigForRoute(routeId) {
+    if (!routeId) return;
+
+    const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            query: `
+              query($routeId: Int!) {
+                milkPricingConfig(routeId: $routeId) {
+                  basePrice
+                  addedWaterMax
+                  fatMin
+                  fatBonus
+                  snfMin
+                  snfBonus
+                  proteinMin
+                  proteinBonus
+                  ureaMax
+                  ureaBonus
+                  bacteriaMax
+                  bacteriaBonus
+                  waterPenaltyPerPercent
+                }
+              }
+            `,
+            variables: { routeId: parseInt(routeId) }
+        })
+    });
+
+    const result = await response.json();
+    const config = result.data.milkPricingConfig;
+
+    function camelToSnake(str) {
+            return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        }
+
+    if (config) {
+        for (const [key, value] of Object.entries(config)) {
+        const inputName = camelToSnake(key); 
+        const input = document.querySelector(`[name=${inputName}]`);
+        if (input) input.value = value;
+    }
+    } else {
+        document.querySelectorAll("#pricing-config-form input").forEach(i => i.value = "");
+    }
+}
+
+document.getElementById("route-select").addEventListener("change", (e) => {
+    loadConfigForRoute(e.target.value);
+});
+</script>
+
+
+<style>
+    :root {
+        --primary-color: #2c5282;
+        --secondary-color: #ebf8ff;
+        --text-color: #333;
+        --border-color: #e2e8f0;
+        --success-color: #38a169;
+        --warning-color: #d69e2e;
+        --danger-color: #e53e3e;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 30px;
+    }
+
+    h1 {
+        color: var(--primary-color);
+        margin-bottom: 25px;
+        font-weight: 600;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .route-selection {
+        background-color: var(--secondary-color);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        max-width: 400px;
+    }
+
+    .filter-group label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #4a5568;
+    }
+
+    .filter-group select {
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 16px;
+        background-color: white;
+    }
+
+    .filter-group select:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.2);
+    }
+
+    .pricing-configuration {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 30px;
+    }
+
+    .config-section {
+        background-color: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-color);
+    }
+
+    .config-section h3 {
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .config-section h3 i {
+        color: #4299e1;
+    }
+
+    .form-grid {
+        display: grid;
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #4a5568;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-group label .unit {
+        color: #718096;
+        font-weight: normal;
+        font-size: 0.9em;
+    }
+
+    .form-group input {
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 16px;
+        background-color: white;
+    }
+
+    .form-group input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.2);
+    }
+
+
+    .form-group input[type="number"]::-webkit-outer-spin-button,
+    .form-group input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .bonus-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+        margin-left: 10px;
+    }
+
+    .bonus-positive {
+        background-color: #c6f6d5;
+        color: #22543d;
+    }
+
+    .bonus-negative {
+        background-color: #fed7d7;
+        color: #742a2a;
+    }
+
+    .penalty-indicator {
+        background-color: #fed7d7;
+        color: #742a2a;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background-color: #2b6cb0;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #2b6cb0;
+    }
+
+    .btn-secondary {
+        background-color: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+        background-color: #cbd5e0;
+    }
+
+    .info-card {
+        background-color: #f0fff4;
+        border: 1px solid #9ae6b4;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 30px;
+    }
+
+    .info-card h4 {
+        color: #22543d;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-card p {
+        color: #276749;
+        margin: 5px 0;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .pricing-configuration {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}

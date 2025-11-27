@@ -13,7 +13,7 @@
     }
     
     .container {
-      max-width: 1000px;
+      max-width: 10000px;
       margin: 0 auto;
       background-color: white;
       border-radius: 8px;
@@ -118,7 +118,7 @@ ul.messages li.info {
       </ul>
     {% endif %}
 
-    <h1>Supplier List</h1>
+    <h1>List of Suppliers enrolled</h1>
     
     <table class="supplier-table">
       <thead>
@@ -126,6 +126,7 @@ ul.messages li.info {
           <th>ID</th>
           <th>Name of Supplier</th>
           <th>Email</th>
+          <th>Milk Cooperative (route)</th>
           <th>Phone</th>
           <th>Daily Capacity</th>
           <th>Total Cows</th>
@@ -150,6 +151,9 @@ async function loadSuppliers() {
           dailyCapacity
           totalDairyCows
           annualOutput
+          route {
+            name
+          }
         }
       }
     `;
@@ -172,6 +176,7 @@ async function loadSuppliers() {
           <td>${supplier.id}</td>
           <td>${supplier.user.username || ""}</td>
           <td>${supplier.email || ""}</td>
+          <td>${supplier.route ? supplier.route.name : "-"}</td>
           <td>${supplier.phoneNumber || ""}</td>
           <td>${supplier.dailyCapacity || ""}</td>
           <td>${supplier.totalDairyCows || ""}</td>

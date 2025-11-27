@@ -1,0 +1,611 @@
+{% extends "base.html" %}
+  {% block title %}Milk Storage Silo Management{% endblock %}
+  {% block content %}
+  <style>
+      .container {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 20px;
+          box-sizing: border-box; 
+      }
+
+      header {
+          text-align: center;
+          margin-bottom: 30px;
+      }
+
+      h1 {
+          color: #1e40af;
+          margin-bottom: 20px;
+          font-weight: 700;
+          font-size: 2rem;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: nowrap; 
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
+        margin-bottom: 40px;
+        border: 1px solid #dbeafe;
+        overflow-x: auto; 
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 140px; 
+      }
+
+      label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #1e40af;
+      }
+
+
+      select, input, button {
+          padding: 12px;
+          border: 1px solid #bfdbfe;
+          border-radius: 3px;
+          font-size: 16px;
+          background: #f8fafc;
+          transition: border-color 0.3s;
+      }
+
+      select:focus, input:focus {
+          outline: none;
+          border-color: #3b82f6;
+      }
+
+      #pump-button {
+          background: #3487d4;
+          color: white;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s;
+          font-weight: 600;
+          margin-top: 25px;
+          height: 48px;
+          border-radius: 8px;
+      }
+
+      #pump-button:hover:not(:disabled) {
+          background: #db0816;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(9, 9, 209, 0.4);
+      }
+
+      #pump-button:active {
+          transform: translateY(0);
+      }
+
+      #pump-button:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+          transform: none;
+      }
+
+      .visualization {
+          display: flex;
+          justify-content: center;
+          align-items: flex-end;
+          gap: 60px;
+          margin-bottom: 40px;
+          flex-wrap: wrap;
+      }
+
+      /* Table Styles */
+      .silos-table-container {
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 10px 25px rgba(30, 64, 175, 0.1);
+          padding: 20px;
+          margin-top: 30px;
+          border: 1px solid #dbeafe;
+          overflow-x: auto;
+      }
+
+      .table-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+      }
+
+      .table-header h2 {
+          color: #1e40af;
+          margin: 0;
+          font-size: 1.5rem;
+      }
+
+      .silos-table {
+          width: 100%;
+          border-collapse: collapse;
+      }
+
+      .silos-table th {
+          background-color: #dbeafe;
+          padding: 16px;
+          text-align: left;
+          font-weight: 600;
+          color: #1e40af;
+          border-bottom: 2px solid #bfdbfe;
+      }
+
+      .silos-table td {
+          padding: 16px;
+          border-bottom: 1px solid #e5e7eb;
+      }
+
+      .silos-table tr:nth-child(even) {
+          background-color: #f8fafc;
+      }
+
+      .silos-table tr:hover {
+          background-color: #eff6ff;
+      }
+
+      .volume-display {
+          font-weight: 600;
+      }
+
+      .capacity-display {
+          color: #4b5563;
+      }
+
+      .status-indicator {
+          display: inline-block;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          margin-right: 8px;
+      }
+
+      .status-active {
+          background-color: #10b981;
+      }
+
+      .status-inactive {
+          background-color: #ef4444;
+      }
+
+      .progress-bar {
+          width: 100%;
+          height: 8px;
+          background-color: #e5e7eb;
+          border-radius: 4px;
+          overflow: hidden;
+          margin-top: 4px;
+      }
+
+      .progress-fill {
+          height: 100%;
+          background-color: #3b82f6;
+          border-radius: 4px;
+      }
+  </style>
+
+  <div class="container">
+      <header>
+          <h1>Milk Storage Silo Management</h1>
+          <div class="controls">
+              <div class="control-group">
+                  <label for="plant-select">Select Plant</label>
+                  <select id="plant-select">
+                  </select>
+              </div>
+
+              <div class="control-group">
+                  <label for="milk-transfer">Milk Transfers</label>
+                  <select id="milk-transfer">
+                  </select>
+              </div>
+
+              <div class="control-group">
+                  <label for="silo-select">Select Silo</label>
+                  <select id="silo-select">
+                  </select>
+              </div>
+
+              <div class="control-group">
+                  <button id="pump-button">Pump into Selected Silo</button>
+              </div>
+          </div>
+      </header>
+
+      <!-- Silo Information Display -->
+      <div class="controls">
+            <div class="control-group">
+            <label>Silo Name</label>
+            <div id="silo-name-display" class="silo-info">-</div>
+          </div>
+          <div class="control-group">
+            <label>Silo Code</label>
+            <div id="silo-code-display" class="silo-info">-</div>
+          </div>
+          <div class="control-group">
+            <label>Created At</label>
+            <div id="silo-created-display" class="silo-info">-</div>
+          </div>
+        
+          <div class="control-group">
+              <label>Current Volume</label>
+              <div id="volume-display" class="volume-display">0 L</div>
+          </div>
+          <div class="control-group">
+              <label>Capacity</label>
+              <div id="capacity-display" class="capacity-display">0 L</div>
+          </div>
+          <div class="control-group">
+              <label>Available Space</label>
+              <div id="available-display" class="capacity-display">0 L</div>
+          </div>
+          
+      </div>
+
+      <!-- Silo Table -->
+      <div class="silos-table-container">
+          <div class="table-header">
+              <h2>Silo Inventory</h2>
+          </div>
+          <table class="silos-table">
+              <thead>
+                  <tr>
+                      <th>Silo Name</th>
+                      <th>Code</th>
+                      <th>Created At</th>
+                      <th>Capacity (Liters)</th>
+                      <th>Current Volume</th>
+                      <th>Utilization</th>
+                      <th>Total Milk Transfers</th>
+                      <th>Last Transfer</th>
+                      <th>Status</th>
+                  </tr>
+              </thead>
+              <tbody id="silos-table-body">
+                  <!-- Table will be populated by JavaScript -->
+                  <tr>
+                      <td colspan="9" style="text-align: center; padding: 30px; color: #6b7280;">
+                          Select a plant to load silo data
+                      </td>
+                  </tr>
+              </tbody>
+          </table>
+      </div>
+  </div>
+
+  <script>
+  //======================================================= load plants and plant details =====================================================//
+  async function loadPlants() {
+    const query = `
+      query {
+        plants {
+          id
+          name
+        }
+      }
+    `;
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      const result = await response.json();
+      const plants = result.data.plants;
+
+      const select = document.getElementById("plant-select");
+      select.innerHTML = '<option value="">-- Select Plant --</option>'; 
+
+      plants.forEach(plant => {
+        const option = document.createElement("option");
+        option.value = plant.id;
+        option.textContent = plant.name;
+        select.appendChild(option);
+      });
+
+    } catch (err) {
+      console.error("Error loading plants:", err);
+    }
+  }
+
+  //======================================================= load Milk Transfers after plant selection ==========================================//
+  async function loadMilkTransfers(plantId) {
+    const query = `
+      query($plantId: Int!) {
+        getApprovedInstantGateTransfersByPlant(plantId: $plantId) {
+          id
+          sourceType
+          arrivalDatetime
+          vehicle { id name }
+          canCollection { id name }
+          bulkCooler { id name }
+          onFarmTank { id name }
+        }
+      }
+    `;
+
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        variables: { plantId: parseInt(plantId) }
+      })
+    });
+
+    const result = await response.json();
+    const milkTransfers = result.data.getApprovedInstantGateTransfersByPlant;
+    const milkTransferSelect = document.getElementById("milk-transfer");
+    milkTransferSelect.innerHTML = '<option value="">-- Select Transfer --</option>';
+
+    milkTransfers.forEach(mt => {
+      let sourceName = "";
+
+      switch (mt.sourceType) {
+        case "can_collection":
+          sourceName = mt.canCollection?.name || "Unknown Collection";
+          break;
+        case "bulk_cooler":
+          sourceName = mt.bulkCooler?.name || "Unknown Cooler";
+          break;
+        case "on_farm_tank":
+          sourceName = mt.onFarmTank?.name || "Unknown Tank";
+          break;
+        default:
+          sourceName = "Unknown Source";
+      }
+
+      const label = `${sourceName} | ${mt.sourceType} | ${new Date(mt.arrivalDatetime).toLocaleString()}`;
+
+      const option = document.createElement("option");
+      option.value = mt.id;
+      option.textContent = label;
+      milkTransferSelect.appendChild(option);
+    });
+  }
+
+  //========================================================Load Silos based on plant selected ===============================================//
+  async function fetchSilos(plantId) {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        },
+      body: JSON.stringify({
+        query: `
+          query GetSilos($plantId: Int!) {
+            silosByPlant(plantId: $plantId) {
+              id
+              name
+              code
+              createdAt
+              currentVolume
+              capacityLiters
+              status
+              completedTransfers{
+                id 
+                arrivalDatetime
+              }
+            }
+          }
+        `,
+        variables: { plantId: plantId }
+      }),
+      
+    });
+
+    const result = await response.json();
+    console.log(result)
+    return result.data.silosByPlant;
+  }
+
+  async function populateSiloDropdown(plantId) {
+    const silos = await fetchSilos(plantId);
+    const siloSelect = document.getElementById("silo-select");
+    siloSelect.innerHTML = '<option value="">-- Select Silo --</option>'; 
+
+
+    populateSilosTable(silos);
+
+    silos.forEach(silo => {
+      const option = document.createElement("option");
+      const createdAtStr = new Date(silo.createdAt).toLocaleDateString("en-IN");
+      option.value = silo.id;
+      option.textContent = `${silo.name} (${createdAtStr})`;
+      option.dataset.volume = silo.currentVolume;
+      option.dataset.capacity = silo.capacityLiters;
+      option.dataset.name = silo.name;
+      option.dataset.code = silo.code;
+      option.dataset.createdAt = silo.createdAt; 
+      siloSelect.appendChild(option);
+    });
+  }
+
+  function populateSilosTable(silos) {
+    const tableBody = document.getElementById("silos-table-body");
+    
+    if (silos.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 30px; color: #6b7280;">
+            No silos found for this plant
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    tableBody.innerHTML = '';
+    
+    silos.forEach(silo => {
+      const utilization = (silo.currentVolume / silo.capacityLiters * 100).toFixed(5);
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td>${silo.name}</td>
+        <td>${silo.code || 'N/A'}</td>
+        <td>${new Date(silo.createdAt).toLocaleDateString()}</td>
+        <td>${silo.capacityLiters.toLocaleString()} L</td>
+        <td>${silo.currentVolume.toLocaleString()} L</td>
+        <td>
+          <div>${utilization}%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${utilization}%"></div>
+          </div>
+        </td>
+        <td style="text-align: center;">${silo.completedTransfers.length || 0}</td>
+        <td>
+          ${
+            silo.completedTransfers && silo.completedTransfers.length > 0
+              ? (() => {
+                  const latestArrival = silo.completedTransfers.reduce((latest, current) => {
+                    const latestDate = new Date(latest.arrivalDatetime);
+                    const currentDate = new Date(current.arrivalDatetime);
+                    return currentDate > latestDate ? current : latest;
+                  });
+                  return new Date(latestArrival.arrivalDatetime).toLocaleDateString();
+                })()
+              : '-'
+          }
+        </td>
+        <td>
+          <span class="status-indicator ${silo.currentVolume > 0 ? 'status-active' : 'status-inactive'}"></span>
+          ${silo.currentVolume > 0 ? 'active' : 'inactive'}
+        </td>
+
+      `;
+      
+      tableBody.appendChild(row);
+    });
+  }
+
+  function updateVolumeDisplay(volume, capacity, name = "-", code = "-", createdAt = "-") {
+    const available = capacity - volume;
+    document.getElementById("volume-display").textContent = `${volume.toLocaleString()} L`;
+    document.getElementById("capacity-display").textContent = `${capacity.toLocaleString()} L`;
+    document.getElementById("available-display").textContent = `${available.toLocaleString()} L`;
+    document.getElementById("silo-name-display").textContent = name;
+    document.getElementById("silo-code-display").textContent = code;
+
+    if (createdAt && createdAt !== "-") {
+      const date = new Date(createdAt);
+      const datePart = date.toLocaleDateString('en-GB', {
+        timeZone: 'UTC',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      const timePart = date.toLocaleTimeString('en-GB', {
+        timeZone: 'UTC',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+      document.getElementById("silo-created-display").innerHTML = `${datePart}<br>${timePart}`;
+    } else {
+      document.getElementById("silo-created-display").textContent = "-";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const plantSelect = document.getElementById("plant-select");
+    const siloSelect = document.getElementById("silo-select");
+
+    // When plant changes → load silos
+    plantSelect.addEventListener("change", e => {
+      const plantId = parseInt(e.target.value);
+      if (plantId) {
+        loadMilkTransfers(plantId);
+        populateSiloDropdown(plantId);
+      } else {
+        document.getElementById("milk-transfer").innerHTML = '<option value="">-- Select Transfer --</option>';
+        document.getElementById("silo-select").innerHTML = '<option value="">-- Select Silo --</option>';
+        document.getElementById("silos-table-body").innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 30px; color: #6b7280;">
+              Select a plant to load silo data
+            </td>
+          </tr>
+        `;
+        updateVolumeDisplay(0, 0);
+      }
+    });
+
+    siloSelect.addEventListener("change", e => {
+      const selected = e.target.options[e.target.selectedIndex];
+      if (selected.value) {
+        updateVolumeDisplay(
+        parseFloat(selected.dataset.volume), 
+        parseFloat(selected.dataset.capacity),
+        selected.dataset.name || "-",
+        selected.dataset.code || "-",
+        selected.dataset.createdAt || "-"
+      );
+      }
+    });
+
+    loadPlants();
+  });
+
+  //========================================================== assign Silo to selected Milk Transfer ========================================//
+  document.getElementById("pump-button").addEventListener("click", async () => {
+      const milkTransferId = document.getElementById("milk-transfer").value;
+      const siloId = document.getElementById("silo-select").value;
+
+      if (!milkTransferId || !siloId) {
+          alert("Please select both a Milk Transfer and a Silo.");
+          return;
+      }
+
+      const query = `
+          mutation AssignSilo($milkTransferId: Int!, $siloId: Int!) {
+              assignSiloToTransfer(milkTransferId: $milkTransferId, siloId: $siloId)
+          }
+      `;
+
+      const variables = {
+          milkTransferId: parseInt(milkTransferId),
+          siloId: parseInt(siloId)
+      };
+
+      try {
+          const response = await fetch("/graphql/", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                  query: query,
+                  variables: variables
+              })
+          });
+
+          const result = await response.json();
+
+          if (result.errors) {
+              alert("Error: " + result.errors[0].message);
+          } else {
+              alert("✅ Success: " + result.data.assignSiloToTransfer);
+              // Refresh the silo data
+              const plantId = document.getElementById("plant-select").value;
+              if (plantId) {
+                populateSiloDropdown(parseInt(plantId));
+              }
+          }
+      } catch (error) {
+          alert("Unexpected error: " + error.message);
+      }
+  });
+  </script>
+  {% endblock %}

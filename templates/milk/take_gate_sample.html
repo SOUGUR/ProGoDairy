@@ -1,0 +1,933 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gate Sample Collection{% endblock %}
+
+{% block content %}
+
+<style>
+:root {
+    --primary-color: #2363b2;
+    --secondary-color: #ebf8ff;
+    --text-color: #333;
+    --border-color: #e2e8f0;
+    --success-color: #38a169;
+    --warning-color: #d69e2e;
+    --danger-color: #e53e3e;
+    --table-header-bg:  var(--secondary-color);
+    --table-header-color: #2b6cb0;
+    --table-row-alt: #f8fafc;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 25px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filters-card {
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #4a5568;
+}
+
+.filter-group select {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+}
+
+.filter-group select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(44, 82, 130, 0.2);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2b6cb0;
+}
+
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+.btn-secondary:hover {
+    background-color: #cbd5e0;
+}
+
+.results-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border-color);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.results-count {
+    color: #718096;
+    font-weight: 500;
+}
+
+.results-count span {
+    color: #2b6cb0;
+    font-weight: 600;
+}
+
+.table-container {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background-color: var(--table-header-bg);
+    color: var(--table-header-color);
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tr:nth-child(even) {
+    background-color: var(--table-row-alt);
+}
+
+.data-table tr:hover {
+    background-color: var(--secondary-color);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #c6f6d5;
+    color: #22543d;
+}
+
+.status-pending {
+    background-color: #fefcbf;
+    color: #744210;
+}
+
+.status-inactive {
+    background-color: #fed7d7;
+    color: #742a2a;
+}
+
+.status-arrived {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.status-pending {
+    color: var(--warning-color);
+    font-weight: 500;
+}
+
+.status-delayed {
+    color: var(--danger-color);
+    font-weight: 500;
+}
+
+.sample-count {
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    max-width: 120px;
+}
+
+.form-input {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px 0 0 4px;
+    width: 60px;
+    text-align: center;
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.form-input:disabled {
+    background-color: #f8fafc;
+    color: #718096;
+}
+
+.input-suffix {
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-left: none;
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    color: #718096;
+    font-size: 0.9em;
+}
+
+/* Switch Toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e0;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--success-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+input:disabled + .slider {
+    background-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 25px;
+    border-top: 1px solid var(--border-color);
+}
+
+.action-info {
+    color: #718096;
+    font-size: 0.9em;
+}
+
+.action-group {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-action {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-collect {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-collect:hover {
+    background-color: #2f855a;
+}
+
+.btn-disabled {
+    background-color: #e2e8f0;
+    color: #718096;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .action-group {
+        justify-content: flex-end;
+    }
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(44, 82, 130, 0.85); /* #2c5282 with opacity - matches your primary color */
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 20px;
+  transition: background 0.3s ease;
+  backdrop-filter: blur(4px); /* Modern glass effect */
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(44, 82, 130, 0.25), 
+              0 4px 16px rgba(44, 82, 130, 0.15);
+  animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0; /* Matches your border color */
+}
+
+.modal-content h3 {
+  color: #2c5282; /* Your primary blue */
+  font-weight: 600;
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #ebf2f7; /* Matches your section borders */
+  padding-bottom: 12px;
+}
+
+.close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #718096; /* Your text secondary color */
+  background: none;
+  border: none;
+  line-height: 1;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.close-modal:hover {
+  color: #e53e3e; /* Error red that matches your theme */
+  background-color: #fed7d7; /* Light red background on hover */
+}
+
+/* Form elements matching your theme */
+.modal-content .form-group {
+  margin-bottom: 20px;
+}
+
+.modal-content label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #4a5568; /* Your label color */
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus,
+.modal-content select:focus {
+  border-color: #4299e1; /* Your button blue */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.modal-content .btn {
+  width: 100%;
+  padding: 14px 24px;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 8px;
+}
+
+.modal-content .btn:hover {
+  background-color: #3182ce; /* Darker blue on hover */
+}
+
+/* Scrollbar styling to match theme */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f8fafc; /* Your light background */
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .modal {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    padding: 24px 20px;
+    margin: 10px;
+  }
+  
+  .close-modal {
+    top: 15px;
+    right: 15px;
+  }
+}
+
+</style>
+<div class="container">
+    <h1>
+        <i class="fas fa-clipboard-check"></i>
+        Gate Sample Collection
+    </h1>
+
+    <!-- Selection Section -->
+    <div class="filters-card">
+        <div class="section-title">Select Collection Parameters</div>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="destinationSelect">Select Destination</label>
+                <select id="destinationSelect" name="destination">
+                    <option value="">-- Choose Destination --</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="milkTransferSelect">Select Milk Transfer</label>
+                <select id="milkTransferSelect" name="milk_transfer">
+                    <option value="">-- Choose Milk Transfer --</option>
+                </select>
+            </div>
+            
+            <div class="filter-group action-buttons">
+                <button type="button" class="btn btn-secondary">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Collection Table -->
+    <div class="results-section">
+        <div class="section-header">
+            <div class="results-count">Showing <span>5</span> transfers</div>
+        </div>
+        
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Milk Transfer ID</th>
+                        <th>Vehicle Arrived At</th>
+                        <th>Vehicle Name</th>
+                        <th>Society Samples</th>
+                        <th>Gate Samples Taken</th>
+                        <th>Is Stirred</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <div class="action-info">
+                Collect gate samples for quality testing and verification
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= Modal to take Gate sample ===========================================================================-->
+<div id="sampleModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h3>Take Composite Sample</h3>
+
+    <!-- Display the selected vehicle tank info -->
+    <div id="sampleSourceInfo" class="form-group" style="margin-bottom: 1rem;">
+      <strong>Source:</strong> <span id="sample_tank_label">-</span>
+      (<span id="sample_tank_id_display">-</span>)
+    </div>
+
+    <form id="sampleForm">
+      <input type="hidden" id="sample_tank_id" name="tank_id">
+      <input type="hidden" id="sample_tank_type" name="tank_type">
+
+      
+      <input type="hidden" id="sample_type" name="sample_type" value="Plant Gate sample">
+      <span>Plant Gate sample</span>
+
+      
+      <div class="form-group">
+        <label for="sample_volume">Sample Volume (ml)</label>
+        <input type="number" id="sample_volume" name="sample_volume" min="50" max="500" value="250" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="sample_temperature">Temperature (°C)</label>
+        <input type="number" id="sample_temperature" name="sample_temperature" step="0.1" value="4.0" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="sample_notes">Notes</label>
+        <textarea id="sample_notes" name="sample_notes" rows="3" placeholder="Any observations about the sample"></textarea>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Record Sample</button>
+    </form>
+  </div>
+</div>
+
+<script>
+async function loadDestinations() {
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query {
+            plants {
+              id
+              name
+            }
+          }
+        `,
+      }),
+    });
+
+    const { data } = await response.json();
+    const plants = data.plants;
+    const select = document.getElementById("destinationSelect");
+    select.length = 1;
+
+    plants.forEach((plant) => {
+      const option = document.createElement("option");
+      option.value = plant.id;
+      option.textContent = plant.name;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading destinations:", error);
+  }
+}
+
+async function loadMilkTransfers(plantId) {
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query ($plantId: Int!) {
+            getCompletedMilkTransfersByPlant(plantId: $plantId) {
+              id
+              arrivalDatetime
+              destination {
+                name
+              }
+            }
+          }
+        `,
+        variables: { plantId: parseInt(plantId) }
+      }),
+    });
+
+    const { data } = await response.json();
+    const transfers = data.getCompletedMilkTransfersByPlant;
+    const select = document.getElementById("milkTransferSelect");
+    select.length = 1;
+
+    transfers.forEach((t) => {
+      const option = document.createElement("option");
+      option.value = t.id;
+      const arrivalDate = t.arrivalDatetime ? new Date(t.arrivalDatetime) : null;
+      const formattedDate = arrivalDate
+        ? arrivalDate.toLocaleString("en-IN", {
+            timeZone: "UTC",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          })
+        : "N/A";
+      option.textContent = `Transfer #${t.id} → Arrived at: ${formattedDate}`;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading milk transfers:", error);
+  }
+}
+
+async function loadMilkTransferDetails(transferId) {
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query ($id: Int!) {
+            milkTransferById(id: $id) {
+              id
+              arrivalDatetime
+              vehicle { 
+                name
+                vehicleId
+             }
+              sourceType
+              remarks
+              status
+              gateSamplesCount
+            }
+          }
+        `,
+        variables: { id: parseInt(transferId) }
+      }),
+    });
+
+    const { data } = await response.json();
+    const transfer = data.milkTransferById;
+
+    if (!transfer) return;
+
+    const tbody = document.querySelector(".data-table tbody");
+    tbody.innerHTML = ""; // clear existing
+
+    const arrivalDateObj = transfer.arrivalDatetime ? new Date(transfer.arrivalDatetime) : null;
+
+    const formattedDate = arrivalDateObj
+    ? arrivalDateObj.toLocaleDateString("en-IN", {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        })
+    : "N/A";
+
+        const formattedTime = arrivalDateObj
+        ? arrivalDateObj.toLocaleTimeString("en-IN", {
+            timeZone: "UTC",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+            })
+        : "";
+
+        const row = document.createElement("tr");
+        row.setAttribute("data-vehicle-id", transfer.vehicle.vehicleId);
+        row.innerHTML = `
+      <td>${transfer.id}</td>
+      <td>
+        ${formattedDate}<br>
+        <small>${formattedTime}</small>
+      </td>
+      <td>${transfer.vehicle ? `${transfer.vehicle.name}<br><small>${transfer.vehicle.vehicleId}</small>` : 'N/A'}</td>
+      <td>${transfer.sourceType || "N/A"}</td>
+      <td>${transfer.gateSamplesCount}</td>
+      <td><input type="checkbox" id="checkbox-${transfer.id}" name="checkbox-${transfer.id}" ${transfer.checked ? 'checked' : ''} /></td>
+      <td><button class="btn-sample btn btn-primary">take sample</button></td>
+    `;
+
+    tbody.appendChild(row);
+    attachSampleButtonEvents();
+    document.querySelector(".results-count span").textContent = "1";
+  } catch (error) {
+    console.error("Error loading milk transfer details:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadDestinations();
+
+  document.getElementById("destinationSelect").addEventListener("change", (e) => {
+    const plantId = e.target.value;
+    if (plantId) {
+      loadMilkTransfers(plantId);
+    } else {
+      document.getElementById("milkTransferSelect").length = 1;
+    }
+  });
+
+  document.getElementById("milkTransferSelect").addEventListener("change", (e) => {
+    const transferId = e.target.value;
+    if (transferId) {
+      loadMilkTransferDetails(transferId);
+    }
+  });
+});
+
+const sampleModal = document.getElementById("sampleModal");
+const closeModalBtn = document.querySelector(".close-modal");
+const sampleForm = document.getElementById("sampleForm");
+
+function openSampleModal(transferId, vehicleId, vehicleName) {
+  document.getElementById("sample_tank_id").value = vehicleId;   // now vehicleId
+  document.getElementById("sample_tank_type").value = "vehicle"; // fixed type
+  document.getElementById("sample_tank_label").textContent = vehicleName;
+  document.getElementById("sample_tank_id_display").textContent = transferId;
+
+  sampleModal.style.display = "flex";
+}
+
+function attachSampleButtonEvents() {
+  document.querySelectorAll(".btn-sample").forEach((btn) => {
+    btn.addEventListener("click", function() {
+      const row = btn.closest("tr");
+
+      const transferId = row.querySelector("td").textContent.trim();      
+      const vehicleName = row.querySelectorAll("td")[2].textContent.trim(); 
+      const vehicleId = row.dataset.vehicleId; 
+
+      openSampleModal(transferId, vehicleId, vehicleName);
+    });
+  });
+}
+
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors.map(e => e.message).join(", "));
+  }
+
+  return result.data;  
+}
+
+function closeSampleModal() {
+  sampleModal.style.display = "none";  
+  sampleForm.reset();                   
+}
+
+sampleForm.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const tableBody = document.querySelector(".data-table tbody"); // <<< add this
+  const vehicleId = document.getElementById("sample_tank_id").value; // vehicle
+  const transferId = parseInt(document.getElementById("sample_tank_id_display").textContent); // milk transfer
+  const sampleVolume = parseInt(document.getElementById("sample_volume").value);
+  const temperature = parseFloat(document.getElementById("sample_temperature").value);
+  const remark = document.getElementById("sample_notes").value;
+
+  const input = {
+    vehicleId: vehicleId,
+    sampleVolumeMl: sampleVolume,    
+    temperatureC: temperature,
+    remark: remark
+  };
+
+  const mutation = `
+    mutation CreateSample($input: CompositeSampleInput!) {
+      createCompositeSample(input: $input) {
+        id
+        collectedAt
+        sampleVolumeMl
+        temperatureC
+        remark
+        vehicle { id name }
+      }
+    }
+  `;
+
+  try {
+    const data = await fetchGraphQL(mutation, { input });
+    alert("Sample recorded successfully!");
+    closeSampleModal();
+
+    // Update gate sample count in table
+    const row = [...tableBody.querySelectorAll("tr")]
+      .find(r => parseInt(r.querySelector("td").textContent.trim()) === transferId);
+    if (row) {
+      const countEl = row.querySelector(".samples-count");
+      if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+    }
+
+  } catch (err) {
+    console.error("Error creating sample:", err);
+    alert("Failed to record sample.");
+  }
+});
+
+closeModalBtn.addEventListener("click", () => {
+  sampleModal.style.display = "none";
+  sampleForm.reset();
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target === sampleModal) {
+    sampleModal.style.display = "none";
+    sampleForm.reset();
+  }
+});
+
+
+</script>
+
+{% endblock %}

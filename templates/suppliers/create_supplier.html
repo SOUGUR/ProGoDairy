@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Supplier List{% endblock %}
+{% block title %}Create New Supplier{% endblock %}
 
 {% block content %}
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-  <title>Create New Supplier</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,7 +17,7 @@
     }
     
     .container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: 0 auto;
       background-color: white;
       border-radius: 8px;
@@ -48,7 +47,8 @@
     input[type="text"],
     input[type="email"],
     input[type="number"],
-    textarea {
+    textarea,
+    select {
       width: 100%;
       padding: 12px;
       border: 1px solid #e2e8f0;
@@ -61,7 +61,8 @@
     input[type="text"]:focus,
     input[type="email"]:focus,
     input[type="number"]:focus,
-    textarea:focus {
+    textarea:focus,
+    select:focus {
       border-color: #63b3ed;
       outline: none;
       box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
@@ -76,38 +77,34 @@
       flex: 1;
     }
     
+    .form-actions {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      text-align: right;
+    }
+    
     #create-supplier-btn {
-      position: fixed;
-      bottom: 20px;       
-      right: 20px;        
-      z-index: 999;      
-
-      
-      padding: 12px 20px;
+      padding: 12px 30px;
       font-size: 16px;
-      border-radius: 8px;
-      background-color: #007bff; 
+      border-radius: 6px;
+      background-color: #4997cb;
       color: white;
-      font-weight: bold;
+      font-weight: 600;
       border: none;
       cursor: pointer;
-
-     
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
       transition: background-color 0.3s ease, transform 0.2s ease;
+      min-width: 150px;
     }
 
-   
     #create-supplier-btn:hover {
       background-color: #0056b3;
-      transform: translateY(-2px);
+      transform: translateY(-1px);
     }
 
-   
     #create-supplier-btn:active {
       transform: translateY(0);
     }
-
     
     .required-field::after {
       content: " *";
@@ -120,11 +117,25 @@
       font-weight: 600;
       font-size: 1.1em;
     }
+    
+    .select2-container .select2-selection--single {
+      height: 46px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 46px;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 46px;
+    }
   </style>
-</head>
-<body>
+
   <div class="container"> 
-    <form>
+    <h1>Create New Supplier</h1>
+    
+    <form id="supplier-form">
       {% csrf_token %}
       
       <div class="section-title">Basic Information</div>
@@ -133,15 +144,13 @@
         <div class="form-group">
           <label class="required-field">Select User</label>
           <select id="userSelect" name="user_id" required style="width: 100%;">
-            <option value=""> Select a user </option>
+            <option value="">Select a user</option>
             {% for user in users %}
               <option value="{{ user.id }}">{{ user.id }} — {{ user.username }}</option>
             {% endfor %}
           </select>
         </div>
       </div>
-
-
       
       <div class="form-row">
         <div class="form-group">
@@ -183,7 +192,7 @@
       
       <div class="form-group">
         <label class="required-field">Aadhar Number</label>
-        <input type="text" name="aadhar_number" value="{{ supplier.aadharNumber }}"  required>
+        <input type="text" name="aadhar_number" value="{{ supplier.aadharNumber }}" required>
       </div>
       
       <div class="form-group">
@@ -210,114 +219,149 @@
         <input type="text" name="ifsc_code" value="{{ supplier.ifscCode }}" required>
       </div>
       
-      <button type="submit" id="create-supplier-btn">Create Supplier</button>
+      <div class="form-actions">
+        <button type="submit" id="create-supplier-btn">Create Supplier</button>
+      </div>
     </form>
   </div>
-<script>
-document.addEventListener("DOMContentLoaded", async () => {
-    const userSelect = document.querySelector("select[name='user_id']");
-    const graphqlEndpoint = "/graphql/";
 
+  <script>
+document.addEventListener("DOMContentLoaded", async () => {
+
+    // 1️⃣ Ensure user has access token (via refresh cookie)
+    const ok = await initializeAccessToken();
+    if (!ok) {
+        window.location.href = "/";
+        return;
+    }
+
+    const userSelect = document.querySelector("select[name='user_id']");
+
+    // ------------------- Initialize Select2 -------------------
+    $('#userSelect').select2({
+        placeholder: "Select a user",
+        allowClear: true,
+        width: '100%',
+    });
+
+    // ------------------- Fetch Users (SECURED) -------------------
     const usersQuery = `
-      query {
-        users {
-          id
-          username
+        query {
+            users {
+                id
+                username
+            }
         }
-      }
     `;
 
-    const usersRes = await fetch(graphqlEndpoint, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ query: usersQuery })
-    });
+    try {
+        const usersRes = await securedGraphQL(usersQuery);
 
-    const usersData = await usersRes.json();
-    usersData.data.users.forEach(user => {
-        const opt = document.createElement("option");
-        opt.value = user.id;
-        opt.textContent = `${user.id} — ${user.username}`;
-        userSelect.appendChild(opt);
-    });
+        if (usersRes.errors) {
+            console.error("Error loading users:", usersRes.errors);
+            return;
+        }
 
-  
-    const form = document.querySelector("form");
+        const users = usersRes.data.users;
+
+        users.forEach(user => {
+            const opt = document.createElement("option");
+            opt.value = user.id;
+            opt.textContent = `${user.id} — ${user.username}`;
+            userSelect.appendChild(opt);
+        });
+
+        $('#userSelect').trigger('change');
+
+    } catch (err) {
+        console.error("Network error while loading users:", err);
+    }
+
+
+    // ------------------- FORM SUBMIT (SECURED) -------------------
+    const form = document.getElementById("supplier-form");
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
         const formData = new FormData(form);
+        const userId = formData.get("user_id");
+
+        if (!userId) {
+            alert("Please select a user");
+            return;
+        }
+
         const mutation = `
-          mutation {
-            createSupplier(
-              id: ${formData.get("user_id")},
-              phoneNumber: "${formData.get("phone_number")}",
-              email: "${formData.get("email")}",
-              dailyCapacity: ${parseFloat(formData.get("daily_capacity"))},
-              totalDairyCows: ${parseInt(formData.get("total_dairy_cows"))},
-              annualOutput: ${parseFloat(formData.get("annual_output"))},
-              distanceFromPlant: ${parseFloat(formData.get("distance_from_plant"))},
-              aadharNumber: "${formData.get("aadhar_number")}",
-              address: """${formData.get("address")}""",
-              bankAccountNumber: "${formData.get("bank_account_number")}",
-              bankName: "${formData.get("bank_name")}",
-              ifscCode: "${formData.get("ifsc_code")}"
+            mutation CreateSupplier(
+                $id: Int!,
+                $phoneNumber: String!,
+                $email: String!,
+                $dailyCapacity: Float!,
+                $totalDairyCows: Int!,
+                $annualOutput: Float!,
+                $distanceFromPlant: Float!,
+                $aadharNumber: String!,
+                $address: String!,
+                $bankAccountNumber: String!,
+                $bankName: String!,
+                $ifscCode: String!
             ) {
-              id
-              phoneNumber
-              email
-              user{
-                username
-              }
+                createSupplier(
+                    id: $id,
+                    phoneNumber: $phoneNumber,
+                    email: $email,
+                    dailyCapacity: $dailyCapacity,
+                    totalDairyCows: $totalDairyCows,
+                    annualOutput: $annualOutput,
+                    distanceFromPlant: $distanceFromPlant,
+                    aadharNumber: $aadharNumber,
+                    address: $address,
+                    bankAccountNumber: $bankAccountNumber,
+                    bankName: $bankName,
+                    ifscCode: $ifscCode
+                ) {
+                    id
+                    phoneNumber
+                    email
+                    user { username }
+                }
             }
-          }
         `;
 
-        const res = await fetch(graphqlEndpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"), 
-            },
-            body: JSON.stringify({ query: mutation })
-        });
+        const variables = {
+            id: parseInt(userId),
+            phoneNumber: formData.get("phone_number"),
+            email: formData.get("email"),
+            dailyCapacity: parseFloat(formData.get("daily_capacity")),
+            totalDairyCows: parseInt(formData.get("total_dairy_cows")),
+            annualOutput: parseFloat(formData.get("annual_output")),
+            distanceFromPlant: parseFloat(formData.get("distance_from_plant")),
+            aadharNumber: formData.get("aadhar_number"),
+            address: formData.get("address"),
+            bankAccountNumber: formData.get("bank_account_number"),
+            bankName: formData.get("bank_name"),
+            ifscCode: formData.get("ifsc_code"),
+        };
 
-        const data = await res.json();
-        if (data.errors) {
-            alert("Error: " + data.errors[0].message);
-        } else {
-            alert("Supplier created for " + data.data.createSupplier.email);
-            window.location.href = "/suppliers/"; 
+        try {
+            const result = await securedGraphQL(mutation, variables);
+
+            if (result.errors) {
+                alert("Error: " + result.errors[0].message);
+                return;
+            }
+
+            alert("Supplier created successfully for " + result.data.createSupplier.email);
+            window.location.href = "/suppliers/";
+
+        } catch (err) {
+            console.error("Error creating supplier:", err);
+            alert("An error occurred. Please try again.");
         }
     });
 
-    
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.startsWith(name + "=")) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 });
-
-
-$(document).ready(function() {
-  $('#userSelect').select2({
-    placeholder: "-- Select a user --",
-    allowClear: true,
-    width: 'resolve',
-  });
-});
-
 </script>
+
 {% endblock %}

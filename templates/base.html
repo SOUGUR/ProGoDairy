@@ -1,11 +1,24 @@
+
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Go Pro Dairy MS</title>
+  <link rel="icon" href="{% static 'images/favicon.png' %}" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet"> 
+  <link rel="stylesheet"  href="{% static 'themeToggle/css/themeToggle.css' %}">
+  <link rel="stylesheet"  href="{% static 'chatbot/css/chatbot.css' %}">
+  <link rel="stylesheet"  href="{% static 'notifications/css/notifications.css' %}">
+  <link rel="stylesheet"  href="{% static 'accounts/css/recent_pages.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{% static 'themeToggle/js/themeToggle.js' %}"></script>
+  <script src="{% static 'accounts/js/recent_pages.js' %}"></script>
+  <script src="{% static 'accounts/js/token_auth.js' %}"></script>
+  
   <style>
     * {
       margin: 0;
@@ -18,15 +31,20 @@
       background-color: #f4f6f9;
       color: #333;
       transition: margin-left 0.3s ease-in-out;
-      display: flex;
+      font-size: 14px; 
+
     }
+
+    body::-webkit-scrollbar {
+    width: 1px;
+   }
 
     .sidebar {
       position: fixed;
+      width:80px;
       top: 0;
       left: 0;
       height: 100vh;
-      width: 220px;
       background-color: #2c3e50;
       color: #ecf0f1;
       transition: width 0.3s ease-in-out;
@@ -34,8 +52,12 @@
       z-index: 1000;
     }
 
-    .sidebar.collapsed {
-      width: 70px;
+    .sidebar.hover {
+      width: 220px; 
+    }
+
+    .sidebar.collapsed ~ .main-content {
+    margin-left: 100px; 
     }
 
     .sidebar-header {
@@ -43,17 +65,31 @@
       align-items: center;
       padding: 1rem;
       background-color: #34495e;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: bold;
       
     }
+
+    .sidebar::-webkit-scrollbar {
+    width: 6px; 
+  }
+
 
     .sidebar-header h3 {
       margin: 0;
       overflow: hidden;
       white-space: nowrap;
+      font-size: 1.05rem;     
+      font-weight: 900;       
+      letter-spacing: 1px;     
+      color: #fffffffe;             
+      text-shadow: 0 1px 2px rgba(0,0,0,0.06); 
     }
 
+
+    ul {
+      list-style-type: none; 
+    }
     .toggle-btn, .full-sidebar-btn {
       background: none;
       border: none;
@@ -108,24 +144,21 @@
 
     .menu-icon {
       width: 24px;
-      text-align: center;
+      text-align: left;
       margin-right: 1rem;
     }
 
 
     .main-content {
       flex: 1;
-      margin-left: 160px;
-      min-height: 100vh;
+      margin-left: 220px; 
       transition: margin-left 0.3s ease-in-out;
     }
 
-    body.collapsed .main-content {
-      margin-left: 60px;
-    }
 
+    
     .page-container {
-      max-width: 1200px;
+      max-width: 2000px;
       margin: 0 auto;
     }
 
@@ -139,95 +172,363 @@
       font-size: 1.1rem;
       color: #7f8c8d;
     }
-  </style>
+
+    .menu-category {
+    margin-bottom: 5px;
+  }
+  
+  .category-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    background-color: #3e6288;
+    border-radius: 4px;
+  }
+  
+  .category-header:hover {
+    background-color: #2f8f8f;
+  }
+  
+  .category-header .menu-icon {
+    margin-right: 10px;
+    font-size: 14px;
+  }
+  
+  .category-header .menu-text {
+    flex-grow: 1;
+    font-weight: 600;
+  }
+  
+  .category-toggle {
+    transition: transform 0.1s ease;
+    font-size: 12px;
+  }
+  
+  .submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.1s ease;
+    padding-left: 20px;
+  }
+  
+  .submenu.active {
+    max-height: 1000px; 
+  }
+
+</style>
 </head>
 <body>
+
+<div id="sidebar-hotzone"></div>
 
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <h3>GoProDairy</h3>
-      <button class="toggle-btn" id="toggle-btn">
-        <i class="fas fa-chevron-left"></i>
+      <button class="toggle-btn" id="toggle-btn" title="Toggle Sidebar">
+        <img src="{% static 'images/favicon.png' %}" alt="Toggle Sidebar" width="30" height="30">
       </button>
       <button class="full-sidebar-btn" id="full-sidebar-btn">
-        <i class="fas fa-expand-arrows-alt"></i>
       </button>
     </div>
     <ul class="sidebar-menu">
-      <li class="menu-item">
-        <a href="{% url 'supplier_list' %}" class="menu-link active">
-          <span class="menu-icon"><i class="fas fa-people-carry"></i></i></span>
-          <span class="menu-text">Suppliers</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'create_supplier' %}" class="menu-link active">
-          <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
-          <span class="menu-text">Add Supplier</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'create_milk_lot' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-plus-circle"></i></span>
-          <span class="menu-text">Add Milk Lot</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'milk_lot_list' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-wine-bottle"></i></span>
-          <span class="menu-text">Milk Lots</span>
-        </a>
-      </li>
-      
-      <li class="menu-item">
-        <a href="{% url 'create_payment_bill' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-          <span class="menu-text">Payment Bills</span>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
-          <span class="menu-text">Vehicles</span>
-        </a>
-      </li>
 
-      <li class="menu-item">
-        <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
-            <span class="menu-text">Milk Pooling</span>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="milk_distribution.html" class="menu-link">
-          <span class="menu-icon"><i class="fas fa-route"></i></span>
-          <span class="menu-text">Distribution</span>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
-            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
-            <span class="menu-text">Samples & Tests</span>
-        </a>
-      </li>
-
-      <li class="menu-item">
-        <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-tachometer-alt"></i></span>
+        <span class="menu-text">Dashboard</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'accounts:user_flow' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-file-pdf"></i></span>
-            <span class="menu-text">Reports</span>
+            <span class="menu-text">User Guide</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'plants:dashboard' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-dashboard-fill"></i></span>
+            <span class="menu-text">Current Month Activity Dashboard</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'milk_market_dashboard' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-discount-percent-line"></i></span>
+            <span class="menu-text">Latest Prices and Demand</span>
+          </a>
+        </li>
+      </ul>
+  </li>
+
+  <li class="menu-category">
+    <div class="category-header">
+      <span class="menu-icon"><i class="fas fa-newspaper"></i></span>
+      <span class="menu-text">News</span>
+      <i class="fas fa-chevron-down category-toggle"></i>
+    </div>
+    <ul class="submenu">
+      <li class="menu-item">
+        <a href="" class="menu-link">
+          <span class="menu-icon"><i class="fas fa-list"></i></span>
+          <span class="menu-text">All News</span>
         </a>
       </li>
+    </ul>
+  </li>
 
+<li class="menu-category">
+    <div class="category-header">
+      <span class="menu-icon"><i class="fas fa-history"></i></i></span>
+      <span class="menu-text">Tankers and Operations</span>
+      <i class="fas fa-chevron-down category-toggle"></i>
+    </div>
+    <ul class="submenu">
       <li class="menu-item">
-        <a href="{% url 'accounts:user_access' %}" class="menu-link">
+          <a href="{% url 'tanker_usage' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-oil-can"></i></span>
+            <span class="menu-text">Set Up /Allocate Tanker</span>
+          </a>
+      </li>
+      <li class="menu-item">
+          <a href="{% url 'plants:sanitation_records' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-spray-can"></i></span>
+            <span class="menu-text">Calibration and Sanitation Records</span>
+          </a>
+      </li>
+      <li class="menu-item">
+        <a href="{% url 'plants:tanker_logs' %}"  class="menu-link">
+          <span class="menu-icon"><i class="fas fa-book"></i></span>
+          <span class="menu-text">Tanker Operations Log</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
+  <!-- Suppliers & Procurement Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-boxes"></i></span>
+        <span class="menu-text">Suppliers & Procurement</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'create_supplier' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
+            <span class="menu-text">Enroll Supplier</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'create_milk_lot' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-plus-circle"></i></span>
+            <span class="menu-text">Add Milk Lot</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'milk_lot_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-wine-bottle"></i></span>
+            <span class="menu-text">Milk Lots Record</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'supplier_list' %}" class="menu-link active">
+            <span class="menu-icon"><i class="fas fa-people-carry"></i></span>
+            <span class="menu-text">Suppliers Record</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Milk Storage & Pooling Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
+        <span class="menu-text">Milk Storage & Pooling</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'bmcu:cooler_tank' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
+            <span class="menu-text">Bulk Cooler Milk Pooling</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'on_farm_bulk_pooling' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
+            <span class="menu-text">On-Farm Tank Milk Pooling</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'can_collection' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-warehouse"></i></span>
+            <span class="menu-text">Can Collection and Segregation</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+
+    <!-- Logistics & Transport Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-truck"></i></span>
+        <span class="menu-text">Logistics & Transport</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'distribution:create_milk_transfer' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-truck-moving"></i></span>
+            <span class="menu-text">Ship Pooled Milk Lots </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'distribution:milk_transfer_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-dolly"></i></span>
+            <span class="menu-text"> Milk Shipment Records </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'distribution:gate_pass_tickets' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-coupon-3-line"></i></span>
+            <span class="menu-text">Generate Gate Passes </span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'distribution:vehicle_list' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-car-washing-fill"></i></span>
+            <span class="menu-text">Vehicles and CIP</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'distribution:add_get_vehicle_driver' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-user-plus"></i></span>
+            <span class="menu-text">Add Driver</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'distribution:vehicle_CIP_log' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-car-fill"></i></span>
+            <span class="menu-text">vehicle CIP logs</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+     <!-- Quality & Testing Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-flask"></i></span>
+        <span class="menu-text">Quality & Testing</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-text">Collect Society Sample</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_gate_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-door-closed-fill"></i></span>
+            <span class="menu-text">Collect Plant-Gate Sample</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:take_composite_sample' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-microscope"></i></span>
+            <span class="menu-text">Composite Samples (CanCollection)</span>
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'milk:list_composite_samples' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-virus-fill"></i></span>
+            <span class="menu-text">Update Composite Samples Results</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Finance & Billing Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-money-bill-wave"></i></span>
+        <span class="menu-text">Finance & Billing</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'create_payment_bill' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-bill-fill"></i></span>
+            <span class="menu-text">Payment Bills</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    
+    <!---------------------------------------------------------- Silos and Plants ---------------------------------------------------------------->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-industry category-toggle"></i></span>
+        <span class="menu-text">Plant and Silos</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'plants:pump_into_silos' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-building-3-line"></i></span>
+            <span class="menu-text">Pump into Silos</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Reporting & Admin Section -->
+    <li class="menu-category">
+      <div class="category-header">
+        <span class="menu-icon"><i class="fas fa-chart-line"></i></span>
+        <span class="menu-text">Reporting & Admin</span>
+        <i class="fas fa-chevron-down category-toggle"></i>
+      </div>
+      <ul class="submenu">
+        <li class="menu-item">
+          <a href="{% url 'accounts:user_access' %}" class="menu-link">
             <span class="menu-icon"><i class="fas fa-user-cog"></i></span>
             <span class="menu-text">Admin</span>
-        </a>
-      </li>
-
-    </ul>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'accounting:accounting_dashboard' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-currency-fill"></i></span>
+            <span class="menu-text">Balance Sheets</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'milk:milk_route_pricings' %}" class="menu-link">
+            <span class="menu-icon"><i class="fas fa-coins"></i></span>
+            <span class="menu-text">Pricing Control Panel</span>
+          </a>
+        </li>
+        <li class="menu-item">
+          <a href="{% url 'accounts:logout' %}" class="menu-link">
+            <span class="menu-icon"><i class="ri-logout-circle-line"></i></span>
+            <span class="menu-text">Log Out</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+</ul>
   </div>
 
 
@@ -238,56 +539,175 @@
     </div>
   </div>
 
+  <!-- Always visible toggle button -->
+<div id="recent-pages-toggle" title="Recent Pages">
+  <i class="fas fa-history"></i>
+</div>
 
-  <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('toggle-btn');
-    const fullSidebarBtn = document.getElementById('full-sidebar-btn');
-    const body = document.body;
+<!-- Hidden list (shown on click) -->
+<div id="recent-pages-list">
+  {% for page in recent_pages %}
+    <a href="{{ page.url }}" class="recent-page-item">
+      {{ page.title|default:"Untitled Page"|truncatechars:35 }}
+    </a>
+  {% endfor %}
+</div>
 
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-      body.classList.toggle('collapsed');
+<!------------------------------------------------------ Floating Notification Button ---------------------------------------------------->
+  <button id="notification-button" class="notification-button">
+    <i class="fas fa-bell"></i>
+    <span id="notification-badge" class="notification-badge">0</span>
+  </button>
 
-      const icon = toggleBtn.querySelector('i');
-      if (sidebar.classList.contains('collapsed')) {
-        icon.classList.remove('fa-chevron-left');
-        icon.classList.add('fa-chevron-right');
-      } else {
-        icon.classList.remove('fa-chevron-right');
-        icon.classList.add('fa-chevron-left');
-      }
-    });
+<!------------------------------------------------------- Notification Panel --------------------------------------------------------------->
+<div id="notification-panel" class="notification-panel">
+  <div class="notification-header">
+    <h3>Notifications</h3>
+    <button id="mark-all-read" class="mark-all-read">Mark all as read</button>
+  </div>
+  <div class="notification-list" id="notification-list">
+    <!-- Notifications will be injected here dynamically -->
+  </div>
+  <div class="notification-footer">
+    <a href="#">View all notifications</a>
+  </div>
+</div>
+
+<!------------------------------------------------------------------ Chat Bot Floating --------------------------------------------------->
+  <button id="chatbot-button" class="chatbot-button">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <!-------------------------------------------------------------Chat Bot window -------------------------------------------------------->
+  <div id="chatbot-window" class="chatbot-window">
+    <div class="chatbot-header">
+      <h3>Chat Assistant</h3>
+      <button id="close-chatbot" class="close-chatbot">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="chatbot-messages" class="chatbot-messages">
+      <!-- Messages will be seen here -->
+    </div>
+    <div class="chatbot-input">
+      <input type="text" id="chatbot-user-input" placeholder="Ask me anything...">
+      <button id="chatbot-send"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+  <script src="{% static 'notifications/js/notification_icon.js' %}"></script>
+<script src="{% static 'chatbot/js/chatbot.js' %}"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const hotzone = document.getElementById('sidebar-hotzone');
+  const body = document.body;
 
 
-    fullSidebarBtn.addEventListener('click', () => {
-      if (sidebar.classList.contains('collapsed')) {
-       
-        sidebar.classList.remove('collapsed');
-        body.classList.remove('collapsed');
-        fullSidebarBtn.title = "Minimize Sidebar";
-        fullSidebarBtn.querySelector('i').classList.replace('fa-expand-arrows-alt', 'fa-compress-arrows-alt');
-      } else {
-       
-        sidebar.classList.add('collapsed');
-        body.classList.add('collapsed');
-        fullSidebarBtn.title = "Expand Sidebar";
-        fullSidebarBtn.querySelector('i').classList.replace('fa-compress-arrows-alt', 'fa-expand-arrows-alt');
-      }
-    });
+  sidebar.classList.add('collapsed');
+  hotzone.addEventListener('mouseenter', () => {
+    sidebar.classList.remove('collapsed');
+    sidebar.classList.add('hover');
+    body.classList.add('sidebar-hover');
+  });
 
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      const currentPage = window.location.pathname.split('/').pop() || 'supplier_list.html';
-      const menuLinks = document.querySelectorAll('.menu-link');
-
-      menuLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === currentPage) {
-          link.classList.add('active');
+  sidebar.addEventListener('mouseleave', () => {
+    if (!sidebar.classList.contains('pinned')) {
+      sidebar.classList.remove('hover');
+      setTimeout(() => {
+        if (!sidebar.matches(':hover') && !hotzone.matches(':hover')) {
+          sidebar.classList.add('collapsed');
         }
-      });
-    });
-  </script>
+      }, 100); 
+    }
+  });
+
+
+  sidebar.addEventListener('mouseenter', () => {
+    sidebar.classList.add('hover');
+    sidebar.classList.remove('collapsed');
+  });
+
+
+const fullSidebarBtn = document.getElementById('full-sidebar-btn');
+fullSidebarBtn.addEventListener('click', () => {
+  if (sidebar.classList.contains('pinned')) {
+    sidebar.classList.remove('pinned');
+    fullSidebarBtn.title = "Expand Sidebar";
+    fullSidebarBtn.querySelector('i').classList.replace('fa-compress-arrows-alt', 'fa-expand-arrows-alt');
+
+    sidebar.classList.remove('hover');
+    sidebar.classList.add('collapsed');
+  } else {
+    sidebar.classList.add('pinned');
+    sidebar.classList.remove('collapsed');
+    sidebar.classList.add('hover');
+    fullSidebarBtn.title = "Minimize Sidebar";
+    fullSidebarBtn.querySelector('i').classList.replace('fa-expand-arrows-alt', 'fa-compress-arrows-alt');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const currentPage = window.location.pathname.split('/').pop() || 'supplier_list';
+  const menuLinks = document.querySelectorAll('.menu-link');
+
+  menuLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href').includes(currentPage)) {
+      link.classList.add('active');
+    }
+  });
+});
+
+document.querySelectorAll('.category-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const submenu = header.nextElementSibling;
+    const toggleIcon = header.querySelector('.category-toggle');
+    
+    submenu.classList.toggle('active');
+    toggleIcon.classList.toggle('fa-chevron-down');
+    toggleIcon.classList.toggle('fa-chevron-up');
+  });
+});
+    
+//================================================= making chatBot button draggable ========================================================//
+const button = document.querySelector('.chatbot-button');
+
+let isDragging = false;
+let offsetX, offsetY;
+
+button.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  offsetX = e.clientX - button.getBoundingClientRect().left;
+  offsetY = e.clientY - button.getBoundingClientRect().top;
+  button.style.transition = 'none'; 
+});
+
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  button.style.transition = ''; 
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+
+  let left = e.clientX - offsetX;
+  let top = e.clientY - offsetY;
+
+
+  const maxLeft = window.innerWidth - button.offsetWidth;
+  const maxTop = window.innerHeight - button.offsetHeight;
+  
+  if (left < 0) left = 0;
+  if (top < 0) top = 0;
+  if (left > maxLeft) left = maxLeft;
+  if (top > maxTop) top = maxTop;
+
+  button.style.left = left + 'px';
+  button.style.top = top + 'px';
+  button.style.bottom = 'auto';
+  button.style.right = 'auto';
+  button.style.position = 'fixed';
+});
+
+</script>
 </body>
 </html>

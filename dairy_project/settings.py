@@ -9,9 +9,16 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import environ
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
+# Now you can access the key securely
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,12 +33,12 @@ SECRET_KEY = "django-insecure-737g57@!i(lxxbyqo=@2=%z(8=97h79i3elsk-_2k(^b+@_oyl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.66', '127.0.0.1']
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-]   
+]
 
 # Application definition
 
@@ -49,6 +56,9 @@ INSTALLED_APPS = [
     "distribution",
     "collection_center",
     "strawberry.django",
+    "channels",
+    "notifications",
+    "accounting"
 ]
 
 MIDDLEWARE = [
@@ -59,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "accounts.middleware.PageVisitMiddleware",
 ]
 
 ROOT_URLCONF = "dairy_project.urls"
@@ -73,12 +84,16 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                'accounts.context_processors.recent_pages'
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = "dairy_project.wsgi.application"
+
+ASGI_APPLICATION = "dairy_project.asgi.application"
+
 
 GRAPHQL_URL = "/graphql"
 
@@ -90,6 +105,15 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  
+        },
+    },
 }
 
 
@@ -136,3 +160,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# FireCrawl API Key
+FIRECRAWL_API_KEY = env('FIRECRAWL_API_KEY', default=None)

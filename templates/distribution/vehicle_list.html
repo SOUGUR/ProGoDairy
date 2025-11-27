@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Vehicle List and Vehicle addition{% endblock %}
 
@@ -11,6 +12,7 @@
       margin: 0;
       padding: 20px;
       color: #333;
+      font-size: 14px; 
     }
     
     .container {
@@ -75,28 +77,11 @@
       outline: none;
       box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.2);
     }
-    
-    .floating-btn {
-    position: fixed;
-    right: 50px;
-    z-index: 999;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 8px;
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    transition: background-color 0.3s, transform 0.2s;
-    text-decoration: none;     
-    display: inline-block;     
-  }
 
   
   #create-milk-lot-btn {
-    bottom: 460px;             
+    bottom: 530px;   
+    right:50px;          
   }
 
 
@@ -165,6 +150,8 @@
     }
     
     .btn-action {
+      background-color: #4299e1; 
+      color: white;
       padding: 6px 12px;
       border-radius: 4px;
       font-size: 0.85em;
@@ -176,22 +163,14 @@
     }
     
     .btn-edit {
-      background-color: #68d391;
+      background-color: #379771d6;
       color: white;
     }
     
     .btn-edit:hover {
-      background-color: #48bb78;
+      background-color: #fc0404;
     }
     
-    .btn-delete {
-      background-color: #fc8181;
-      color: white;
-    }
-    
-    .btn-delete:hover {
-      background-color: #f56565;
-    }
     
     .empty-state {
       text-align: center;
@@ -200,7 +179,156 @@
       background-color: #f8fafc;
       border-radius: 4px;
     }
-  </style>
+
+    .btn-inline-submit {
+      background-color: #4299e1; 
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      width: 100%;
+      margin-top: 26px;
+    }
+
+    .btn-inline-submit:hover {
+      background-color: #3182ce;
+      transform: translateY(-1px);
+    }
+
+  /* =================================================== Modal CIP ======================================================================*/
+/* Modal Styles - Updated with Scrollbar */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.3s ease-out;
+  overflow-y: auto; /* Optional: if you want page to scroll too */
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto; /* Keeps it centered vertically */
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh; /* Limits height */
+  overflow-y: auto; /* Scroll inside modal */
+  border-top: 6px solid #4299e1;
+  animation: slideIn 0.3s ease-out;
+  position: relative;
+  /* Ensure modal stays centered even when scrolling */
+  transform: translateY(0);
+}
+
+/* Optional: Style scrollbar for modern look */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a5b4fc;
+}
+
+/* For Firefox */
+.modal-content {
+  scrollbar-width: thin;
+  scrollbar-color: #c7d2fe #f1f1f1;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+  opacity: 0.8;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.close:hover,
+.close:focus {
+  color: #f40f0f;
+  transform: scale(1.2);
+  opacity: 1;
+}
+
+.modal-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 1rem;
+}
+
+.modal-form label {
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.modal-form input,
+.modal-form select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: white;
+}
+
+.modal-submit {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.modal-submit:hover {
+  background-color: #3182ce;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+</style>
 </head>
 <body>
   <div class="container">
@@ -239,8 +367,10 @@
             <option value="">Select Route</option>
           </select>
         </div>
-        
-        <button type="submit" id="create-milk-lot-btn" class="floating-btn">Add Vehicle</button>
+
+          <div class="form-group">
+            <button type="submit" class="btn-inline-submit">Add Vehicle</button>
+          </div>
       </form>
     </div>
     
@@ -253,36 +383,133 @@
           <th>Capacity (L)</th>
           <th>Route</th>
           <th>Status</th>
-          <th>Actions</th>
+          <th>Add new CIP</th>
+          <th>Update latest CIP</th>
         </tr>
       </thead>
       <tbody>
-        {% for vehicle in vehicles %}
-        <tr>
-          <td>{{ vehicle.vehicle_id }}</td>
-          <td>{{ vehicle.name }}</td>
-          <td>{{ vehicle.distributor.user.username }}</td>
-          <td>{{ vehicle.capacity_liters|default:"-" }}</td>
-          <td>{{ vehicle.distributor.route.name|default:"-" }}</td>
-          <td>
-            <span class="status-indicator status-{% if vehicle.is_available %}available{% else %}unavailable{% endif %}"></span>
-            {% if vehicle.is_available %}Available{% else %}In Use{% endif %}
-          </td>
-          <td>
-            <div class="action-buttons">
-              <a href="{% url 'edit_vehicle' vehicle.id %}" class="btn-action btn-edit">Edit</a>
-              <a href="{% url 'delete_vehicle' vehicle.id %}" class="btn-action btn-delete">Delete</a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="7" class="empty-state">No vehicles found.</td>
-        </tr>
-        {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- Add CIP Modal -->
+<div id="addCipModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('addCipModal')">&times;</span>
+    <h2>Add CIP Record</h2>
+    <form id="addCipForm" class="modal-form">
+      <input type="hidden" id="add-vehicle-id" name="vehicle_id">
+      
+      <label for="add-cert-no">Certificate No *</label>
+      <input type="text" id="add-cert-no" name="certificate_no" required>
+
+      <label for="add-wash-type">Wash Type *</label>
+      <select id="add-wash-type" name="wash_type" required>
+        <option value="">Select Wash Type</option>
+        <option value="Caustic">Caustic</option>
+        <option value="Acid">Acid</option>
+        <option value="Sanitiser">Sanitiser</option>
+        <option value="Full-CIP">Full-CIP</option>
+      </select>
+
+      <label for="add-started">Started At *</label>
+      <input type="datetime-local" id="add-started" name="started_at" required>
+
+      <label for="add-finished">Finished At *</label>
+      <input type="datetime-local" id="add-finished" name="finished_at" required>
+
+      <label for="add-expiry">Expiry At *</label>
+      <input type="datetime-local" id="add-expiry" name="expiry_at" required>
+
+      <label for="add-caustic-temp">Caustic Temp (°C)</label>
+      <input type="number" step="0.1" id="add-caustic-temp" name="caustic_temp_c">
+
+      <label for="add-acid-temp">Acid Temp (°C)</label>
+      <input type="number" step="0.1" id="add-acid-temp" name="acid_temp_c">
+
+      <label for="add-caustic-conc">Caustic Conc (%)</label>
+      <input type="number" step="0.1" id="add-caustic-conc" name="caustic_conc_pct">
+
+      <label for="add-acid-conc">Acid Conc (%)</label>
+      <input type="number" step="0.1" id="add-acid-conc" name="acid_conc_pct">
+
+      <label for="add-rinse-cond">Final Rinse Conductivity (mS)</label>
+      <input type="number" step="0.1" id="add-rinse-cond" name="final_rinse_cond_ms">
+
+      <label for="add-operator">Operator Code *</label>
+      <input type="text" id="add-operator" name="operator_code" required>
+
+      <label for="add-passed">Passed?</label>
+      <select id="add-passed" name="passed">
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
+
+      <button type="submit" class="btn-primary modal-submit">Save CIP Record</button>
+    </form>
+  </div>
+</div>
+
+<!-- Update CIP Modal -->
+<div id="updateCipModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('updateCipModal')">&times;</span>
+    <h2>Update Latest CIP</h2>
+    <form id="updateCipForm" class="modal-form">
+      <input type="hidden" id="update-cip-id" name="id">
+      <input type="hidden" id="update-vehicle-id" name="vehicle_id">
+
+      <label for="update-cert-no">Certificate No *</label>
+      <input type="text" id="update-cert-no" name="certificate_no" required>
+
+      <label for="update-wash-type">Wash Type *</label>
+      <select id="update-wash-type" name="wash_type" required>
+        <option value="">Select Wash Type</option>
+        <option value="Caustic">Caustic</option>
+        <option value="Acid">Acid</option>
+        <option value="Sanitiser">Sanitiser</option>
+        <option value="Full-CIP">Full-CIP</option>
+      </select>
+
+      <label for="update-started">Started At *</label>
+      <input type="datetime-local" id="update-started" name="started_at" required>
+
+      <label for="update-finished">Finished At *</label>
+      <input type="datetime-local" id="update-finished" name="finished_at" required>
+
+      <label for="update-expiry">Expiry At *</label>
+      <input type="datetime-local" id="update-expiry" name="expiry_at" required>
+
+      <label for="update-caustic-temp">Caustic Temp (°C)</label>
+      <input type="number" step="0.1" id="update-caustic-temp" name="caustic_temp_c">
+
+      <label for="update-acid-temp">Acid Temp (°C)</label>
+      <input type="number" step="0.1" id="update-acid-temp" name="acid_temp_c">
+
+      <label for="update-caustic-conc">Caustic Conc (%)</label>
+      <input type="number" step="0.1" id="update-caustic-conc" name="caustic_conc_pct">
+
+      <label for="update-acid-conc">Acid Conc (%)</label>
+      <input type="number" step="0.1" id="update-acid-conc" name="acid_conc_pct">
+
+      <label for="update-rinse-cond">Final Rinse Conductivity (mS)</label>
+      <input type="number" step="0.1" id="update-rinse-cond" name="final_rinse_cond_ms">
+
+      <label for="update-operator">Operator Code *</label>
+      <input type="text" id="update-operator" name="operator_code" required>
+
+      <label for="update-passed">Passed?</label>
+      <select id="update-passed" name="passed">
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
+
+      <button type="submit" class="btn-primary modal-submit">Update CIP Record</button>
+    </form>
+  </div>
+</div>
+
+  <script src="{% static 'notifications/js/notify.js' %}"></script>
   <script>
 document.addEventListener("DOMContentLoaded", function () {
   fetch("/graphql/", {
@@ -403,15 +630,15 @@ document.addEventListener('DOMContentLoaded', function () {
     .then(data => {
       if (data.errors) {
         console.error("GraphQL errors:", data.errors);
-        alert("Error creating vehicle.");
+        showNotification("Error creating vehicle.", 'error', 1900);
       } else {
-        alert("Vehicle created successfully!");
+        showNotification("Vehicle added sucessfully", 'success', 1900);
         form.reset(); 
       }
     })
     .catch(err => {
       console.error("Network error:", err);
-      alert("Failed to create vehicle.");
+      showNotification("Failed to create vehicle", 'error', 1900);
     });
   });
 });
@@ -432,6 +659,7 @@ document.addEventListener("DOMContentLoaded", function () {
             name
             vehicleId
             capacityLiters
+            isOccupied
             distributor {
               user {
                 username
@@ -469,15 +697,20 @@ document.addEventListener("DOMContentLoaded", function () {
         <td>${vehicle.capacityLiters || '-'}</td>
         <td>${vehicle.route?.name || '-'}</td>
         <td>
-          <span class="status-indicator status-${vehicle.isAvailable ? "available" : "unavailable"}"></span>
-          ${vehicle.isAvailable ? "Available" : "In Use"}
+          <span class="status-indicator status-${vehicle.isOccupied ? "available" : "unavailable"}"></span>
+          ${vehicle.isOccupied ? "Available" : "In Use"}
         </td>
         <td>
-          <div class="action-buttons">
-            <a href="/vehicles/edit/${vehicle.id}/" class="btn-action btn-edit">Edit</a>
-            <a href="/vehicles/delete/${vehicle.id}/" class="btn-action btn-delete">Delete</a>
-          </div>
-        </td>
+        <button class="btn-action btn-add" onclick="openAddCipModal(${vehicle.id})">
+          <i class="fas fa-plus"></i> new CIP
+        </button>
+      </td>
+      <td>
+        <button class="btn-action btn-edit" onclick="openUpdateCipModal(${vehicle.id})">
+          <i class="fas fa-edit"></i> Update
+        </button>
+      </td>
+
       `;
       tbody.appendChild(tr);
     });
@@ -500,6 +733,254 @@ function getCookie(name) {
     }
   }
   return cookieValue;
+}
+
+// Utility: Close modal
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Open Add CIP Modal
+function openAddCipModal(vehicleId) {
+  document.getElementById('add-vehicle-id').value = vehicleId;
+  document.getElementById('addCipModal').style.display = 'block';
+}
+
+// Open Update CIP Modal (fetch latest CIP first)
+function openUpdateCipModal(vehicleId) {
+  fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `
+        query LatestCIP($vehicleId: Int!) {
+          latestCipRecord(vehicleId: $vehicleId) {
+            id
+            certificateNo
+            washType
+            startedAt
+            finishedAt
+            expiryAt
+            causticTempC
+            acidTempC
+            causticConcPct
+            acidConcPct
+            finalRinseCondMs
+            operatorCode
+            passed
+          }
+        }
+      `,
+      variables: { vehicleId: vehicleId }
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const cip = data.data.latestCipRecord;
+    if (!cip) {
+      showNotification("No CIP record found for this vehicle.", 'warning', 2000);
+      return;
+    }
+
+    // Fill form
+    document.getElementById('update-cip-id').value = cip.id;
+    document.getElementById('update-vehicle-id').value = vehicleId;
+    document.getElementById('update-cert-no').value = cip.certificateNo;
+    document.getElementById('update-wash-type').value = cip.washType;
+    document.getElementById('update-started').value = formatDateTimeLocal(cip.startedAt);
+    document.getElementById('update-finished').value = formatDateTimeLocal(cip.finishedAt);
+    document.getElementById('update-expiry').value = formatDateTimeLocal(cip.expiryAt);
+    document.getElementById('update-caustic-temp').value = cip.causticTempC || '';
+    document.getElementById('update-acid-temp').value = cip.acidTempC || '';
+    document.getElementById('update-caustic-conc').value = cip.causticConcPct || '';
+    document.getElementById('update-acid-conc').value = cip.acidConcPct || '';
+    document.getElementById('update-rinse-cond').value = cip.finalRinseCondMs || '';
+    document.getElementById('update-operator').value = cip.operatorCode;
+    document.getElementById('update-passed').value = cip.passed.toString();
+
+    document.getElementById('updateCipModal').style.display = 'block';
+  })
+  .catch(err => {
+    console.error("Error fetching CIP:", err);
+    showNotification("Failed to load CIP record.", 'error', 2000);
+  });
+}
+
+// Helper: Format ISO datetime to datetime-local
+function formatDateTimeLocal(isoString) {
+  const dt = new Date(isoString);
+  const year = dt.getUTCFullYear();
+  const month = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(dt.getUTCDate()).padStart(2, '0');
+  const hours = String(dt.getUTCHours()).padStart(2, '0');
+  const minutes = String(dt.getUTCMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+document.getElementById('addCipForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  
+  // Build input object with proper field names
+  const input = {
+    vehicleId: parseInt(formData.get('vehicle_id')),
+    certificateNo: formData.get('certificate_no'),
+    washType: formData.get('wash_type'),
+    startedAt: formData.get('started_at'),
+    finishedAt: formData.get('finished_at'),
+    expiryAt: formData.get('expiry_at'),
+    operatorCode: formData.get('operator_code'),
+    passed: formData.get('passed') === 'true'
+  };
+
+  // Handle optional numeric fields
+  const optionalFields = [
+    'caustic_temp_c',
+    'acid_temp_c', 
+    'caustic_conc_pct',
+    'acid_conc_pct',
+    'final_rinse_cond_ms'
+  ];
+
+  optionalFields.forEach(field => {
+    const value = formData.get(field);
+    if (value && value.trim() !== '') {
+      const camelCaseField = field
+        .split('_')
+        .map((word, index) => 
+          index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+        )
+        .join('');
+      input[camelCaseField] = parseFloat(value);
+    }
+  });
+
+  fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `
+        mutation AddCIP($input: CIPRecordInput!) {
+          addCipRecord(input: $input) {
+            id
+            certificateNo
+          }
+        }
+      `,
+      variables: { input }
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.errors) {
+      console.error("GraphQL errors:", data.errors);
+      throw data.errors;
+    }
+    showNotification("CIP record added successfully!", 'success', 2000);
+    closeModal('addCipModal');
+    this.reset();
+  })
+  .catch(err => {
+    console.error("Add CIP error:", err);
+    showNotification("Failed to add CIP record.", 'error', 2000);
+  });
+});
+
+// Handle Update CIP Form Submit - FIXED VERSION
+document.getElementById('updateCipForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  
+  // Build update input - only include fields that have values
+  const input = {
+    id: parseInt(formData.get('id'))
+  };
+
+  // Define all possible fields with their mappings
+  const fieldMappings = {
+    'certificate_no': 'certificateNo',
+    'wash_type': 'washType', 
+    'started_at': 'startedAt',
+    'finished_at': 'finishedAt',
+    'expiry_at': 'expiryAt',
+    'operator_code': 'operatorCode',
+    'passed': 'passed'
+  };
+
+  // Handle string/date fields
+  Object.entries(fieldMappings).forEach(([formField, graphqlField]) => {
+    const value = formData.get(formField);
+    if (value && value.trim() !== '') {
+      if (formField === 'passed') {
+        input[graphqlField] = value === 'true';
+      } else {
+        input[graphqlField] = value;
+      }
+    }
+  });
+
+  // Handle optional numeric fields
+  const numericFields = [
+    'caustic_temp_c',
+    'acid_temp_c',
+    'caustic_conc_pct', 
+    'acid_conc_pct',
+    'final_rinse_cond_ms'
+  ];
+
+  numericFields.forEach(field => {
+    const value = formData.get(field);
+    const camelCaseField = field
+      .split('_')
+      .map((word, index) => 
+        index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+      )
+      .join('');
+    
+    if (value && value.trim() !== '') {
+      input[camelCaseField] = parseFloat(value);
+    } else {
+      // Explicitly set to None for update
+      input[camelCaseField] = null;
+    }
+  });
+
+  fetch("/graphql/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `
+        mutation UpdateCIP($input: CIPRecordUpdateInput!) {
+          updateCipRecord(input: $input) {
+            id
+            certificateNo
+          }
+        }
+      `,
+      variables: { input } 
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.errors) {
+      console.error("GraphQL errors:", data.errors);
+      throw data.errors;
+    }
+    showNotification("CIP record updated successfully!", 'success', 2000);
+    closeModal('updateCipModal');
+  })
+  .catch(err => {
+    console.error("Update CIP error:", err);
+    showNotification("Failed to update CIP record.", 'error', 2000);
+  });
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  if (event.target.classList.contains('modal')) {
+    closeModal('addCipModal');
+    closeModal('updateCipModal');
+  }
 }
 </script>
 {% endblock %}

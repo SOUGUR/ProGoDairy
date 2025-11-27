@@ -570,7 +570,8 @@ async function loadPaymentBills() {
             <a href="#" class="btn-action btn-view" onclick="viewPaymentBill('${bill.id}')">View</a>
             ${bill.pdfUrl ? `<a href="${bill.pdfUrl}" class="btn-action btn-pdf">PDF</a>` : ""}
             ${!bill.isPaid ? `<a href="#" class="btn-action btn-mark-paid" onclick="markBillPaid('${bill.id}', '${bill.supplier.id}', '${bill.date}')">Mark Paid</a>` : ""}
-          </div>
+            ${`<a href="/bills/${bill.id}/invoice/" target="_blank" class="btn-action btn-view">Invoice</a>`}
+            </div>
         </td>
       `;
       tbody.appendChild(row);

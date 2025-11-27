@@ -1,0 +1,532 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Driver Management{% endblock %}
+
+{% block content %}
+
+<style>
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    font-size: 14px; 
+  }
+
+  h1 {
+    color: #2c5282;
+    margin-bottom: 25px;
+    font-weight: 600;
+    border-bottom: 2px solid #ebf2f7;
+    padding-bottom: 10px;
+  }
+
+  .filter-card {
+    background-color: #ebf8ff;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+
+  .filter-form {
+    width: 100%;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+
+  select, input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: white;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 15px;
+    border-top: 1px solid #cbd5e0;
+    padding-top: 20px;
+  }
+
+ .btn-edit {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 300;
+    cursor: pointer;
+    color: white;
+    background-color: #199542;
+    transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+    background-color: #0bff33; 
+}
+
+.btn-delete {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 300;
+    cursor: pointer;
+    color: white;
+    background-color: #ec0d0d;
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background-color: #fc0808; 
+}
+
+  .btn-primary {
+    background-color: #4299e1;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #3182ce;
+  }
+
+  .btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+  }
+
+  .btn-secondary:hover {
+    background-color: #cbd5e0;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px; 
+    align-items: center; 
+    cursor: pointer;
+  }
+
+  .drivers-section {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .section-header h2 {
+    color: #2c5282;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .results-count {
+    color: #4a5568;
+    font-size: 0.95em;
+  }
+
+  .samples-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  .samples-table th {
+    background-color: #ebf8ff;
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .samples-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .samples-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  .samples-table tr:hover {
+    background-color: #ebf8ff;
+  }
+
+  .sample-id {
+    font-weight: 600;
+    color: #2c5282;
+  }
+
+  .source-info,
+  .vehicle-info {
+    line-height: 1.4;
+  }
+
+  .source-type,
+  .vehicle-id {
+    font-size: 0.9em;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .source-name,
+  .vehicle-name {
+    font-weight: 500;
+    color: #2d3748;
+  }
+
+  .destination,
+  .volume {
+    color: #2d3748;
+    font-weight: 500;
+  }
+
+
+  .status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-active {
+    color: #22543d;
+  }
+
+  .btn-add-driver {
+    background-color: #4299e1;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    font-weight: 600;
+    padding: 12px 28px;
+    font-size: 15px;
+    transition: background-color 0.3s ease;
+    margin-top: 8px;
+    width: 100%
+}
+
+.btn-add-driver:hover { 
+    cursor: pointer;
+}
+
+
+  .btn-view {
+    padding: 4px 4px;
+    background-color: #4299e1;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    display: inline-block;
+  }
+
+  .btn-view:hover {
+    background-color: #3182ce;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #718096;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+  }
+
+  .empty-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #4a5568;
+  }
+
+  .empty-subtext {
+    font-size: 0.9rem;
+  }
+
+  
+</style>
+
+<div class="container">
+    <h1>Driver Management</h1>
+
+    <!-- Add New Driver Form -->
+    <div class="filter-card">
+        <h2 class="section-title">Add New Driver</h2>
+        <form method="POST" class="filter-form">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" placeholder="Enter driver name" required>
+                </div>
+                <div class="form-group">
+                    <label for="route">Route</label>
+                    <select id="route" name="route" class="form-control" required>
+                        <option value="">Select Route</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mobile_number">Mobile Number</label>
+                    <input type="tel" id="mobile_number" name="mobile_number" placeholder="Enter mobile number" required>
+                </div>
+                <div class="form-group">
+                    <label for="licence_no">License Number</label>
+                    <input type="text" id="licence_no" name="licence_no" placeholder="Enter license number" required>
+                </div>
+                <div class="form-group">
+                    <label for="licence_expiry">License Expiry</label>
+                    <input type="date" id="licence_expiry" name="licence_expiry" required>
+                </div>
+                <div class="form-group">
+                    <label for="working_status">Working Status</label>
+                    <select id="working_status" name="working_status" required>
+                        <option value="active" selected>Active</option>
+                        <option value="inactive">Inactive</option>
+                        </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-actions">
+                        <button type="submit" class="btn-add-driver">Add Driver</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Drivers Table -->
+    <div class="drivers-section">
+        <div class="section-header">
+            <h2>Drivers List</h2>
+        </div>
+            <table class="samples-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Route</th>
+                        <th>Mobile Number</th>
+                        <th>License Number</th>
+                        <th>License Expiry</th>
+                        <th>Working Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+    </div>
+</div>
+<script src="{% static 'notifications/js/notify.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    const routeSelect = document.getElementById("route");
+
+    const routesQuery = `
+      query {
+        allRoutes {
+          id
+          name
+        }
+      }
+    `;
+
+    try {
+        const response = await fetch("/graphql/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ query: routesQuery }),
+        });
+
+        const result = await response.json();
+        const routes = result.data.allRoutes;
+
+        routeSelect.innerHTML = '<option value="">Select Route</option>';
+        routes.forEach(route => {
+            const option = document.createElement("option");
+            option.value = route.id;
+            option.textContent = route.name;
+            routeSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Error loading routes:", error);
+    }
+});
+
+
+// ================================================ Handle Add Driver form submission ==================================================================== //
+document.querySelector(".filter-form").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const routeId = document.getElementById("route").value;
+    const mobile = document.getElementById("mobile_number").value;
+    const licence_no = document.getElementById("licence_no").value;
+    const licence_expiry = document.getElementById("licence_expiry").value;
+    const working_status = document.getElementById("working_status").value;
+
+    const is_active = (working_status === "active");
+
+    const mutation = `
+      mutation {
+        addDriver(input: {
+          name: "${name}",
+          mobile: "${mobile}",
+          licenceNo: "${licence_no}",
+          licenceExpiry: "${licence_expiry}",
+          routeId: ${routeId || null},
+          isActive: ${is_active}
+        }) {
+          name
+          route {
+            name
+          }
+        }
+      }
+    `;
+
+    try {
+
+        const response = await fetch("/graphql/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({ query: mutation }),
+        });
+
+        const result = await response.json();
+        if (result.data && result.data.addDriver) {
+            showNotification(`Driver ${result.data.addDriver.name} added successfully to route ${result.data.addDriver.route?.name || "N/A"}`, 'success', 1900);
+            document.querySelector(".filter-form").reset();
+        } else {
+            console.error(result.errors);
+            showNotification(`Failed to add driver. Check details.`, 'error', 1900);
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong while adding the driver.");
+    }
+});
+
+// ============================================================== load all drivers details ========================================================//
+async function loadDrivers() {
+  try {
+    const query = `
+      query {
+        allDrivers {
+          id
+          name
+          mobile
+          licenceNo
+          licenceExpiry
+          isActive
+          route {
+            name
+          }
+        }
+      }
+    `;
+
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    const result = await response.json();
+
+    const drivers = result.data?.allDrivers || [];
+
+    const tableBody = document.querySelector(".samples-table tbody");
+    tableBody.innerHTML = ""; 
+
+    drivers.forEach(driver => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${driver.name}</td>
+        <td>${driver.route ? driver.route.name : "—"}</td>
+        <td>${driver.mobile}</td>
+        <td>${driver.licenceNo}</td>
+        <td>${driver.licenceExpiry}</td>
+        <td>
+          <span class="${driver.isActive ? 'status-active' : 'status-inactive'}">
+            ${driver.isActive ? 'Active' : 'Inactive'}
+          </span>
+        </td>
+        <td>
+          <button class="btn-edit btn-sm btn-warning" onclick="editDriver(${driver.id})">Edit</button>
+          <button class="btn-delete btn-sm btn-danger" onclick="deleteDriver(${driver.id})">Delete</button>
+        </td>
+      `;
+
+      tableBody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Error loading drivers:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadDrivers);
+</script>
+
+
+{% endblock %}

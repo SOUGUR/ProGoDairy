@@ -1,44 +1,55 @@
-import strawberry
-from strawberry_django import type as strawberry_django_type, field
-from distribution.schema import MilkTransferType
-from suppliers.models import Supplier, MilkLot, PaymentBill
-from plants.models import Tester
-from django.contrib.auth.models import User
-from typing import List
-from strawberry.types import Info
-from strawberry.permission import BasePermission
-from django.shortcuts import get_object_or_404
-from typing import Optional
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from graphql import GraphQLError
-from datetime import date
-from distribution.schema import UserType
-from collection_center.schema import BulkCoolerType
-from plants.schema import TesterType
+from typing import List, Optional
 
+import strawberry
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Max
+from django.utils.timezone import make_aware
+from graphql import GraphQLError
+from strawberry.permission import BasePermission
+from strawberry.types import Info
+from strawberry_django import field
+
+from accounts.schema import UserType
+from accounts.utils import get_authenticated_user
+from collection_center.schema import AssignLotsPayload
+from dairy_project.graphql_types.billing import PaymentBillType
+from dairy_project.graphql_types.collection import (
+    AssignCanCollectionPayload,
+    CanCollectionType,
+    OnFarmTankType,
+)
+from dairy_project.graphql_types.milk import MilkLotType
+from dairy_project.graphql_types.suppliers import SupplierType
+from distribution.models import Route
+from suppliers.models import CanCollection, MilkLot, OnFarmTank, PaymentBill, Supplier
 
 class IsAuthenticated(BasePermission):
-    message = "User is not authenticated"
+    message = "Authentication required"
 
     def has_permission(self, source, info: Info, **kwargs):
-        return info.context.request.user.is_authenticated
+        user = get_authenticated_user(info)
+        info.context.request.user = user
+        return True
+
+@strawberry.input
+class PaginationInput:
+    page: int = 1
+    per_page: int = 30   
 
 
-@strawberry_django_type(Supplier)
-class SupplierType:
-    id: int
-    user: "UserType"
-    address: Optional[str]
-    phone_number: Optional[str]
-    email: Optional[str]
-    daily_capacity: Optional[int]
-    total_dairy_cows: Optional[int]
-    annual_output: Optional[float]
-    distance_from_plant: Optional[float]
-    aadhar_number: Optional[str]
-    bank_account_number: Optional[str]
-    bank_name: Optional[str]
-    ifsc_code: Optional[str]
+@strawberry.type
+class MilkLotPage:
+    items: List["MilkLotType"]
+    total_items: int
+    total_pages: int
+    current_page: int
+    per_page: int
 
 
 @strawberry.input
@@ -53,38 +64,10 @@ class MilkLotInput:
     snf: float
     urea_nitrogen: float
     bacterial_count: int
+    added_water_percent: Optional[float] = 0.0
 
 
-@strawberry.type
-class PaymentBillType:
-    id: int
-    total_volume_l: float
-    total_value: float
-    is_paid: bool
-    payment_date: Optional[date] = None
 
-
-@strawberry.type
-class MilkLotType:
-    id: int
-    supplier_id: int
-    tester:Optional[TesterType]
-    volume_l: float
-    fat_percent: float
-    total_price: Optional[Decimal]
-    protein_percent: float
-    urea_nitrogen: float
-    lactose_percent: float
-    total_solids: float
-    snf: float
-    price_per_litre: Optional[Decimal]
-    status: str
-    bacterial_count: int
-    date_created: Optional[date]
-    supplier: SupplierType
-    bill: Optional[PaymentBillType]
-    transfer: Optional[MilkTransferType]
-    bulk_cooler: Optional["BulkCoolerType"]
 
 
 @strawberry.input
@@ -132,7 +115,7 @@ class Query:
         except Supplier.DoesNotExist:
             return None
 
-    @strawberry.field(permission_classes=[IsAuthenticated])
+    @strawberry.field()
     def milk_lots_by_bill(self, info: Info, bill_id: int) -> List[MilkLotType]:
         return MilkLot.objects.filter(bill_id=bill_id).select_related(
             "supplier", "bill"
@@ -141,14 +124,33 @@ class Query:
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_list(
         self,
-    ) -> List[MilkLotType]:
-        try:
-            milk_lots = MilkLot.objects.select_related("supplier", "bill").order_by(
-                "-date_created"
-            )
-            return milk_lots
-        except Supplier.DoesNotExist:
-            raise GraphQLError("Supplier profile not found.")
+        info,
+        pagination: PaginationInput = PaginationInput()
+    ) -> MilkLotPage:
+
+        qs = MilkLot.objects.select_related("supplier", "bill").order_by("-date_created")
+
+        # Pagination variables
+        page = pagination.page
+        per_page = pagination.per_page
+
+        total_items = qs.count()
+        total_pages = (total_items + per_page - 1) // per_page   # Ceiling division
+
+        # Slice queryset
+        start = (page - 1) * per_page
+        end = start + per_page
+
+        items = qs[start:end]
+
+        return MilkLotPage(
+            items=items,
+            total_items=total_items,
+            total_pages=total_pages,
+            current_page=page,
+            per_page=per_page,
+        )
+
 
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_by_id(self, info: Info, id: int) -> Optional[MilkLotType]:
@@ -159,16 +161,116 @@ class Query:
             raise GraphQLError(f"Milk Lot with ID {id} not found or not authorized.")
 
     @strawberry.field(permission_classes=[IsAuthenticated])
-    def approved_milk_lot_list(self) -> List[MilkLotType]:
+    def pending_milk_lot_list(self) -> List[MilkLotType]:
         try:
             milk_lots = (
                 MilkLot.objects.select_related("supplier", "bill")
-                .filter(status="approved")
+                .filter(status="pending")
                 .order_by("-date_created")
             )
             return milk_lots
         except Supplier.DoesNotExist:
             raise GraphQLError("Supplier profile not found.")
+        
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def pending_milk_lot_list_by_supplier(self, supplier_id: int) -> List[MilkLotType]:
+        milk_lots = (
+        MilkLot.objects.select_related("supplier", "bill")
+        .filter(supplier_id=supplier_id, status="pending")
+        .order_by("-date_created")
+    )
+
+        if not milk_lots.exists():
+            raise GraphQLError("N" \
+            "no approved milk lots found for this supplier.")
+        return milk_lots
+        
+    @strawberry.field
+    def on_farm_tanks_by_supplier(self, supplier_id: int) -> List[OnFarmTankType]:
+        return OnFarmTank.objects.filter(supplier_id=supplier_id)
+    
+    @strawberry.field
+    def onfarm_tanks_by_route(self, route_id: int) -> List[OnFarmTankType]:
+        latest_datetime = (
+        OnFarmTank.objects
+        .filter(supplier__route_id=route_id)
+        .aggregate(latest=Max('created_at'))['latest']
+    )
+
+        if not latest_datetime:
+            return []  
+
+        latest_date = latest_datetime.date()  
+
+        tanks = OnFarmTank.objects.filter(
+            supplier__route_id=route_id,
+            created_at__date=latest_date  
+        ).order_by('-created_at')
+
+        return tanks
+    
+    @strawberry.field
+    def all_onfarm_tanks_by_route(
+        self,
+        route_id: int,
+        from_date: date,
+        to_date: date
+    ) -> List[OnFarmTankType]:
+
+        from_dt = make_aware(datetime.combine(from_date, datetime.min.time()))
+        to_dt = make_aware(datetime.combine(to_date, datetime.max.time()))
+
+        tanks = OnFarmTank.objects.filter(
+            supplier__route_id=route_id,
+            created_at__range=(from_dt, to_dt)
+        ).order_by("-created_at")
+
+        return [
+            OnFarmTankType(
+                id=t.id,
+                name=t.name,
+                capacity_liters=t.capacity_liters,
+                current_volume_liters=t.current_volume_liters,
+                temperature_celsius=t.temperature_celsius,
+                last_calibration_date=t.last_calibration_date,
+                created_at=t.created_at,
+                supplier=t.supplier,
+                filled_at=t.filled_at,
+                emptied_at=t.emptied_at,
+                last_cleaned_at=t.last_cleaned_at,
+                last_sanitized_at=t.last_sanitized_at,
+                service_interval_days=t.service_interval_days,
+                last_serviced_at=t.last_serviced_at,
+                is_stirred=t.is_stirred,
+            )
+            for t in tanks
+        ]
+
+    
+    @strawberry.field
+    def can_collections_by_date(
+        self, 
+        route_id: int, 
+        created_date: date
+    ) -> List[CanCollectionType]:
+        try:
+            route = Route.objects.get(id=route_id)
+            collections = CanCollection.objects.filter(
+                route=route,
+                created_at__date=created_date
+            )
+            return [
+                CanCollectionType(
+                    id=c.id,
+                    route=c.route,
+                    name=c.name,
+                    total_volume_liters=c.total_volume_liters,
+                    created_at=c.created_at
+                )
+                for c in collections
+            ]
+        except Route.DoesNotExist:
+            raise GraphQLError("Route not found")
 
     @field
     def all_payment_bills(self) -> List[PaymentBillTypeList]:
@@ -221,74 +323,39 @@ class Mutation:
         return supplier
 
     @strawberry.mutation
-    def create_milk_lot(self, info: Info, input: MilkLotInput) -> MilkLotType:
-        try:
-            tester = Tester.objects.get(id=input.tester_id)
-        except Tester.DoesNotExist:
-            raise Exception("Tester not found for the authenticated user")
+    def update_milk_lot(self, info: Info, input: MilkLotInput, lot_id: Optional[int] = None) -> MilkLotType:
+        if lot_id:
+            try:
+                milk_lot = MilkLot.objects.get(id=lot_id)
+            except MilkLot.DoesNotExist:
+                raise Exception("Milk Lot not found")
+        else:
+            milk_lot = MilkLot()
 
-        try:
-            supplier = Supplier.objects.get(id=input.supplier_id)
-        except Supplier.DoesNotExist:
-            raise Exception("Supplier not found with the given ID")
-
-        milk_lot, _ = MilkLot.objects.update_or_create(
-            supplier=supplier,
-            tester=tester,
-            defaults={
-                "volume_l": input.volume_l,
-                "fat_percent": input.fat_percent,
-                "protein_percent": input.protein_percent,
-                "lactose_percent": input.lactose_percent,
-                "total_solids": input.total_solids,
-                "snf": input.snf,
-                "urea_nitrogen": input.urea_nitrogen,
-                "bacterial_count": input.bacterial_count,
-            },
-        )
+        milk_lot.supplier_id = input.supplier_id
+        milk_lot.tester_id = input.tester_id
+        milk_lot.volume_l = input.volume_l
+        milk_lot.fat_percent = input.fat_percent
+        milk_lot.protein_percent = input.protein_percent
+        milk_lot.lactose_percent = input.lactose_percent
+        milk_lot.total_solids = input.total_solids
+        milk_lot.snf = input.snf
+        milk_lot.urea_nitrogen = input.urea_nitrogen
+        milk_lot.bacterial_count = input.bacterial_count
+        milk_lot.added_water_percent = input.added_water_percent
 
         milk_lot.evaluate_and_price()
         milk_lot.save()
-
-        return MilkLotType(
-            id=milk_lot.id,
-            supplier_id=supplier.id,
-            tester=milk_lot.tester, 
-            supplier=supplier,
-            volume_l=milk_lot.volume_l,
-            fat_percent=milk_lot.fat_percent,
-            protein_percent=milk_lot.protein_percent,
-            lactose_percent=milk_lot.lactose_percent,
-            total_solids=milk_lot.total_solids,
-            snf=milk_lot.snf,
-            urea_nitrogen=milk_lot.urea_nitrogen,
-            bacterial_count=milk_lot.bacterial_count,
-            total_price=milk_lot.total_price,
-            price_per_litre=milk_lot.price_per_litre,
-            status=milk_lot.status,
-            date_created=milk_lot.date_created,
-            bill=milk_lot.bill,
-            transfer=milk_lot.transfer,
-            bulk_cooler=milk_lot.bulk_cooler,
+        
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+        "notifications",  
+        {
+            "type": "send_notification",   
+            "message": f"Milk lot {milk_lot.id} was updated successfully!"
+        }
         )
-
-    @strawberry.mutation
-    def update_milk_lot(
-        self, info: Info, id: strawberry.ID, input: MilkLotInput
-    ) -> MilkLotType:
-        lot = get_object_or_404(MilkLot, id=id)
-        lot.volume_l = input.volume_l
-        lot.fat_percent = input.fat_percent
-        lot.protein_percent = input.protein_percent
-        lot.lactose_percent = input.lactose_percent
-        lot.total_solids = input.total_solids
-        lot.snf = input.snf
-        lot.urea_nitrogen = input.urea_nitrogen
-        lot.bacterial_count = input.bacterial_count
-
-        lot.evaluate_and_price()
-        lot.save()
-        return lot
+        return milk_lot
 
     @strawberry.mutation
     def create_payment_bill(
@@ -296,21 +363,35 @@ class Mutation:
     ) -> CreatePaymentBillPayload:
         try:
             supplier = Supplier.objects.get(id=input.supplier_id)
-            payment_date = input.payment_date
             bill_date = input.date
+            payment_date = input.payment_date
+
+            approved_lots = MilkLot.objects.filter(
+                supplier=supplier, status="approved", date_created=bill_date
+            )
+
+            total_volume = sum(lot.volume_l for lot in approved_lots)
+            total_value = sum(lot.total_price for lot in approved_lots if lot.total_price)
+
+            if total_volume == 0 or total_value == 0:
+                return CreatePaymentBillPayload(
+                    success=False,
+                    error="No approved milk lots found for this supplier on this date",
+                )
 
             bill, _ = PaymentBill.objects.update_or_create(
                 supplier=supplier,
                 date=bill_date,
                 defaults={
-                    "total_volume_l": 0,
-                    "total_value": 0,
+                    "total_volume_l": total_volume,
+                    "total_value": total_value,
                     "is_paid": input.is_paid,
                     "payment_date": payment_date,
                 },
             )
 
-            bill.calculate_totals()
+            approved_lots.update(bill=bill)
+
             return CreatePaymentBillPayload(
                 success=True,
                 bill=PaymentBillType(
@@ -320,10 +401,178 @@ class Mutation:
                     is_paid=bill.is_paid,
                 ),
             )
+
         except Supplier.DoesNotExist:
             return CreatePaymentBillPayload(success=False, error="Supplier not found")
         except Exception as e:
             return CreatePaymentBillPayload(success=False, error=str(e))
 
 
+
+    
+    @strawberry.mutation
+    def assign_milk_lots_to_onfarm_tank(
+        self,
+        tank_id: int,
+        milk_lot_ids: List[int],
+        temperature_celsius: Optional[float] = None,
+        last_cleaned_at: Optional[datetime] = None,
+        last_sanitized_at: Optional[datetime] = None,
+        last_calibration_date: Optional[datetime] = None,
+        service_interval_days: Optional[int] = None,
+        last_serviced_at: Optional[datetime] = None,
+    ) -> AssignLotsPayload:
+        try:
+            tank = OnFarmTank.objects.get(id=tank_id)
+            lots = list(MilkLot.objects.filter(id__in=milk_lot_ids))
+
+            count = tank.add_lots(*lots)
+
+            if temperature_celsius is not None:
+                tank.temperature_celsius = temperature_celsius
+            if last_cleaned_at:
+                tank.last_cleaned_at = last_cleaned_at
+            if last_sanitized_at:
+                tank.last_sanitized_at = last_sanitized_at
+            if last_calibration_date:
+                tank.last_calibration_date = last_calibration_date
+            if service_interval_days is not None:
+                tank.service_interval_days = service_interval_days
+            if last_serviced_at:
+                tank.last_serviced_at = last_serviced_at
+
+            tank.save()
+
+            return AssignLotsPayload(
+                success=True,
+                message=f"{count} milk lots assigned to On-Farm Tank {tank.name}",
+            )
+        except OnFarmTank.DoesNotExist:
+            raise GraphQLError("On-Farm Tank not found")
+        except ValueError as e:
+            raise GraphQLError(str(e))
+        except Exception as e:
+            raise GraphQLError(f"Error assigning lots: {e}")
+        
+    @strawberry.mutation
+    def assign_milk_lots_to_can_collection(
+        self,
+        can_collection_id: int,
+        milk_lot_ids: List[int],
+    ) -> AssignCanCollectionPayload:
+        print("==="*34)
+        print(can_collection_id, milk_lot_ids)
+        print("==="*34)
+        try:
+            collection = CanCollection.objects.get(id=can_collection_id)
+            lots = list(MilkLot.objects.filter(id__in=milk_lot_ids))
+
+            count = collection.add_lots(*lots)
+
+            return AssignCanCollectionPayload(
+                success=True,
+                message=f"{count} milk lots assigned to Can Collection {collection.name}",
+            )
+        except CanCollection.DoesNotExist:
+            raise GraphQLError("Can Collection not found")
+        except ValidationError as e:
+            raise GraphQLError(str(e))
+        except Exception as e:
+            raise GraphQLError(f"Error assigning lots: {e}")
+        
+    @strawberry.mutation
+    def create_can_collection(
+        self,
+        route_id: int,
+        name: str
+    ) -> CanCollectionType:
+        try:
+            route = Route.objects.get(id=route_id)
+            collection = CanCollection.objects.create(
+                route=route,
+                name=name,
+                total_volume_liters=0.0, 
+            )
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+            "notifications",  
+            {
+                "type": "send_notification",   
+                "message": f"Can Collection {name} was created successfully!"
+            }
+            )
+            return CanCollectionType(
+                id=collection.id,
+                route=collection.route,
+                name=collection.name,
+                total_volume_liters=collection.total_volume_liters,
+                created_at=collection.created_at,
+            )
+        except Route.DoesNotExist:
+            raise GraphQLError("Route not found")
+        except Exception as e:
+            raise GraphQLError(f"Error creating can collection: {e}")
+        
+    @strawberry.mutation
+    def create_onfarm_tank(self, info, tank_id: int, confirm: bool = False) -> Optional[OnFarmTankType]:
+        today = date.today()
+
+        try:
+            processed_tank = OnFarmTank.objects.get(id=tank_id)
+        except OnFarmTank.DoesNotExist:
+            raise Exception("OnFarmTank not found")
+
+        with transaction.atomic():
+            supplier = processed_tank.supplier.__class__.objects.select_for_update().get(id=processed_tank.supplier.id)
+
+            already_exists = OnFarmTank.objects.filter(
+                supplier=supplier,
+                created_at__date=today,
+                name=processed_tank.name,
+            ).exists()
+
+            if already_exists:
+                raise Exception(
+                    f"An On-Farm Tank for {supplier.user.username} has already been created today {today}."
+                )
+
+            MAX_AGE_HOURS = 96
+            if processed_tank.last_sanitized_at is None:
+                raise Exception(f"Bulk Cooler {processed_tank.name} has no sanitization record.")
+
+            age = datetime.now(timezone.utc) - processed_tank.last_sanitized_at
+            if age > timedelta(hours=MAX_AGE_HOURS):
+                if not confirm:
+                    raise Exception(
+                        f"Bulk Cooler {processed_tank.name} was last sanitized {age.days} day(s) ago. "
+                        f"Sanitation must be within {MAX_AGE_HOURS} hours. "
+                        f"Please re-sanitize before use or confirm override."
+                    )
+
+            new_tank = OnFarmTank.objects.create(
+                supplier=supplier,
+                name=processed_tank.name,
+                capacity_liters=processed_tank.capacity_liters,
+                current_volume_liters=0.0,
+                temperature_celsius=processed_tank.temperature_celsius,
+                filled_at=None,
+                emptied_at=None,
+                last_cleaned_at=processed_tank.last_cleaned_at,
+                last_sanitized_at=processed_tank.last_sanitized_at,
+                last_serviced_at=processed_tank.last_serviced_at,
+                last_calibration_date=processed_tank.last_calibration_date,
+                service_interval_days=processed_tank.service_interval_days,
+            )
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "notifications",
+                {
+                    "type": "send_notification",
+                    "message": f"A new OnFarm Tank {today} was created successfully!"
+                }
+            )
+
+            return new_tank
+            
 schema = strawberry.Schema(query=Query, mutation=Mutation)

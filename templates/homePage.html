@@ -2,16 +2,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="{% static 'images/favicon.png' %}" type="image/png" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>DairyChain - Smart Milk Collection & Transfer System</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Open+Sans&display=swap" rel="stylesheet"/>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
     <style>
         :root {
-            --primary: #1e40af;     
+            --primary: #072072;     
             --primary-light: #3b82f6; 
             --accent: #10b981;     
             --milk-white: #ffffff;
@@ -28,11 +28,27 @@
             box-sizing: border-box;
         }
 
+        ::-webkit-scrollbar {
+        width: 3px;                     
+        height: 3px;                 
+        }
+        ::-webkit-scrollbar-track {
+        background: #eee;               
+        }
+        ::-webkit-scrollbar-thumb {
+        background: #042799;             
+        border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+        background: #555;               
+        }
+
         body {
             font-family: 'Open Sans', sans-serif;
             line-height: 1.7;
             color: var(--dark);
-            background-color: #fafafa;
+            background: linear-gradient(135deg, #0869d8 0%, #2f46f5 100%);
+            overflow-x: hidden;
         }
 
         h1, h2, h3, h4, h5 {
@@ -47,55 +63,139 @@
             padding: 0 20px;
         }
 
+        /* 3D Hero Section */
         .hero {
-            background: linear-gradient(rgba(30, 64, 175, 0.85), rgba(30, 64, 175, 0.9)), url('https://source.unsplash.com/random/1600x900/?dairy-farm,milk') no-repeat center center/cover;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.95), rgba(59, 130, 246, 0.9)), 
+                        url('https://source.unsplash.com/random/1600x900/?dairy-farm,milk') no-repeat center center/cover;
             color: white;
             text-align: center;
-            padding: 6rem 1rem;
+            padding: 8rem 1rem;
             position: relative;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
         }
 
         .hero h1 {
-            font-size: 2.8rem;
+            font-size: 3.5rem;
             margin-bottom: 1rem;
             color: white;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: floatIn 1s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) rotateX(20deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
         }
 
         .hero p {
-            font-size: 1.2rem;
-            max-width: 700px;
-            margin: 0 auto 1.5rem;
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
             opacity: 0.95;
+            animation: floatIn 1s ease-out 0.3s backwards;
         }
 
-  
+        /* 3D Floating Milk Drops */
+        .floating-drops {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .drop {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            animation: float 6s infinite;
+            backdrop-filter: blur(5px);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-30px) translateX(20px) scale(1.2); opacity: 0.6; }
+        }
+
+        /* 3D Stats Cards with Glassmorphism */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.8rem;
-            margin: 4rem 0;
+            gap: 2rem;
+            margin: -4rem 0 4rem;
+            position: relative;
+            z-index: 10;
         }
 
         .stat-card {
-            background: var(--milk-white);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: var(--shadow);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
             text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border-top: 4px solid var(--accent);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+            transform-style: preserve-3d;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+            transform: translateY(-15px) rotateX(5deg);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
         }
 
         .stat-number {
-            font-size: 2.6rem;
+            font-size: 3rem;
             font-weight: 700;
-            color: var(--primary);
-            margin: 0;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 1rem 0;
         }
 
         .stat-label {
@@ -105,47 +205,133 @@
         }
 
         .stat-icon {
-            font-size: 2rem;
+            font-size: 2.5rem;
             color: var(--primary-light);
             margin-bottom: 0.5rem;
+            animation: bounce 2s infinite;
         }
 
-     
-        .process-flow {
-            background: var(--cream);
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Modern 3D Carousel */
+        .carousel-section {
+            background: rgba(255, 255, 255, 0.95);
             padding: 5rem 0;
+            position: relative;
+        }
+
+        .carousel-container {
+            position: relative;
+            height: 450px;
+            perspective: 1500px;
+            margin: 3rem auto;
+        }
+
+        .carousel-track {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .carousel-item {
+            position: absolute;
+            width: 350px;
+            height: 400px;
+            left: 50%;
+            top: 50%;
+            transform-style: preserve-3d;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .carousel-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(30, 64, 175, 0.3);
+        }
+
+        .carousel-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.5);
+        }
+
+        /* 3D Process Flow */
+        .process-flow {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(239, 246, 255, 0.95));
+            padding: 5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .process-flow::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .process-flow h2 {
             text-align: center;
             margin-bottom: 1rem;
             color: var(--primary);
-        }
-
-        .process-flow p {
-            text-align: center;
-            color: var(--gray);
-            max-width: 800px;
-            margin: 0 auto 3rem;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 10px rgba(30, 64, 175, 0.2);
         }
 
         .flow-steps {
             display: flex;
             justify-content: space-between;
             position: relative;
-            margin-top: 3rem;
+            margin-top: 4rem;
+            z-index: 2;
         }
 
         .flow-steps::before {
             content: "";
             position: absolute;
-            top: 40px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--accent);
+            top: 50px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--primary-light), var(--accent));
             z-index: 0;
             border-radius: 2px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         .flow-step {
@@ -154,221 +340,379 @@
             position: relative;
             z-index: 1;
             padding: 0 1rem;
+            transform-style: preserve-3d;
         }
 
         .step-number {
-            width: 60px;
-            height: 60px;
-            background: var(--accent);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent), #0d9668);
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1rem;
+            margin: 0 auto 1.5rem;
             font-weight: bold;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-        }
-
-        .flow-step h3 {
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary);
-        }
-
-        .flow-step p {
-            font-size: 0.95rem;
-            color: var(--gray);
-        }
-
-        .step-icon {
             font-size: 1.5rem;
-            color: var(--primary-light);
-            margin-bottom: 0.3rem;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            transition: all 0.4s ease;
+            transform-style: preserve-3d;
         }
 
-        .graph-bar {
-            height: 6px;
-            width: 100%;
-            background: #e2e8f0;
-            border-radius: 3px;
+        .flow-step:hover .step-number {
+            transform: translateY(-10px) rotateY(360deg);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.6);
+        }
+
+        /* 3D Feature Cards */
+        .features-section {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+            transform-style: preserve-3d;
+            position: relative;
             overflow: hidden;
-            margin: 8px 0;
         }
 
-        .graph-fill {
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
-            background: var(--accent);
-            border-radius: 3px;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
         }
 
+        .feature-card:hover::after {
+            transform: translateX(100%);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px) rotateX(5deg);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: rotateY(360deg);
+        }
+
+        .feature-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .section-title {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Testimonials with 3D Effect */
         .testimonials {
             padding: 5rem 0;
-            background: var(--milk-white);
-        }
-
-        .testimonials h2 {
-            text-align: center;
-            color: var(--primary);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .testimonial-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
-            margin-top: 2.5rem;
+            margin-top: 3rem;
         }
 
         .testimonial {
-            background: white;
-            border-radius: 12px;
-            padding: 1.8rem;
-            box-shadow: var(--shadow);
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(239, 246, 255, 0.9));
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
             position: relative;
-            border-left: 4px solid var(--primary-light);
+            border-left: 5px solid var(--primary-light);
+            transition: all 0.4s ease;
+            transform-style: preserve-3d;
         }
 
-        .testimonial p:first-of-type {
-            font-style: italic;
-            color: var(--dark);
+        .testimonial:hover {
+            transform: translateY(-10px) rotateX(2deg);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
         }
 
-        .testimonial-role {
-            color: var(--primary);
-            font-weight: 600;
-            margin-top: 1rem;
-            font-size: 1rem;
-        }
-
-        .quote-icon {
-            font-size: 3rem;
-            color: var(--light-blue);
-            opacity: 0.3;
-            position: absolute;
-            top: 10px;
-            right: 15px;
-        }
-
-      
+        /* CTA Section */
         .cta {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
             padding: 5rem 0;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        .cta h2 {
-            color: white;
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .cta::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: floatAround 8s infinite;
         }
 
-        .cta p {
-            color: rgba(255,255,255,0.85);
-            max-width: 600px;
-            margin: 0 auto 1.5rem;
-            font-size: 1.1rem;
+        @keyframes floatAround {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(100px, -50px); }
+            50% { transform: translate(-50px, 50px); }
+            75% { transform: translate(50px, 100px); }
         }
 
         .btn {
             display: inline-block;
             background: var(--accent);
             color: white;
-            padding: 14px 32px;
-            border-radius: 6px;
+            padding: 16px 40px;
+            border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
             font-size: 1.1rem;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
             border: none;
-            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            position: relative;
+            z-index: 2;
+            transform-style: preserve-3d;
         }
 
         .btn:hover {
             background: #0d9668;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.6);
         }
 
-      
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin: auto;
-            max-width: 1500px;
-        }
-
-        .image-item {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            height: 350px;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-origin: content-box;
-        }
-        .image-item:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); 
-            transition: all 0.3s ease; 
-            z-index: 1; 
-            cursor: pointer; 
-        }
-
-        .image-farmer { 
-            background-image: url('{% static "images/farmer.png" %}'); 
-        }
-        .image-cooler { 
-            background-image: url('{% static "images/cooler.png" %}'); 
-        }
-        .image-tanker { 
-            background-image: url('{% static "images/tanker.png" %}'); 
-        }
-        .image-lab { 
-            background-image: url('{% static "images/lab.png" %}'); 
-        }
-
+        /* Floating Buttons */
         .floating-buttons {
             position: fixed;
             top: 20px;
             right: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            z-index: 1000; 
+            gap: 15px;
+            z-index: 1000;
         }
 
         .floating-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: rgb(11, 64, 97); 
-            color: rgb(140, 222, 245);                 
-            padding: 8px 16px;
+            background: linear-gradient(135deg, rgb(11, 64, 97), rgb(30, 64, 175));
+            color: rgb(140, 222, 245);
+            padding: 12px 24px;
             font-family: 'Poppins', sans-serif;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 600;
             text-decoration: none;
-            border: 2px solid white;      
-            border-radius: 6px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            }
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+        }
 
         .floating-btn:hover {
-            background-color: white;
-            color: #1e40af;               
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, white, rgba(255,255,255,0.95));
+            color: #1e40af;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Login/Register Modal */
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            scrollbar-width: thin; 
+        }
+        .login-form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            animation: modalSlideIn 0.4s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .login-form-container::-webkit-scrollbar {
+            width: 3px; 
+        }
+
+        .login-form-container::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+
+        .login-form-container::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2); 
+            border-radius: 10px; 
+            border: 10px solid transparent; 
+        }
+        
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h3 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .close-login, .close-register {
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--gray);
+            transition: all 0.3s ease;
+        }
+
+        .close-login:hover, .close-register:hover {
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .login-submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 25px rgba(30, 64, 175, 0.3);
+        }
+
+        .login-submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(30, 64, 175, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .flow-steps { flex-direction: column; }
+            .flow-steps::before { display: none; }
+            .features-grid, .testimonial-grid { grid-template-columns: 1fr; }
+            .carousel-item { width: 300px; height: 350px; }
         }
     </style>
 </head>
 <body>
 
     <header class="hero">
+        <div class="floating-drops">
+            <div class="drop" style="left: 10%; animation-delay: 0s;"></div>
+            <div class="drop" style="left: 30%; animation-delay: 1s;"></div>
+            <div class="drop" style="left: 50%; animation-delay: 2s;"></div>
+            <div class="drop" style="left: 70%; animation-delay: 1.5s;"></div>
+            <div class="drop" style="left: 90%; animation-delay: 0.5s;"></div>
+        </div>
         <div class="container">
             <h1>Transforming India's Milk Supply Chain</h1>
             <p>Digitizing 70% of India's organized milk procurement with smart collection, testing & transfer systems</p>
@@ -400,10 +744,56 @@
         </div>
     </section>
 
+    <!-- 3D Image Carousel -->
+    <section class="carousel-section">
+        <div class="container">
+            <h2 style="color: var(--primary); font-size: 2.5rem; margin-bottom: 1rem;">Our Dairy Operations</h2>
+            <p style="text-align: center; color: var(--gray); max-width: 700px; margin: 0 auto 2rem;">Experience the complete milk collection journey from farm to processing plant</p>
+            
+            <div class="carousel-container">
+                <div class="carousel-track" id="carouselTrack">
+                    <div class="carousel-item" style="background-image: url({% static 'images/farmer.png' %}); background-size: cover; background-position: center;">
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                            <h3 style="color: white; margin-bottom: 0.5rem;">Farmer Collection</h3>
+                            <p style="margin: 0; font-size: 0.9rem;">Direct from source</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" style="background-image: url('{% static "images/cooler.png" %}'); background-size: cover; background-position: center;">
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                            <h3 style="color: white; margin-bottom: 0.5rem;">BMCU Cooling</h3>
+                            <p style="margin: 0; font-size: 0.9rem;">Temperature controlled storage</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" style="background-image: url('{% static "images/tanker.png" %}'); background-size: cover; background-position: center;">
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                            <h3 style="color: white; margin-bottom: 0.5rem;">Tanker Transfer</h3>
+                            <p style="margin: 0; font-size: 0.9rem;">Efficient bulk transport</p>
+                        </div>
+                    </div>
+                    <div class="carousel-item" style="background-image: url('{% static "images/lab.png" %}'); background-size: cover; background-position: center;">
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 1.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                            <h3 style="color: white; margin-bottom: 0.5rem;">Quality Testing</h3>
+                            <p style="margin: 0; font-size: 0.9rem;">Advanced lab analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="carousel-controls">
+                <button class="carousel-btn" onclick="rotateCarousel(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-btn" onclick="rotateCarousel(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
     <section class="process-flow">
         <div class="container">
             <h2>How DairyChain Simplifies Milk Transfers</h2>
-            <p>Our automated system handles all three collection scenarios with precision, from village to plant.</p>
+            <p style="text-align: center; color: var(--gray); max-width: 800px; margin: 0 auto 3rem;">Our automated system handles all three collection scenarios with precision, from village to plant.</p>
 
             <div class="flow-steps">
                 <div class="flow-step">
@@ -440,34 +830,99 @@
         </div>
     </section>
 
-    <div class="container">
-        <div class="image-grid">
-            <div class="image-item image-farmer"></div>
-            <div class="image-item image-cooler"></div>
-            <div class="image-item image-tanker"></div>
-            <div class="image-item image-lab"></div>
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Revolutionizing Milk Collection Logistics</h2>
+            <p class="section-subtitle">Our platform transforms traditional dairy operations with smart digital solutions</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3>Real-time Collection Monitoring</h3>
+                    <p>Track every milk lot from farm to processing plant with recorded updates on volume, quality parameters, and transfer status for better investigations.</p>
+                    <div class="feature-stats" style="font-size: 0.9rem; color: #718096; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <span class="stat-badge" style="background-color: #c6f6d5; color: #22543d; padding: 3px 10px; border-radius: 20px; font-weight: 600;">+40%</span> collection efficiency reported by users
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <h3>Tracked Quality Assurance</h3>
+                    <p>Three-tier testing system ensures milk quality at every stage - farm, collection center, and plant gate.</p>
+                    <div class="feature-stats" style="font-size: 0.9rem; color: #718096; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <span class="stat-badge" style="background-color: #c6f6d5; color: #22543d; padding: 3px 10px; border-radius: 20px; font-weight: 600;">98.7%</span> quality compliance rate
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h3>Intelligent Route Management</h3>
+                    <p>Optimize collection routes based on updated data from 300+ BMCUs across India.</p>
+                    <div class="feature-stats" style="font-size: 0.9rem; color: #718096; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <span class="stat-badge" style="background-color: #c6f6d5; color: #22543d; padding: 3px 10px; border-radius: 20px; font-weight: 600;">2.5 hrs</span> average daily time savings
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <h3>Transparent Payment System</h3>
+                    <p>Automated payments based on quality parameters with complete audit trails.</p>
+                    <div class="feature-stats" style="font-size: 0.9rem; color: #718096; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <span class="stat-badge" style="background-color: #c6f6d5; color: #22543d; padding: 3px 10px; border-radius: 20px; font-weight: 600;">24 hrs</span> faster payments to farmers
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-snowflake"></i>
+                    </div>
+                    <h3>Cold Chain Integrity</h3>
+                    <p>Monitor temperature at every stage from farm bulk tanks to transport vehicles.</p>
+                    <div class="feature-stats" style="font-size: 0.9rem; color: #718096; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <span class="stat-badge" style="background-color: #c6f6d5; color: #22543d; padding: 3px 10px; border-radius: 20px; font-weight: 600;">4°C</span> maintained throughout
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Advanced Analytics</h3>
+                    <p>Powerful insights into collection patterns, quality trends, and operational efficiency.</p>
+                    <div class="feature-stats" style="font-size: 0.9rem; color: #718096; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <span class="stat-badge" style="background-color: #c6f6d5; color: #22543d; padding: 3px 10px; border-radius: 20px; font-weight: 600;">15%</span> reduced milk spoilage
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-
+    </section>
 
     <section class="testimonials">
         <div class="container">
             <h2>Trusted by India's Dairy Ecosystem</h2>
             <div class="testimonial-grid">
                 <div class="testimonial">
-                    <i class="quote-icon fas fa-quote-right"></i>
+                    <i class="quote-icon fas fa-quote-right" style="font-size: 3rem; color: var(--light-blue); opacity: 0.3; position: absolute; top: 10px; right: 15px;"></i>
                     <p>"With DairyChain, our collection efficiency improved by 40%. The three-tier testing gives us complete quality control."</p>
-                    <p class="testimonial-role">- Plant Manager, Gujarat Co-op Dairy</p>
+                    <p class="testimonial-role" style="color: var(--primary); font-weight: 600; margin-top: 1rem; font-size: 1rem;">- Plant Manager, Gujarat Co-op Dairy</p>
                 </div>
                 <div class="testimonial">
-                    <i class="quote-icon fas fa-quote-right"></i>
+                    <i class="quote-icon fas fa-quote-right" style="font-size: 3rem; color: var(--light-blue); opacity: 0.3; position: absolute; top: 10px; right: 15px;"></i>
                     <p>"No more paper records! Now I get instant payments when my milk is transferred to the tanker."</p>
-                    <p class="testimonial-role">- Farmer, Maharashtra</p>
+                    <p class="testimonial-role" style="color: var(--primary); font-weight: 600; margin-top: 1rem; font-size: 1rem;">- Farmer, Maharashtra</p>
                 </div>
                 <div class="testimonial">
-                    <i class="quote-icon fas fa-quote-right"></i>
+                    <i class="quote-icon fas fa-quote-right" style="font-size: 3rem; color: var(--light-blue); opacity: 0.3; position: absolute; top: 10px; right: 15px;"></i>
                     <p>"The system automatically routes milk to the nearest BMCU, saving us 2 hours daily in logistics."</p>
-                    <p class="testimonial-role">- Collection Agent, Karnataka</p>
+                    <p class="testimonial-role" style="color: var(--primary); font-weight: 600; margin-top: 1rem; font-size: 1rem;">- Collection Agent, Karnataka</p>
                 </div>
             </div>
         </div>
@@ -475,16 +930,278 @@
 
     <section class="cta">
         <div class="container">
-            <h2>Ready to Modernize Your Milk Collection?</h2>
-            <p>Join 1,200+ dairies using DairyChain for seamless milk transfers</p>
+            <h2 style="color: white; font-size: 2.5rem; margin-bottom: 1rem;">Ready to Modernize Your Milk Collection?</h2>
+            <p style="color: rgba(255,255,255,0.9); max-width: 700px; margin: 0 auto 2rem; font-size: 1.2rem;">Join 1,200+ dairies using DairyChain for seamless milk transfers</p>
         </div>
     </section>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal">
+        <div class="login-form-container">
+            <div class="login-header">
+                <h3>Login</h3>
+                <span class="close-login">&times;</span>
+            </div>
+            <form class="login-form" method="POST" action="#">
+                <div class="form-group">
+                    <label for="id_username">Email/Username</label>
+                    <input type="text" id="id_username" name="username" placeholder="Enter your email or username" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_password">Password</label>
+                    <input type="password" id="id_password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="login-submit-btn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="register-modal" class="login-modal">
+        <div class="login-form-container">
+            <div class="login-header">
+                <h3>Register</h3>
+                <span class="close-register">&times;</span>
+            </div>
+            <form class="login-form" id="register-form" method="POST" action="">
+                <div class="form-group">
+                    <label for="id_username">Phone Number</label>
+                    <input type="tel" id="reg_username" name="username" placeholder="Enter 10-digit phone number" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_first_name">First Name</label>
+                    <input type="text" id="id_first_name" name="first_name" placeholder="Enter your first name" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_last_name">Last Name</label>
+                    <input type="text" id="id_last_name" name="last_name" placeholder="Enter your last name" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_password1">Password</label>
+                    <input type="password" id="id_password1" name="password1" placeholder="Create a password" minlength="8" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_password2">Confirm Password</label>
+                    <input type="password" id="id_password2" name="password2" placeholder="Confirm your password" required>
+                    <div id="password-error" style="color: red; font-size: 14px; margin-top: 5px; display: none;">
+                        Passwords do not match.
+                    </div>
+                </div>
+                <button type="submit" class="login-submit-btn">Register</button>
+            </form>
+        </div>
+    </div>
     
     <div class="floating-buttons">
         <a href="#" class="floating-btn demo-btn">Request Demo</a>
         <a href="#" class="floating-btn login-btn">Login</a>
-        <a href="#" class="floating-btn login-btn">Register</a>
+        <a href="#" class="floating-btn register-trigger">Register</a>
     </div>
 
+    <script src="{% static 'notifications/js/notify.js' %}"></script>
+    <script>
+        // Carousel functionality 
+        let currentRotation = 0;
+        const items = document.querySelectorAll('.carousel-item');
+        const totalItems = items.length;
+
+        function positionCarouselItems() {
+            items.forEach((item, index) => {
+                const angle = (360 / totalItems) * index + currentRotation;
+                const radian = (angle * Math.PI) / 180;
+                const radius = 400;
+                
+                const x = Math.sin(radian) * radius;
+                const z = Math.cos(radian) * radius;
+                const scale = (z + radius) / (radius * 2);
+                const opacity = scale;
+                
+                item.style.transform = `translate(-50%, -50%) translate3d(${x}px, 0, ${z}px) scale(${scale})`;
+                item.style.opacity = opacity;
+                item.style.zIndex = Math.floor(scale * 100);
+            });
+        }
+
+        function rotateCarousel(direction) {
+            currentRotation += direction * (360 / totalItems);
+            positionCarouselItems();
+        }
+
+        positionCarouselItems();
+        setInterval(() => rotateCarousel(1), 4000);
+
+
+        let ACCESS_TOKEN = null;
+        const loginModal = document.getElementById('login-modal');
+        const loginBtn = document.querySelector('.login-btn');
+        const closeBtn = document.querySelector('.close-login');
+
+        const registerModal = document.getElementById('register-modal');
+        const registerBtn = document.querySelector('.register-trigger');
+        const closeRegister = document.querySelector('.close-register');
+
+        loginBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            loginModal.style.display = 'flex';
+        });
+
+        closeBtn.addEventListener('click', function () {
+            loginModal.style.display = 'none';
+        });
+
+        registerBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            registerModal.style.display = 'flex';
+        });
+
+        closeRegister.addEventListener('click', () => {
+            registerModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function (event) {
+            if (event.target === loginModal) loginModal.style.display = 'none';
+            if (event.target === registerModal) registerModal.style.display = 'none';
+        });
+
+        //=============================== GraphQL Helper=================================================
+        async function callGraphQL(query, variables = {}) {
+            const response = await fetch("/graphql/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ query, variables }),
+            });
+            return response.json();
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        //===================================================== Login Handler============================================================
+        document.querySelector('#login-modal .login-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const username = document.querySelector('#login-modal #id_username').value;
+            const password = document.querySelector('#login-modal #id_password').value;
+
+            const query = `
+                mutation Login($username: String!, $password: String!) {
+                    loginUser(username: $username, password: $password) {
+                        accessToken
+                        message
+                    }
+                }
+            `;
+
+            const result = await callGraphQL(query, { username, password });
+            const data = result.data.loginUser;
+
+            if (!data.accessToken) {
+                showNotification(data.message, "error", 2500);
+                return;
+            }
+
+            ACCESS_TOKEN = data.accessToken;
+            loginModal.style.display = 'none';
+            showNotification(data.message, 'success', 2000);
+
+            setTimeout(() => {
+                window.location.href = "/accounts/user-flow/";
+            }, 2100);
+        });
+
+        //========================================================== Register Handler======================================================
+        document.getElementById('register-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById('reg_username').value;
+            const first_name = document.getElementById('id_first_name').value;
+            const last_name = document.getElementById('id_last_name').value;
+            const password1 = document.getElementById('id_password1').value;
+            const password2 = document.getElementById('id_password2').value;
+            const errorDiv = document.getElementById('password-error');
+
+            if (password1 !== password2) {
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
+            const query = `
+                mutation Register(
+                    $username: String!,
+                    $password: String!,
+                    $first_name: String,
+                    $last_name: String
+                ) {
+                    register(
+                        username: $username,
+                        password: $password,
+                        firstName: $first_name,
+                        lastName: $last_name
+                    )
+                }
+            `;
+
+            const variables = {
+                username,
+                password: password1,
+                first_name,
+                last_name
+            };
+
+            const result = await callGraphQL(query, variables);
+            registerModal.style.display = 'none';
+            showNotification(result.data.register, 'info', 2000);
+            setTimeout(() => {
+                window.location.href = "/accounts/user-flow/";
+            }, 2100);
+        });
+
+        // Secured GraphQL
+        async function securedGraphQL(query, variables = {}) {
+            const response = await fetch("/graphql/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + ACCESS_TOKEN,
+                },
+                body: JSON.stringify({ query, variables }),
+            });
+
+            const data = await response.json();
+
+            if (data.errors && data.errors[0].message.includes("Signature has expired")) {
+                const refreshQuery = `
+                    mutation {
+                        refreshAccess {
+                            accessToken
+                            message
+                        }
+                    }
+                `;
+
+                const refreshResult = await callGraphQL(refreshQuery);
+                ACCESS_TOKEN = refreshResult.data.refreshAccess.accessToken;
+                return securedGraphQL(query, variables);
+            }
+
+            return data;
+        }
+    </script>
 </body>
 </html>

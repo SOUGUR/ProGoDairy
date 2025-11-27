@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Indian Milk Collection Flow – Cooperative Model{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header>
+        <h1><i class="fas fa-cow"></i> Indian Milk Collection Flow – Cooperative Model</h1>
+        <p class="subtitle">Amul / NDDB pattern – twice-daily village collection to dairy plant</p>
+    </header>
+
+    <div class="flow-container">
+
+        <!-- 1. FARMER -->
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-user-tie"></i> Farmer</h2>
+                <p class="step-description">Registered milk producer brings milk to the Dairy Co-op Society (DCS) in 40-L cans.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-sun"></i> Morning window</div>
+                        <p>6 – 8 AM</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-moon"></i> Evening window</div>
+                        <p>4 – 6 PM</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">Farmer</span>, <span class="highlight">MilkLot</span></div>
+            </div>
+        </div>
+
+        <!-- 2. DCS WEIGH & SAMPLE -->
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-balance-scale"></i> DCS – weigh & individual test</h2>
+                <p class="step-description">Each can is weighed, a 20 ml sample drawn, Fat & SNF tested on EMT.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-receipt"></i> Result slip</div>
+                        <p>Printed instantly; same data uploaded to union server</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-coins"></i> Same-day pay</div>
+                        <p>Money reaches farmer’s bank/PMCU card by evening</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">ProducerSample</span>, <span class="highlight">PaymentLine</span></div>
+            </div>
+        </div>
+
+        <!-- 3. POOL & COMPOSITE -->
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-fill-drip"></i> Pool milk & draw DCS composite</h2>
+                <p class="step-description">Whole shift milk poured into BMC or society cans; a 200 ml composite is kept for the tanker crew.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-thermometer-half"></i> BMC target</div>
+                        <p>≤ 4 °C within 3 h</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-vial"></i> Composite label</div>
+                        <p>DCS code + shift + date</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">CompositeSample</span> (DCS-level)</div>
+            </div>
+        </div>
+
+        <!-- 4. CLEAN TANKER ARRIVES -->
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-truck"></i> Route tanker arrives</h2>
+                <p class="step-description">Pre-cleaned (CIP) insulated tanker follows fixed route; driver checks seal & CIP tag.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-clock"></i> Hold-time rule</div>
+                        <p>≤ 4 h between CIP-end and first fill</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-route"></i> Typical route</div>
+                        <p>12–25 societies, 3-4 h round</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">Route</span>, <span class="highlight">Tanker</span></div>
+            </div>
+        </div>
+
+        <!-- 5. LOADING & CHAIN OF CUSTODY -->
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-tint"></i> Load milk & documents</h2>
+                <p class="step-description">Milk pumped or cans stacked; driver collects composite pouch, records qty, temp, puts inline seal.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-tag"></i> Milk Transfer docket</div>
+                        <p>Cumulative litres, route, seal no.</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-snowflake"></i> Max out temp</div>
+                        <p>≤ 8 °C on departure</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">MilkTransfer</span></div>
+            </div>
+        </div>
+
+        <!-- 6. REACH PLANT – RMRD -->
+        <div class="step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-industry"></i> Plant RMRD – weigh & seal check</h2>
+                <p class="step-description">Tanker sealed, weighed, arrival time stamped; seal numbers verified against docket.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-weight"></i> Weigh-bridge</div>
+                        <p>Gross wt captured; tare after unload</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-shield-alt"></i> Security check</div>
+                        <p>Seal intact & recorded</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">TankerReceipt</span></div>
+            </div>
+        </div>
+
+        <!-- 7. GATE COMPOSITE & LAB -->
+        <div class="step">
+            <div class="step-number">7</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-microscope"></i> Gate composite & platform tests</h2>
+                <p class="step-description">2 % composite drawn after 30 s purge; COB, alcohol, MBRT, Fat/SNF run within 15 min.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="pass">PASS</span></div>
+                        <p>Unload to dump tank → PHE chiller → raw silo</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="penalty">PENALTY</span></div>
+                        <p>Accept with deduction logged</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><span class="fail">FAIL</span></div>
+                        <p>Full tanker rejected; diverted to effluent/cattle-feed; zero payment to DCS</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">CompositeSample</span> (gate), <span class="highlight">RejectionEvent</span></div>
+            </div>
+        </div>
+
+        <!-- 8. UNLOAD & CHILL -->
+        <div class="step">
+            <div class="step-number">8</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-temperature-low"></i> Unload & instant chill</h2>
+                <p class="step-description">Milk passes through in-line filter, plate heat-exchanger, chilled to ≤ 4 °C before entering raw silo.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-clock"></i> Elapsed time</div>
+                        <p>Unload ≤ 45 min; temp drop ≤ 4 °C</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-filter"></i> In-line filter</div>
+                        <p>100 mesh to remove sediments</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">TankerReceipt.unload_time</span></div>
+            </div>
+        </div>
+
+        <!-- 9. RAW SILO STORAGE -->
+        <div class="step">
+            <div class="step-number">9</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-database"></i> Raw silo – FIFO hold</h2>
+                <p class="step-description">Agitated, maintained at 4 °C; max 12 h residence to minimise bacterial growth.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-thermometer-quarter"></i> Temp alarm</div>
+                        <p>> 5 °C triggers SMS</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-sort-amount-down"></i> FIFO logic</div>
+                        <p>Oldest milk released to pasteuriser first</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">Silo</span> (raw)</div>
+            </div>
+        </div>
+
+        <!-- 10. PROCESS & PACKAGE -->
+        <div class="step">
+            <div class="step-number">10</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-cogs"></i> HTST pasteurise, homogenise, package</h2>
+                <p class="step-description">Standardised → HTST 72 °C / 15 s → homogenise → cool → pouch / tetra / PET.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-thermometer-half"></i> Pasteuriser</div>
+                        <p>Automated flow-diversion valve if temp < 72 °C</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-box"></i> Formats</div>
+                        <p>500 mL pouch, 1 L tetra, 500 mL PET, etc.</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">ProcessBatch</span>, <span class="highlight">StockKeepingUnit</span></div>
+            </div>
+        </div>
+
+        <!-- 11. COLD-STORE & DISPATCH -->
+        <div class="step">
+            <div class="step-number">11</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-truck-loading"></i> Cold-store & dispatch</h2>
+                <p class="step-description">Finished product held ≤ 4 °C; loaded onto refrigerated trucks for distributors/retailers.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-snowflake"></i> Cold-room</div>
+                        <p>2 – 4 °C, RH 85 %</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-truck-moving"></i> Truck temp</div>
+                        <p>≤ 6 °C throughout transit</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">Dispatch</span>, <span class="highlight">ColdChainTrip</span></div>
+            </div>
+        </div>
+
+        <!-- 12. PAYMENT & CLAW-BACK -->
+        <div class="step">
+            <div class="step-number">12</div>
+            <div class="step-content">
+                <h2 class="step-title"><i class="fas fa-hand-holding-usd"></i> Payment & claw-back</h2>
+                <p class="step-description">Farmer paid same day; union credits DCS weekly/10-day; if gate composite fails, amount is clawed back from DCS.</p>
+                <div class="step-details">
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-credit-card"></i> Farmer</div>
+                        <p>Auto credit via bank/PMCUL card</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-university"></i> DCS</div>
+                        <p>Union transfer minus transport & penalty</p>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-title"><i class="fas fa-undo-alt"></i> Claw-back</div>
+                        <p>Triggered by RejectionEvent</p>
+                    </div>
+                </div>
+                <div class="model-reference">Data model: <span class="highlight">PaymentLine</span>, <span class="highlight">RejectionEvent</span></div>
+            </div>
+        </div>
+
+    </div> <!-- /flow-container -->
+
+    <!-- KEY FEATURES -->
+    <div class="key-achievements">
+        <h2><i class="fas fa-star"></i> Key Features of This Flow</h2>
+        <div class="achievements-grid">
+            <div class="achievement-item">
+                <div class="achievement-icon"><i class="fas fa-clock"></i></div>
+                <div class="achievement-content">
+                    <h3>Twice-daily collection</h3>
+                    <p>Morning & evening windows keep bacterial counts low</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon"><i class="fas fa-vial"></i></div>
+                <div class="achievement-content">
+                    <h3>Dual composite sampling</h3>
+                    <p>Society + plant gate tests safeguard quality</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon"><i class="fas fa-snowflake"></i></div>
+                <div class="achievement-content">
+                    <h3>Unbroken cold chain</h3>
+                    <p>BMC → tanker → PHE → silo never > 4 °C</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon"><i class="fas fa-project-diagram"></i></div>
+                <div class="achievement-content">
+                    <h3>Full traceability</h3>
+                    <p>Any retail pack traced back to individual farmer cans</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon"><i class="fas fa-robot"></i></div>
+                <div class="achievement-content">
+                    <h3>Automated payment</h3>
+                    <p>Same-day farmer credit; penalty claw-back if tanker fails</p>
+                </div>
+            </div>
+            <div class="achievement-item">
+                <div class="achievement-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="achievement-content">
+                    <h3>CIP & hold-time control</h3>
+                    <p>All containers cleaned, tagged and used within 4 h</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+* {margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{background:linear-gradient(135deg,#f5f7fa 0%,#e4edf5 100%);color:#333;line-height:1.6;padding:20px;min-height:100vh}
+.container{max-width:1400px;margin:0 auto}
+header{text-align:center;padding:30px 0;margin-bottom:30px}
+h1{font-size:2.8rem;color:#456fb2;margin-bottom:10px;text-shadow:1px 1px 2px rgba(0,0,0,.1)}
+.subtitle{font-size:1.2rem;color:#5a7d9a;max-width:800px;margin:0 auto}
+.flow-container{display:flex;flex-direction:column;gap:30px;margin-bottom:40px}
+.step{display:flex;background:white;border-radius:16px;box-shadow:0 8px 20px rgba(0,30,60,.12);overflow:hidden;transition:transform .3s,box-shadow .3s}
+.step:hover{transform:translateY(-5px);box-shadow:0 12px 25px rgba(0,30,60,.18)}
+.step-number{background:#0d5086;color:white;width:60px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:bold}
+.step-content{padding:25px;flex:1}
+.step-title{font-size:1.5rem;color:#1a3a6c;margin-bottom:15px;display:flex;align-items:center;gap:12px}
+.step-title i{background:#e6f0fa;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#1a3a6c}
+.step-description{color:#555;margin-bottom:20px;line-height:1.7}
+.step-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-top:15px}
+.detail-card{background:#f8fbff;border-radius:10px;padding:15px;border-left:3px solid #4a90e2}
+.detail-title{font-weight:600;color:#1a3a6c;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.model-reference{background:#e6f0fa;padding:8px 12px;border-radius:20px;font-size:.85rem;display:inline-block;margin-top:10px;color:#1a3a6c}
+.key-achievements{background:white;border-radius:16px;padding:30px;box-shadow:0 8px 20px rgba(0,30,60,.12);margin-top:20px}
+.key-achievements h2{color:#1a3a6c;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.achievements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.achievement-item{display:flex;gap:15px}
+.achievement-icon{background:#e6f0fa;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1a3a6c;font-size:1.4rem}
+.achievement-content h3{color:#1a3a6c;margin-bottom:8px}
+.penalty{color:#e74c3c;font-weight:600}
+.pass{color:#27ae60;font-weight:600}
+.fail{color:#e74c3c;font-weight:600}
+.highlight{background:linear-gradient(120deg,#e6f0fa 0%,#d1e3f5 100%);padding:3px 6px;border-radius:4px;font-weight:600}
+@media(max-width:768px){.step{flex-direction:column}.step-number{width:100%;padding:15px 0}h1{font-size:2.2rem}}
+</style>
+{% endblock %}

@@ -1,265 +1,645 @@
 {% extends "base.html" %}
 {% block title %}Rights and Access{% endblock %}
 {% block content %}
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Access Rights Management</title>
-    <style>
-        :root {
-            --primary-color: #2c5282;
-            --secondary-color: #ebf8ff;
-            --text-color: #333;
-            --border-color: #e2e8f0;
-            --hover-color: #4299e1;
-            --success-color: #38a169;
-        }
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<style>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f9fc;
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
+    .container {
+        max-width: 1000px;
+        margin: auto;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        padding: 30px;
+        position: relative;
+        min-height: 80vh;
+    }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 30px;
-            position: relative;
-            min-height: 80vh;
-        }
+    h1 {
+        color: var(--primary-color);
+        margin-bottom: 25px;
+        font-weight: 600;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+    }
 
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 25px;
-            font-weight: 600;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
-        }
+    .search-bar {
+        margin-bottom: 30px;
+    }
 
-        .search-bar {
-            margin-bottom: 30px;
-        }
+    .search-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
 
-        .search-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
+    .search-input:focus {
+        border-color: var(--hover-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    }
 
-        .search-input:focus {
-            border-color: var(--hover-color);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
-        }
+    .user-info {
+        background-color: var(--secondary-color);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
 
-        .rights-section {
-            margin-bottom: 30px;
-        }
+    .user-info h3 {
+        margin: 0 0 10px 0;
+        color: var(--primary-color);
+    }
 
-        .section-title {
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
+    .user-details {
+        display: flex;
+        gap: 20px;
+    }
 
-        .rights-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
+    .user-detail-item {
+        flex: 1;
+    }
 
-        .right-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-radius: 4px;
-            background-color: #f8fafc;
-        }
+    .user-detail-item label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: #4a5568;
+    }
 
-        .right-item:hover {
-            background-color: var(--secondary-color);
-        }
+    .user-detail-item span {
+        display: block;
+        padding: 8px;
+        background-color: white;
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+    }
 
-        .right-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 10px;
-            accent-color: var(--primary-color);
-        }
 
-        .right-item label {
-            font-weight: 500;
-            cursor: pointer;
-        }
+    .category {
+        margin-bottom: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        overflow: hidden;
+    }
 
-        .floating-action-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
+    .category-header {
+        background-color: var(--category-bg);
+        padding: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 600;
+        color: var(--primary-color);
+        border-bottom: 1px solid var(--border-color);
+    }
 
-        .floating-action-btn:hover {
-            background-color: #2f855a;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
+    .category-header:hover {
+        background-color: var(--secondary-color);
+    }
 
-        .user-info {
-            background-color: var(--secondary-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+    .category-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
-        .user-info h3 {
-            margin: 0 0 10px 0;
-            color: var(--primary-color);
-        }
+    .category-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background-color: white;
+    }
 
-        .user-details {
-            display: flex;
-            gap: 20px;
-        }
+    .category-checkbox {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary-color);
+    }
 
-        .user-detail-item {
-            flex: 1;
-        }
+    .permission-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px 10px 45px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        background-color: #839eb727;
+    }
 
-        .user-detail-item label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 5px;
-            color: #4a5568;
-        }
+    .permission-item:hover {
+        background-color: #00a9fd90;
+    }
 
-        .user-detail-item span {
-            display: block;
-            padding: 8px;
-            background-color: white;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>User Access Rights Management</h1>
-        
-        <div class="search-bar">
-            <input type="text" class="search-input" placeholder="Search for user...">
-        </div>
-        
-        <div class="user-info">
-            <h3>Selected User</h3>
-            <div class="user-details">
-                <div class="user-detail-item">
-                    <label>Username</label>
-                    <span id="username-display"></span>
-                </div>
-                <div class="user-detail-item">
-                    <label>Email</label>
-                    <span id="email-display"></span>
-                </div>
-                <div class="user-detail-item">
-                    <label>Current Role</label>
-                    <span id="role-display"></span>
-                </div>
+    .permission-item input[type="checkbox"] {
+        margin-right: 12px;
+        width: 16px;
+        height: 16px;
+        accent-color: var(--primary-color);
+    }
+
+    .permission-item label {
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .floating-action-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background-color: var(--success-color);
+        color: #ffffff;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.03s;
+        background-color: #3498db;
+    }
+
+    .floating-action-btn:hover {
+        background-color: #2f855a;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .category-toggle {
+        display: none;
+    }
+
+    .category-toggle:checked + .category-header + .category-content {
+        max-height: 500px;
+    }
+
+    .category-toggle:checked + .category-header .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    .fa-chevron-down {
+        transition: transform 0.03s ease;
+    }
+
+
+    .basic-rights {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .basic-right-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 4px;
+        background-color: var(--category-bg);
+    }
+
+    .basic-right-item:hover {
+        background-color: var(--secondary-color);
+    }
+
+    .basic-right-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-right: 10px;
+        accent-color: var(--primary-color);
+    }
+
+    .basic-right-item label {
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .section-title {
+        font-size: 1.2em;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+</style>
+
+<div class="rights-page-content">
+<div class="container">
+    <h1>User Access Rights Management</h1>
+    
+    <div class="search-bar">
+    <select id="userSelect" style="width: 100%;">
+        <option></option> 
+    </select>
+    </div>
+
+    
+    <div class="user-info">
+        <h3>Selected User</h3>
+        <div class="user-details">
+            <div class="user-detail-item">
+                <label>Username</label>
+                <span id="username-display"></span>
             </div>
-        </div>
-        
-        <div class="rights-section">
-            <div class="section-title">Basic User Rights</div>
-            <div class="rights-grid">
-                <div class="right-item">
-                    <input type="checkbox" id="is-active" name="is-active">
-                    <label for="is-active">Is Active</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="is-staff" name="is-staff">
-                    <label for="is-staff">Is Staff</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="is-superadmin" name="is-superadmin">
-                    <label for="is-superadmin">Is Superadmin</label>
-                </div>
+            <div class="user-detail-item">
+                <label>Email</label>
+                <span id="email-display"></span>
             </div>
-        </div>
-        
-        <div class="rights-section">
-            <div class="section-title">User Access Rights</div>
-            <div class="rights-grid">
-                <div class="right-item">
-                    <input type="checkbox" id="supplier" name="supplier">
-                    <label for="supplier">Supplier</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="add-supplier" name="add-supplier">
-                    <label for="add-supplier">Add Supplier</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="milk-lot" name="milk-lot">
-                    <label for="milk-lot">Milk Lot</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="add-milk-lot" name="add-milk-lot">
-                    <label for="add-milk-lot">Add Milk Lot</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="payment-bills" name="payment-bills">
-                    <label for="payment-bills">Payment Bills</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="vehicles" name="vehicles">
-                    <label for="vehicles">Vehicles</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="pooling" name="pooling">
-                    <label for="pooling">Pooling</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="distribution" name="distribution">
-                    <label for="distribution">Distribution</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="sample-tests" name="sample-tests">
-                    <label for="sample-tests">Sample and Tests</label>
-                </div>
-                <div class="right-item">
-                    <input type="checkbox" id="reports" name="reports">
-                    <label for="reports">Reports</label>
-                </div>
+            <div class="user-detail-item">
+                <label>Current Role</label>
+                <span id="role-display"></span>
             </div>
         </div>
     </div>
     
-    <button class="floating-action-btn" title="Grant Access">
-        <i class="fas fa-save" style="font-size: 24px;"></i>
-    </button>
+    <div class="rights-section">
+        <div class="section-title">Basic User Rights</div>
+        <div class="basic-rights">
+            <div class="basic-right-item">
+                <input type="checkbox" id="is-active" name="is-active">
+                <label for="is-active">Is Active</label>
+            </div>
+            <div class="basic-right-item">
+                <input type="checkbox" id="is-staff" name="is-staff">
+                <label for="is-staff">Is Staff</label>
+            </div>
+            <div class="basic-right-item">
+                <input type="checkbox" id="is-superadmin" name="is-superadmin">
+                <label for="is-superadmin">Is Superadmin</label>
+            </div>
+        </div>
+    </div>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <div class="rights-section">
+        <div class="section-title">Page Access Rights</div>
+        
+        <!-- Dashboard Category -->
+        <div class="category">
+            <input type="checkbox" id="dashboard-toggle" class="category-toggle">
+            <label class="category-header" for="dashboard-toggle">
+                <div class="category-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="dashboard-prices" name="dashboard-prices">
+                    <label for="dashboard-prices">Latest Prices and Demand</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- News Category -->
+        <div class="category">
+            <input type="checkbox" id="news-toggle" class="category-toggle">
+            <label class="category-header" for="news-toggle">
+                <div class="category-title">
+                    <i class="fas fa-newspaper"></i>
+                    <span>News</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="news-all" name="news-all">
+                    <label for="news-all">All News</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Suppliers & Procurement Category -->
+        <div class="category">
+            <input type="checkbox" id="suppliers-toggle" class="category-toggle">
+            <label class="category-header" for="suppliers-toggle">
+                <div class="category-title">
+                    <i class="fas fa-boxes"></i>
+                    <span>Suppliers & Procurement</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="suppliers-view" name="suppliers-view">
+                    <label for="suppliers-view">Suppliers</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="suppliers-add" name="suppliers-add">
+                    <label for="suppliers-add">Add Supplier</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="milk-lot-add" name="milk-lot-add">
+                    <label for="milk-lot-add">Add Milk Lot</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="milk-lot-view" name="milk-lot-view">
+                    <label for="milk-lot-view">Milk Lots</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Finance & Billing Category -->
+        <div class="category">
+            <input type="checkbox" id="finance-toggle" class="category-toggle">
+            <label class="category-header" for="finance-toggle">
+                <div class="category-title">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Finance & Billing</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="payment-bills" name="payment-bills">
+                    <label for="payment-bills">Payment Bills</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logistics & Transport Category -->
+        <div class="category">
+            <input type="checkbox" id="logistics-toggle" class="category-toggle">
+            <label class="category-header" for="logistics-toggle">
+                <div class="category-title">
+                    <i class="fas fa-truck"></i>
+                    <span>Logistics & Transport</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="create-delivery" name="create-delivery">
+                    <label for="create-delivery">Create Milk Lot Delivery</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="transfer-list" name="transfer-list">
+                    <label for="transfer-list">Milk Lot Transfer List</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="vehicles" name="vehicles">
+                    <label for="vehicles">Vehicles</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="distribution" name="distribution">
+                    <label for="distribution">Distribution</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Milk Storage & Pooling Category -->
+        <div class="category">
+            <input type="checkbox" id="storage-toggle" class="category-toggle">
+            <label class="category-header" for="storage-toggle">
+                <div class="category-title">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Milk Storage & Pooling</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="cooler-pooling" name="cooler-pooling">
+                    <label for="cooler-pooling">Bulk Cooler Milk Pooling</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="onfarm-pooling" name="onfarm-pooling">
+                    <label for="onfarm-pooling">On-Farm Tank Milk Pooling</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="can-collection" name="can-collection">
+                    <label for="can-collection">Can Collection and Segregation</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quality & Testing Category -->
+        <div class="category">
+            <input type="checkbox" id="quality-toggle" class="category-toggle">
+            <label class="category-header" for="quality-toggle">
+                <div class="category-title">
+                    <i class="fas fa-flask"></i>
+                    <span>Quality & Testing</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="composite-list" name="composite-list">
+                    <label for="composite-list">Composite Samples List</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="cooler-samples" name="cooler-samples">
+                    <label for="cooler-samples">Composite Samples for Bulk Cooler and OnFarm tank</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="can-samples" name="can-samples">
+                    <label for="can-samples">Composite Samples for CanCollection</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reporting & Admin Category -->
+        <div class="category">
+            <input type="checkbox" id="reporting-toggle" class="category-toggle">
+            <label class="category-header" for="reporting-toggle">
+                <div class="category-title">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reporting & Admin</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </label>
+            <div class="category-content">
+                <div class="permission-item">
+                    <input type="checkbox" id="reports" name="reports">
+                    <label for="reports">Reports</label>
+                </div>
+                <div class="permission-item">
+                    <input type="checkbox" id="admin" name="admin">
+                    <label for="admin">Admin</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<button class="floating-action-btn" id="saveRightsBtn"  title="Save Access Rights">
+    <i class="fas fa-save" style="font-size: 24px;"></i>
+</button>
+
+<script>
+    async function loadUsers() {
+    const userEmployees = `
+      {
+        employees {
+            user {
+                id
+                username
+                email
+                }
+            role {
+                name
+                }
+        }
+        }
+
+    `;
+
+    const usersRes = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: userEmployees })
+    });
+
+    const usersData = await usersRes.json();
+    const userSelect = document.getElementById("userSelect");
+
+    usersData.data.employees.forEach(employee => {
+    const opt = document.createElement("option");
+    opt.value = employee.user.id;
+    opt.textContent = `${employee.user.id} — ${employee.user.username} (${employee.role.name})`;
+    userSelect.appendChild(opt);
+    opt.setAttribute('data-username', employee.user.username);
+    opt.setAttribute('data-email', employee.user.email || "-");
+    opt.setAttribute('data-role', employee.role?.name || "-");
+    
+});
+}
+
+//====================================== display user details if selected ======================================================//
+$('#userSelect').on('change', function() {
+  let selectedOption = $(this).find('option:selected');
+  let user_id = selectedOption.val()
+  let username = selectedOption.data('username') || "-";
+  let email = selectedOption.data('email') || "-";
+  let role = selectedOption.data('role') || "-";
+
+  document.getElementById("username-display").textContent = username;
+  document.getElementById("email-display").textContent = email;
+  document.getElementById("role-display").textContent = role;
+  loadUserRights(parseInt(user_id))
+});
+
+//====================================== load user name, email, role and make it searchable =====================================//
+$(document).ready(async function() {
+    await loadUsers();  
+    $('#userSelect').select2({
+        placeholder: "-- Select a user --",
+        allowClear: true,
+        width: 'resolve'
+    });
+});
+
+//===================================================== function to auto check rights given to selected user ===========================================//
+async function loadUserRights(userId) {
+    const query = `
+      query GetUser($id: Int!) {
+        getUser(id: $id) {
+          id
+          username
+          email
+          isActive
+          isStaff
+          isSuperuser
+          groups
+        }
+      }
+    `;
+
+    const res = await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, variables: { id: userId } })
+    });
+    const data = await res.json();
+    const user = data.data.getUser;
+    document.getElementById("is-active").checked = user.isActive;
+    document.getElementById("is-staff").checked = user.isStaff;
+    document.getElementById("is-superadmin").checked = user.isSuperuser;
+
+    document.querySelectorAll(".rights-section input[type=checkbox]").forEach(cb => {
+        if (!["is-active", "is-staff", "is-superadmin"].includes(cb.id)) {
+            cb.checked = false;
+        }
+    });
+
+    user.groups.forEach(groupName => {
+        const cb = document.getElementById(groupName);
+        if (cb) cb.checked = true;
+    });
+}
+
+
+//============================================== User right updates ==========================================================//
+document.getElementById("saveRightsBtn").addEventListener("click", async function() {
+    const userId = document.getElementById("userSelect").value;
+
+    const isActive = document.getElementById("is-active").checked;
+    const isStaff = document.getElementById("is-staff").checked;
+    const isSuperadmin = document.getElementById("is-superadmin").checked;
+
+    const allCheckboxes = document.querySelectorAll(".rights-section input[type=checkbox]");
+    const selectedGroups = [];
+    allCheckboxes.forEach(cb => {
+        if (cb.checked && !["is-active", "is-staff", "is-superadmin"].includes(cb.id)) {
+            selectedGroups.push(cb.id);
+        }
+    });
+
+    const mutation = `
+      mutation UpdateUserRights($input: UserRightsInput!) {
+        updateUserRights(input: $input) {
+          id
+          username
+          email
+          isActive
+          isStaff
+          isSuperuser
+          groups
+        }
+      }
+    `;
+
+    const variables = {
+        input: {
+            userId: parseInt(userId),
+            isActive: isActive,
+            isStaff: isStaff,
+            isSuperuser: isSuperadmin,
+            groups: selectedGroups
+        }
+    };
+
+    const res = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: mutation, variables })
+    });
+
+    const result = await res.json();
+    if (result.errors) {
+        alert("Error: " + result.errors[0].message);
+    } else {
+        alert("Access rights saved for " + result.data.updateUserRights.username);
+        console.log("Groups:", result.data.updateUserRights.groups);
+    }
+});
+
+</script>
 {% endblock %}

@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+
+{% block title %}Can Collection Management{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1><i class="fas fa-warehouse"></i> Tanker Usage Logs</h1>
+  
+  <!-- Filters Card -->
+  <div class="filters-card">
+    <div class="section-title">Filter Collections</div>
+    
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label for="route-select">Routes</label>
+        <select id="route-select" name="route">
+          <option value="">-- All Routes --</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="source-select">Select Source</label>
+        <select id="source-select" name="source">
+          <option value="">-- Select Tanker Type --</option>
+          <option value="bulk_cooler">Bulk Cooler</option>
+          <option value="on_farm_tank">On-Farm Tank</option>
+        </select>
+      </div>
+      
+            
+      <div class="filter-group">
+        <label for="from-date">From Date</label>
+        <input type="date" id="from-date" name="from_date">
+      </div>
+      
+      <div class="filter-group">
+        <label for="to-date">To Date</label>
+        <input type="date" id="to-date" name="to_date">
+      </div>
+      
+      <div class="filter-group">
+        <label for="search">Search ID or Name</label>
+        <input type="text" id="search" name="search" placeholder="Enter ID or name...">
+      </div>
+      
+      
+      <div class="filter-group action-buttons">
+        <button type="button" class="btn btn-primary">
+          <i class="fas fa-filter"></i> Apply Filters
+        </button>
+        
+      </div>
+    </div>
+  </div>
+  
+  <!-- Results Table -->
+  <div class="results-section">
+    <div class="section-header">
+      <h2>Can Collection Records</h2>
+      <div class="results-count">Showing <span>15</span> records</div>
+    </div>
+    
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Date Created</th>
+            <th>Source Type</th>
+            <th>Name</th>
+            <th>Sanitized At</th>
+            <th>Volume (L)</th>
+            <th>Capacity (L)</th>
+            <th>Milk Lots</th>
+            <th>Emptied At</th>
+            <th>Vehicle Used</th>
+            <th>Arrived At</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="pagination">
+      <button class="pagination-btn">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="pagination-btn active">1</button>
+      <button class="pagination-btn">2</button>
+      <button class="pagination-btn">3</button>
+      <button class="pagination-btn">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+const GRAPHQL_ENDPOINT = "/graphql/";  
+
+async function fetchGraphQL(query, variables = {}) {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+  const result = await response.json();
+  return result.data;
+}
+
+async function loadRoutes() {
+  const query = `
+    query {
+      allRoutes {
+        id
+        name
+      }
+    }
+  `;
+  const data = await fetchGraphQL(query);
+  const routes = data.allRoutes;
+
+  const routeSelect = document.getElementById("route-select");
+  routes.forEach(route => {
+    const option = document.createElement("option");
+    option.value = route.id;
+    option.textContent = route.name;
+    routeSelect.appendChild(option);
+  });
+}
+
+
+async function applyFilters() {
+  const routeId = document.getElementById("route-select").value;
+  const sourceType = document.getElementById("source-select").value;
+  const fromDate = document.getElementById("from-date").value;
+  const toDate = document.getElementById("to-date").value;
+  const search = document.getElementById("search").value.toLowerCase();
+
+  if (!routeId || !sourceType || !fromDate || !toDate) {
+    alert("Please select route, tanker type, and date range.");
+    return;
+  }
+
+  let query;
+  let fieldName;
+
+  if (sourceType === "bulk_cooler") {
+    query = `
+      query ($routeId: Int!, $fromDate: Date!, $toDate: Date!) {
+        allBulkCoolersByRoute(routeId: $routeId, fromDate: $fromDate, toDate: $toDate) {
+          id
+          name
+          createdAt
+          lastSanitizedAt
+          currentVolumeLiters
+          capacityLiters
+          emptiedAt
+          filledAt
+          milkLots{
+            id
+          }
+          relatedMilkTransfers{
+            vehicle{
+              name
+              capacityLiters
+              route{
+                name
+              }
+            }
+          }
+        }
+      }
+    `;
+    fieldName = "allBulkCoolersByRoute";
+  } else if (sourceType === "on_farm_tank") {
+    query = `
+      query ($routeId: Int!, $fromDate: Date!, $toDate: Date!) {
+        allOnfarmTanksByRoute(routeId: $routeId, fromDate: $fromDate, toDate: $toDate) {
+          id
+          name
+          createdAt
+          lastSanitizedAt
+          currentVolumeLiters
+          capacityLiters
+          emptiedAt
+          filledAt
+          milkLots{
+            id
+          }
+          relatedMilkTransfers{
+            vehicle{
+              name
+              capacityLiters
+              route{
+                name
+              }
+            }
+          }
+        }
+      }
+    `;
+    fieldName = "allOnfarmTanksByRoute";
+  }
+
+  const data = await fetchGraphQL(query, {
+    routeId: parseInt(routeId),
+    fromDate,
+    toDate,
+  });
+
+  const results = data[fieldName];
+
+  const tbody = document.querySelector(".data-table tbody");
+  tbody.innerHTML = ""; 
+  results
+    .filter(r =>
+      !search || r.name.toLowerCase().includes(search) || String(r.id).includes(search)
+    )
+    .forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.id}</td>
+        <td>${r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-GB', { timeZone: 'UTC' }) + "<br>" + new Date(r.createdAt).toLocaleTimeString('en-GB', { timeZone: 'UTC' })  : ""}</td>
+        <td>${sourceType}</td>
+        <td>${r.name}</td>
+        <td>${r.lastSanitizedAt ? new Date(r.lastSanitizedAt).toLocaleString() : "-"}</td>
+        <td>${r.currentVolumeLiters}</td>
+        <td>${r.capacityLiters}</td>
+        <td>${r.milkLots.length}</td>
+        <td>${r.filledAt || "-"}</td>
+        <td>
+          ${
+            r.relatedMilkTransfers.length
+              ? `${r.relatedMilkTransfers[0].vehicle.name}<br>
+                <sub>
+                  (${r.relatedMilkTransfers[0].vehicle.capacityLiters} L,
+                    ${r.relatedMilkTransfers[0].vehicle.route.name})
+                </sub>`
+              : "-"
+          }
+        </td>
+        <td>${r.emptiedAt ? new Date(r.emptiedAt).toLocaleDateString('en-GB', { timeZone: 'UTC' }) + "<br>" + new Date(r.emptiedAt).toLocaleTimeString('en-GB', { timeZone: 'UTC' }) : "-"}</td>`;
+      tbody.appendChild(tr);
+    });
+
+  document.querySelector(".results-count span").textContent = results.length;
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadRoutes();
+  document.querySelector(".btn.btn-primary").addEventListener("click", applyFilters);
+});
+</script>
+
+<style>
+  .container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 20px;
+    font-size: 14px;
+  }
+  
+  h1 {
+    color: #2c5282;
+    margin-bottom: 25px;
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .filters-card {
+    background-color: #ebf8ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .filter-group label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #4a5568;
+  }
+  
+  .filter-group select, 
+  .filter-group input {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+  }
+  
+  .filter-group select:focus,
+  .filter-group input:focus {
+    border-color: #4299e1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+  }
+  
+  .action-buttons {
+    display: flex;
+    margin-top: 30px;
+    gap: 5px;
+    justify-content: flex-start;
+  }
+  
+  .btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-primary {
+    background-color: #4299e1;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #3182ce;
+  }
+  
+  .btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #cbd5e0;
+  }
+  
+  .results-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .section-header h2 {
+    color: #2c5282;
+    margin: 0;
+  }
+  
+  .results-count {
+    color: #718096;
+    font-weight: 500;
+  }
+  
+  .results-count span {
+    color: #2b6cb0;
+    font-weight: 600;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+  }
+  
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .data-table th {
+    background-color: #ebf8ff;
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+  }
+  
+  .data-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .data-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .data-table tr:hover {
+    background-color: #ebf8ff;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 8px;
+  }
+  
+  .pagination-btn {
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+  }
+  
+  .pagination-btn.active {
+    background-color: #4299e1;
+    color: white;
+    border-color: #4299e1;
+  }
+  
+  .pagination-btn:hover:not(.active) {
+    background-color: #ebf8ff;
+  }
+  
+  @media (max-width: 1200px) {
+    .filters-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .action-buttons {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+  }
+</style>
+{% endblock %}

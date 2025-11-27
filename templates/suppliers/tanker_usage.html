@@ -1,0 +1,586 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tanker Usage Log{% endblock %}
+
+{% block content %}
+<style>
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  h1 {
+    color: #2c5282;
+    margin-bottom: 25px;
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+  }
+  
+  .cooler-selection-card {
+    background-color: #ebf8ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .section-title {
+    color: #2b6cb0;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+  }
+  
+  .cooler-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+  
+  select, input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    accent-color: #2c5282;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+  }
+  
+  .btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .btn-primary {
+    background-color: #4299e1;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #3182ce;
+  }
+  
+  .btn-secondary {
+    background-color: #e2e8f0;
+    color: #4a5568;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #cbd5e0;
+  }
+  
+  .milk-lots-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .section-header {
+    margin-bottom: 20px;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .milk-lots-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .milk-lots-table th {
+    background-color: #ebf8ff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2b6cb0;
+  }
+  
+  .milk-lots-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .milk-lots-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  
+  .status-approved {
+    color: #38a169;
+    font-weight: 500;
+  }
+  
+  .unassigned {
+    color: #e53e3e;
+    font-weight: 500;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 10px;
+  }
+  
+  .pagination-btn {
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+  }
+  
+  .pagination-btn.active {
+    background-color: #4299e1;
+    color: white;
+    border-color: #4299e1;
+  }
+</style>
+<div class="container">
+  <h1><i class="fas fa-truck"></i> Set Up Tanker</h1>
+  
+  <!-- Filters Card -->
+  <div class="cooler-selection-card">
+    <div class="section-title">Filter Tankers</div>
+    
+    <div class="cooler-form-grid">
+      <!-- Route and Tanker Type Selection -->
+      <div class="form-group">
+        <label for="route-select">Select Route</label>
+        <select id="route-select" name="route">
+          <option value="">-- Select Route --</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="tanker-type-select">Select Bulk Milk Tanker Type</label>
+        <select id="tanker-type-select" name="tanker_type">
+          <option value="">-- Select Tanker Type --</option>
+          <option value="bulk_cooler">Bulk Cooler</option>
+          <option value="on_farm_tank">On-Farm Tank</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="tanker-containor-select">Select tanker Container</label>
+        <select id="tanker-containor-select" name="tanker_type">
+          <option value="">-- Select Tanker Container --</option>
+        </select>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="form-group action-buttons">
+        <button type="button" id = "use-tanker-btn" class="btn btn-primary">Use tanker</button>
+        <button type="button" class="btn btn-secondary">Reset</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tanker Usage Table -->
+  <div class="milk-lots-section">
+    <div class="section-header">
+      <h2>Tanker Usage History</h2>
+    </div>
+    
+    <div class="table-container">
+      <table class="milk-lots-table">
+        <thead>
+          <tr>
+            <th>Date Created</th>
+            <th>Tanker Type</th>
+            <th>Tanker Name</th>
+            <th>Tanker Volume (L)</th>
+            <th>Volume at Use(L)</th>
+            <th>Last Sanitized At</th>
+            <th>Last Cleaned At</th>
+            <th>Last Serviced At</th>
+            <th>Temperature (°C)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="milk-lots-table-body">
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="pagination">
+      <button class="pagination-btn active">1</button>
+      <button class="pagination-btn">2</button>
+      <button class="pagination-btn">3</button>
+      <button class="pagination-btn">Next</button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'notifications/js/notify.js' %}"></script>
+<script>
+  //SINGLE, GLOBAL fetchGraphQL 
+async function fetchGraphQL(query, variables = {}) {
+  try {
+    const response = await fetch("/graphql/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+
+    if (result.errors && result.errors.length > 0) {
+      console.error("GraphQL Errors:", result.errors);
+      const errorMsg = result.errors.map(e => e.message).join("\n");
+      showNotification(errorMsg, 'error', 6000);
+      return null;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error("Network or parsing error:", error);
+    showNotification("Network error: Could not connect to server.", 'error', 6000);
+    return null;
+  }
+}
+  //======================================================= load Routes =======================================================//
+  async function loadRoutes() {
+    const query = `
+      query {
+        allRoutes {
+          id
+          name
+        }
+      }
+    `;
+
+    try {
+      const response = await fetch("/graphql/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      const result = await response.json();
+      const routes = result.data.allRoutes;
+
+      const select = document.getElementById("route-select");
+
+      select.innerHTML = '<option value="">-- Select Route --</option>';
+
+      routes.forEach(route => {
+        const option = document.createElement("option");
+        option.value = route.id;
+        option.textContent = route.name;
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error fetching routes:", error);
+    }
+  }
+
+document.addEventListener("DOMContentLoaded", loadRoutes);
+
+//================================================ Load Tankers ==================================================//
+const routeSelect = document.getElementById("route-select");
+const tankerTypeSelect = document.getElementById("tanker-type-select");
+const tankerContainerSelect = document.getElementById("tanker-containor-select");
+
+
+  async function loadTankerContainers() {
+    const routeId = routeSelect.value;
+    const tankerType = tankerTypeSelect.value;
+
+    tankerContainerSelect.innerHTML =
+      '<option value="">-- Select Tanker Container --</option>';
+
+    if (!routeId || !tankerType) return; 
+    let query;
+    let field;
+
+    if (tankerType === "on_farm_tank") {
+      query = `
+        query ($routeId: Int!) {
+          onfarmTanksByRoute(routeId: $routeId) {
+            id
+            name
+            capacityLiters
+            createdAt
+          }
+        }
+      `;
+      field = "onfarmTanksByRoute";
+    } else if (tankerType === "bulk_cooler") {
+      query = `
+        query ($routeId: Int!) {
+          bulkCoolersByRoute(routeId: $routeId) {
+            id
+            name
+            capacityLiters
+            createdAt
+          }
+        }
+      `;
+      field = "bulkCoolersByRoute";
+    }
+
+    const data = await fetchGraphQL(query, { routeId: parseInt(routeId) });
+    if (!data) return;
+
+    const containers = data[field];
+
+    containers.forEach(container => {
+      let createdDate = new Date(container.createdAt).toISOString().split('T')[0];
+      const option = document.createElement("option");
+      option.value = container.id;
+      const date = new Date(container.createdAt);
+      const formattedDate = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      option.innerHTML = `${container.name} <small style="font-size: 0.02em;">(last used: ${formattedDate})</small>`;
+      tankerContainerSelect.appendChild(option);
+    });
+  }
+
+  routeSelect.addEventListener("change", loadTankerContainers);
+  tankerTypeSelect.addEventListener("change", loadTankerContainers);
+
+
+  //========================================= Make ready tankers for today's operation ===========================//
+  const useTankerBtn = document.getElementById("use-tanker-btn");
+  async function useTanker() {
+    const tankerType = tankerTypeSelect.value;
+    const containerId = tankerContainerSelect.value;
+
+    if (!tankerType || !containerId) {
+      alert("Please select both tanker type and container first.");
+      return;
+    }
+
+    let mutation, variables;
+
+    if (tankerType === "on_farm_tank") {
+      mutation = `
+        mutation ($tankId: Int!, $confirm: Boolean) {
+          createOnfarmTank(tankId: $tankId, confirm: $confirm) {
+            id
+            name
+            capacityLiters
+          }
+        }
+      `;
+      variables = { tankId: parseInt(containerId), confirm: false };
+    } else if (tankerType === "bulk_cooler") {
+      mutation = `
+        mutation ($coolerId: Int!, $confirm: Boolean) {
+          createBulkCooler(coolerId: $coolerId, confirm: $confirm) {
+            id
+            name
+            capacityLiters
+          }
+        }
+      `;
+      variables = { coolerId: parseInt(containerId), confirm: false };
+    }
+
+    const data = await fetchGraphQL(mutation, variables);
+    if (data) {
+      const tankerInfo = data.createOnfarmTank || data.createBulkCooler;
+      if (tankerInfo) {
+        showNotification(`Tanker ready: ${tankerInfo.name} (ID: ${tankerInfo.id}, Capacity: ${tankerInfo.capacityLiters}L)`, 'success', 1400);
+      } else {
+      showNotification("Tanker ready", 'success', 6000);
+      }
+    }
+  }
+
+  useTankerBtn.addEventListener("click", useTanker);
+
+//================================================= Populate the table based on selected route and tanker type =======================================//
+const milkLotsTableBody = document.getElementById("milk-lots-table-body");
+
+async function loadTankerHistory() {
+  const routeId = routeSelect.value;
+  const tankerType = tankerTypeSelect.value;
+
+  if (!routeId || !tankerType) {
+    milkLotsTableBody.innerHTML = `
+      <tr>
+        <td colspan="10" class="empty-message">Select a route and tanker type to load data</td>
+      </tr>`;
+    return;
+  }
+
+  let query;
+  let field;
+  let typeName;
+
+  if (tankerType === "on_farm_tank") {
+    query = `
+      query ($routeId: Int!) {
+        onfarmTanksByRoute(routeId: $routeId) {
+          id
+          name
+          capacityLiters
+          currentVolumeLiters
+          temperatureCelsius
+          createdAt
+          lastSanitizedAt
+          lastCleanedAt
+          lastServicedAt
+          supplier {
+            user {
+              username
+            }
+          }
+        }
+      }
+    `;
+    field = "onfarmTanksByRoute";
+    typeName = "On-Farm Tank";
+  } else if (tankerType === "bulk_cooler") {
+    query = `
+      query ($routeId: Int!) {
+        bulkCoolersByRoute(routeId: $routeId) {
+          id
+          name
+          capacityLiters
+          currentVolumeLiters
+          temperatureCelsius
+          createdAt
+          lastSanitizedAt
+          lastCleanedAt
+          lastServicedAt
+          isStirred
+          filledAt
+          emptiedAt
+        }
+      }
+    `;
+    field = "bulkCoolersByRoute";
+    typeName = "Bulk Cooler";
+  } else {
+    milkLotsTableBody.innerHTML = `
+      <tr>
+        <td colspan="10" class="empty-message">Invalid tanker type selected.</td>
+      </tr>`;
+    return;
+  }
+
+  const data = await fetchGraphQL(query, { routeId: parseInt(routeId) });
+  if (!data || !data[field] || data[field].length === 0) {
+    milkLotsTableBody.innerHTML = `
+      <tr>
+        <td colspan="10" class="empty-message">No tanker records found for today.</td>
+      </tr>`;
+    return;
+  }
+
+  // Format date helper
+  const formatDate = (isoString) => {
+    if (!isoString) return "-";
+    const d = new Date(isoString);
+    return `${d.toLocaleDateString('en-GB')}<br><small>${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</small>`;
+  };
+
+  milkLotsTableBody.innerHTML = data[field].map(tanker => {
+    const status = (() => {
+      if (tankerType === "bulk_cooler") {
+        if (tanker.filledAt && !tanker.emptiedAt) return "In Use";
+        if (tanker.filledAt && tanker.emptiedAt) return "Used & Empty";
+        return "Available";
+      }
+      return "Active"; 
+    })();
+
+    return `
+      <tr>
+        <td>${formatDate(tanker.createdAt)}</td>
+        <td>${typeName}</td>
+        <td>${tanker.name}</td>
+        <td>${tanker.capacityLiters}</td>
+        <td>${tanker.currentVolumeLiters}</td>
+        <td>${formatDate(tanker.lastSanitizedAt)}</td>
+        <td>${formatDate(tanker.lastCleanedAt)}</td>
+        <td>${formatDate(tanker.lastServicedAt)}</td>
+        <td>${tanker.temperatureCelsius ?? "-"}</td>
+        <td>
+          <span class="status-badge ${
+            status === 'In Use' ? 'badge-success' :
+            status === 'Used & Empty' ? 'badge-warning' :
+            status === 'Available' ? 'badge-info' : 'badge-primary'
+          }">${status}</span>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  // Optional: Add CSS classes for status badges
+  const style = document.createElement('style');
+  style.textContent = `
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      color: white;
+      display: inline-block;
+    }
+    .badge-success { background-color: #28a745; }
+    .badge-warning { background-color: #ffc107; color: #212529; }
+    .badge-info { background-color: #17a2b8; }
+    .badge-primary { background-color: #6c757d; }
+  `;
+  document.head.appendChild(style);
+}
+
+// Trigger when route or tanker type changes
+routeSelect.addEventListener("change", loadTankerHistory);
+tankerTypeSelect.addEventListener("change", loadTankerHistory);
+
+// Initial load (optional)
+loadTankerHistory();
+</script>
+
+{% endblock %}
