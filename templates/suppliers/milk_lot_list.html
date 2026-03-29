@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Supplier List{% endblock %}
 
@@ -374,16 +375,10 @@
       </table>
     </div>
   </div>
+
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
-
-    // =============================Initialize Access Token (refresh → access)=======================================
-    const ok = await initializeAccessToken();
-    if (!ok) {
-        console.warn("No refresh token — redirecting to login");
-        window.location.href = "/";
-        return;
-    }
 
     const tableBody = document.querySelector(".milk-lot-table tbody");
     function renderPaginationControls(data) {
@@ -463,7 +458,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
 
         const variables = { page, perPage };
-        const result = await securedGraphQL(query, variables);
+        const result = await callGraphQL(query, variables);
 
         if (result.errors) {
             console.error("GraphQL Error:", result.errors);
@@ -556,7 +551,7 @@ document.addEventListener("click", async function (e) {
         `;
 
         try {
-            const result = await securedGraphQL(fetchMilkLotQuery, { id: lotId });
+            const result = await callGraphQL(fetchMilkLotQuery, { id: lotId });
             if (result.errors) {
                 alert(result.errors[0].message);
                 return;

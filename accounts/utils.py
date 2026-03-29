@@ -52,17 +52,10 @@ def jwt_login_required(view_func):
 
     return wrapper
 
-def get_authenticated_user(info: Info):
-    auth_header = info.context.request.headers.get("Authorization")
+def get_authenticated_user(info):
+    user = info.context.request.user
 
-    if not auth_header:
-        raise Exception("Authorization header missing")
+    if not user.is_authenticated:
+        raise Exception("User not authenticated")
 
-    token = auth_header.replace("Bearer ", "")
-
-    payload = decode_token(token)
-
-    if payload["type"] != "access":
-        raise Exception("Invalid token type")
-
-    return User.objects.get(id=payload["user_id"])
+    return user

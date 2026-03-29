@@ -199,7 +199,7 @@ class Mutation:
             vehicle = None
             if input.vehicle_id:
                 vehicle = Vehicle.objects.get(id=input.vehicle_id)
-
+            
             destination = None
             if input.destination_id:
                 destination = Plant.objects.get(id=input.destination_id)

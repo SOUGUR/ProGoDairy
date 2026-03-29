@@ -252,6 +252,7 @@
 
 <script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
+   //============================================================================================================================//
   //SINGLE, GLOBAL fetchGraphQL 
 async function fetchGraphQL(query, variables = {}) {
   try {
@@ -388,7 +389,7 @@ const tankerContainerSelect = document.getElementById("tanker-containor-select")
   tankerTypeSelect.addEventListener("change", loadTankerContainers);
 
 
-  //========================================= Make ready tankers for today's operation ===========================//
+  //=================================================== Make ready tankers for today's operation ======================================//
   const useTankerBtn = document.getElementById("use-tanker-btn");
   async function useTanker() {
     const tankerType = tankerTypeSelect.value;
@@ -579,7 +580,7 @@ async function loadTankerHistory() {
 routeSelect.addEventListener("change", loadTankerHistory);
 tankerTypeSelect.addEventListener("change", loadTankerHistory);
 
-// Initial load (optional)
+// Initial load 
 loadTankerHistory();
 </script>
 

@@ -388,12 +388,6 @@
 <script>
 //------------------------------------------CREATE Milk Lot if lot_Id not present, else UPDATE Milk Lot-------------------------------------//
 document.addEventListener("DOMContentLoaded", async () => {
-  const ok = await initializeAccessToken();
-  if (!ok) {
-      console.warn("No refresh token — redirecting to login");
-      window.location.href = "/";
-      return;
-  }
 
   const milkTestBtn = document.getElementById("milk-test-btn");
   const lotId = "{{ lot_id|default:'' }}";
@@ -437,7 +431,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
 
     try {
-      const result = await securedGraphQL(graphqlQuery, {
+      const result = await callGraphQL(graphqlQuery, {
           input,
           lotId: lotId ? parseInt(lotId) : null
       });
@@ -477,10 +471,10 @@ async function loadSuppliersAndTesters(selectedSupplierId = null, selectedTester
         }
     }`;
 
-    const supplierResult = await securedGraphQL(supplierQuery);
+    const supplierResult = await callGraphQL(supplierQuery);
     const suppliers = supplierResult.data.suppliers;
 
-    const testerResult = await securedGraphQL(employeeTesterQuery);
+    const testerResult = await callGraphQL(employeeTesterQuery);
     const testers = testerResult.data.testers;
 
     const supplierSelect = document.querySelector("select[name='supplier_id']");
@@ -550,7 +544,7 @@ async function fetchMilkLotAndFillForm(lotId) {
         }
     `;
 
-    const result = await securedGraphQL(query, { id: parseInt(lotId) });
+    const result = await callGraphQL(query, { id: parseInt(lotId) });
     const lot = result.data.milkLotById;
     if (!lot) return;
 

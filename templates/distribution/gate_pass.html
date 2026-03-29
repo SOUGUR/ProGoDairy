@@ -505,7 +505,7 @@ body {
 </div>
 
 <!-- Custom Confirmation Modal -->
-<div id="confirmationModal" class="modal-overlay">
+<div id="confirmationModal" class="modal-overlay hidden">
     <div class="modal-content">
         <div class="modal-header">Confirm Gate Pass Creation</div>
         <div class="modal-body">Are you sure you want to finalize and create this Gate Pass? This action issues the pass and links all associated seals and samples.</div>
@@ -553,8 +553,6 @@ body {
     let mockSamples = [];
 
     let nextSealId = 1;
-
-    // --- Utility Functions ---
 
     /** Renders the Seal input fields based on current data. */
     function renderSeals() {

@@ -1,11 +1,12 @@
 
-// ========================================== Memory-stored access token ============================================================
+// ========================================== Memory-stored access token ==================================================================
 let ACCESS_TOKEN = null;
 
 //================================================ Normal GraphQL call function ============================================================================
 async function callGraphQL(query, variables = {}) {
     const response = await fetch("/graphql/", {
         method: "POST",
+        credentials: "include", 
         headers: {
             "Content-Type": "application/json",
             "X-CSRFToken": getCookie('csrftoken'),

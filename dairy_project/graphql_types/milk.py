@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Annotated, List, Optional
 
 import strawberry
 import strawberry_django
-from strawberry_django import type as strawberry_django_type
+from django.db.models import Q
 
 from milk.models import CompositeSample
-from suppliers.models import MilkLot
+
 
 from .billing import PaymentBillType
 from .employees import EmployeeType
@@ -113,21 +113,20 @@ class MilkTransferType:
     
     @strawberry.field
     def related_composite_samples(self, info) -> List["CompositeSampleType"]:
-        filters = {}
+        query = Q()
 
-      
         if self.vehicle:
-            filters["vehicle"] = self.vehicle
+            query |= Q(vehicle=self.vehicle)
 
         if self.bulk_cooler:
-            filters["bulk_cooler"] = self.bulk_cooler
-        elif self.on_farm_tank:
-            filters["on_farm_tank"] = self.on_farm_tank
-        elif self.can_collection:
-            filters["bulk_cooler__isnull"] = True
-            filters["on_farm_tank__isnull"] = True
+            query |= Q(bulk_cooler=self.bulk_cooler)
 
-        return CompositeSample.objects.filter(**filters)
+        if self.on_farm_tank:
+            query |= Q(on_farm_tank=self.on_farm_tank)
+
+        if self.can_collection:
+            query |= Q(bulk_cooler__isnull=True, on_farm_tank__isnull=True)
+        return CompositeSample.objects.filter(query)
 
 @strawberry.type
 class MilkLotType:
