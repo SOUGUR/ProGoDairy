@@ -15,7 +15,7 @@
     --warning-color: #d69e2e;
     --danger-color: #e53e3e;
     --ticket-bg: #ffffff;
-    --ticket-border: #333;
+    --ticket-border: #333333;
     --section-header-bg: var(--secondary-color);
     --section-header-color: #2b6cb0;
     --table-header-bg: var(--secondary-color);
@@ -329,14 +329,27 @@ body {
 }
 
 /* Modal Styles */
+
 .modal-overlay {
-    display: none;
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 50;
+    display: flex;
     justify-content: center;
     align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.hidden {
+    display: none !important;
 }
 
 .modal-content {
@@ -410,7 +423,9 @@ body {
             <div class="transfer-grid">
                 <div class="field-group">
                     <label for="driver">Driver</label>
-                    <input type="text" id="driver" name="driver" value="Jagat Singh (DRV-004)" readonly>
+                    <select id="driver" name="driver" class="driver-select">
+                        <!-- Options will be populated by JS -->
+                    </select>
                 </div>
                 <div class="field-group">
                     <label for="route">Route</label>
@@ -516,14 +531,17 @@ body {
     </div>
 </div>
 
+<script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
     const MILK_TRANSFER_ID = {{ milk_transfer_id }};
     //================================================ Utility function  ==================================================================//
     async function fetchGraphQL(query, variables = {}) {
         const response = await fetch("/graphql/", {
             method: "POST",
+            credentials: "include",  
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ query, variables }),
+            
         });
         const result = await response.json();
         if (result.errors) {
@@ -564,6 +582,7 @@ body {
             mockInitialSeals.push({ id: nextSealId++, seal_no: '', position: '' });
         }
 
+
         mockInitialSeals.forEach(seal => {
             const sealRow = document.createElement('div');
             sealRow.className = 'seal-row';
@@ -587,6 +606,14 @@ body {
             defaultOption.textContent = '-- Select Position --';
             positionSelect.appendChild(defaultOption);
 
+        
+            sealNoInput.addEventListener("input", (e) => {
+                seal.seal_no = e.target.value;
+            });
+
+            positionSelect.addEventListener("change", (e) => {
+                seal.position = e.target.value;
+            });
             SEAL_POSITIONS.forEach(pos => {
                 const option = document.createElement('option');
                 option.value = pos.value;
@@ -626,6 +653,54 @@ body {
         });
     }
 
+
+    async function fetchAndPopulateDrivers(routeId) {
+        try {
+            const driversQuery = `
+            query($routeId: Int) {
+                allDrivers(routeId: $routeId) {
+                id
+                name
+                mobile
+                licenceNo
+                }
+            }
+            `;
+            
+            const variables = routeId ? { routeId: parseInt(routeId) } : {};
+            const driversData = await fetchGraphQL(driversQuery, variables);
+            const drivers = driversData.allDrivers || [];
+
+            const driverSelect = document.getElementById('driver');
+            
+            // Clear existing options
+            driverSelect.innerHTML = '';
+            
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Driver';
+            driverSelect.appendChild(defaultOption);
+            
+            // Populate with drivers
+            drivers.forEach(driver => {
+            const option = document.createElement('option');
+            option.value = driver.id;
+            option.textContent = `${driver.name} (${driver.licenceNo})`;
+            option.dataset.mobile = driver.mobile;
+            driverSelect.appendChild(option);
+            });
+
+            console.log(`Populated ${drivers.length} drivers for route ${routeId || 'all'}`);
+
+        } catch (err) {
+            console.error("Failed to fetch drivers:", err);
+            // Fallback: leave dropdown empty or with error state
+            const driverSelect = document.getElementById('driver');
+            driverSelect.innerHTML = '<option value="">Error loading drivers</option>';
+        }
+        }
+
     /** Renders the QC Samples table body. */
     function renderSamples() {
         const tableBody = document.getElementById('samplesTableBody');
@@ -635,7 +710,7 @@ body {
             const row = document.createElement('tr');
 
             const primaryTag = sample.is_primary
-                ? '<span class="status-tag status-primary">Primary</span>'
+                ? '<span class="status-tag status-primary">Yes</span>'
                 : '<span class="status-tag status-secondary">No</span>';
 
             let statusClass = 'status-pending';
@@ -645,7 +720,7 @@ body {
             const statusTag = `<span class="status-tag ${statusClass}">${sample.status}</span>`;
 
             row.innerHTML = `
-                <td>CS-${sample.id}</td>
+                <td>${sample.id}</td>
                 <td>${primaryTag}</td>
                 <td>${sample.volume}</td>
                 <td>${sample.collected_at}</td>
@@ -676,45 +751,83 @@ body {
         renderSeals();
     }
 
-    function handleConfirmPass() {
-        // Placeholder for actual submission logic
-        console.log('Gate Pass Confirmed and Submitted!');
-        document.getElementById('confirmationModal').classList.add('hidden');
-        // For demo: show a success message in the console
-        console.log('Gate Pass Data:', {
-            status: document.getElementById('gate_pass_status').value,
-            tare: document.getElementById('empty_tare_kg').value,
-            volume: document.getElementById('net_volume_l').value,
-            density: document.getElementById('density_kg_per_l').value,
-            seals: mockInitialSeals.filter(s => s.seal_no !== ''), // Only save seals with a number
-            samplesCount: mockSamples.length
-        });
+    async function handleConfirmPass() {
+    try {
+        // -----------------------------
+        // Build seals payload
+        // -----------------------------
+        const seals = mockInitialSeals
+            .filter(s => s.seal_no && s.position)
+            .map(s => ({
+                sealNo: s.seal_no,
+                position: s.position
+            }));
 
-        // Visually change the button/header to indicate submission (optional)
-        document.querySelector('h1').textContent = 'Gate Pass GP-789 Created!';
-        document.querySelector('.gate-pass-container').classList.add('border-green-500');
+        // -----------------------------
+        // Build input object
+        // -----------------------------
+        const input = {
+            milkTransferId: MILK_TRANSFER_ID,
+
+            gatePassStatus: document.getElementById('gate_pass_status').value,
+
+            emptyTareKg: parseFloat(document.getElementById('empty_tare_kg').value),
+            netVolumeL: parseFloat(document.getElementById('net_volume_l').value),
+            densityKgPerL: parseFloat(document.getElementById('density_kg_per_l').value),
+
+            // IMPORTANT: these must come from loaded transfer
+            driverId: parseInt(document.getElementById('driver').value),
+            routeId: window.currentTransfer?.vehicle?.route?.id || null,
+            cipRecordId: parseInt(window.currentCip?.id),
+
+            expectedArrivalPlant: new Date().toISOString(),
+
+            seals: seals
+        };
+
+        console.log("GatePass Input:", input);
+
+        // -----------------------------
+        // GraphQL Mutation
+        // -----------------------------
+        const mutation = `
+            mutation CreateGatePass($input: GatePassInput!) {
+                createGatePass(input: $input) {
+                    id
+                    gatePassStatus
+                    createdAt
+                }
+            }
+        `;
+
+        const result = await fetchGraphQL(mutation, { input });
+
+        const gatePass = result.createGatePass;
+
+        // -----------------------------
+        // Success UI
+        // -----------------------------
+        showNotification(`Gate Pass Created! ID: ${gatePass.id}`, 'transfer', 4000);
+
+        document.getElementById('confirmationModal')
+            .classList.add('hidden');
+
+        // Optional redirect
+        window.location.href = `/distribution/gate_pass_view/${gatePass.id}/`;
+
+    } catch (error) {
+        console.error(" Error:", error);
+        showNotification(`Failed to create Gate Pass: " + ${error.message}`, 'error', 4000);
     }
+}
 
-    // --- Initialization ---
-
-    window.onload = function() {
-        populateStatusDropdown();
-        renderSeals();
-        renderSamples();
-
-        // Setup Event Listeners
-        document.getElementById('gatePassForm').addEventListener('submit', handleFormSubmit);
-        document.getElementById('addSealButton').addEventListener('click', handleAddSeal);
-
-        // Modal Listeners
-        document.getElementById('cancelModalButton').addEventListener('click', () => {
-            document.getElementById('confirmationModal').classList.add('hidden');
-        });
-        document.getElementById('confirmPassButton').addEventListener('click', handleConfirmPass);
-    };
 
     async function loadTransferData() {
   try {
+
+    console.log("loadTransferData started");
+
+    console.log("Using ID:", MILK_TRANSFER_ID);
     // Fetch milk transfer
     const transferQuery = `
       query($id: Int!) {
@@ -728,7 +841,7 @@ body {
             id
             name
             vehicleId
-            route { name }
+            route { id name }  
           }
           relatedCompositeSamples {
             id
@@ -741,18 +854,25 @@ body {
       }
     `;
     const transferData = await fetchGraphQL(transferQuery, { id: MILK_TRANSFER_ID });
+    console.log("GraphQL transferData:", transferData);
     const transfer = transferData.milkTransferById;
+    window.currentTransfer = transfer;
 
     if (!transfer) {
       alert("Milk transfer not found!");
       return;
     }
 
+    const routeId = transfer.vehicle?.route?.id;
+    window.currentRouteId = routeId;
+
     // Populate read-only fields
     document.getElementById('driver').value = transfer.vehicle?.name || "N/A";
     document.getElementById('vehicle').value = transfer.vehicle?.vehicleId || "N/A";
     document.getElementById('route').value = transfer.vehicle?.route?.name || "N/A";
     document.getElementById('net_volume_l').value = transfer.totalVolume || "";
+
+    await fetchAndPopulateDrivers(routeId);
 
     // Update header
     document.querySelector('.header-section p').textContent = `Initiating pass for outgoing transfer: MT-${transfer.id}`;
@@ -764,7 +884,7 @@ body {
         volume: s.sampleVolumeMl,
         collected_at: s.collectedAt ? new Date(s.collectedAt).toLocaleString('en-GB') : 'N/A',
         status: s.passed === "approved" ? "Tested and passed" : s.passed === "rejected" ? "Rejected" : "Pending",
-        is_primary: false // or determine based on your logic
+        is_primary: s.sampleType === "SOCIETY_TEST" ? true : false,
       }));
 
     mockSamples = societySamples;
@@ -784,6 +904,7 @@ body {
       `;
       const cipData = await fetchGraphQL(cipQuery, { vehicleId: transfer.vehicle.id });
       const cip = cipData.latestCipRecord;
+      window.currentCip = cip;  
 
       if (cip) {
         document.querySelector('.cip-card h3').textContent = `Associated CIP Record: CIPR-${cip.id}`;

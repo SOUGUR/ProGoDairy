@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gate Pass Details{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Main wrapper to isolate styles */
+    .gp-details-wrapper {
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Top Title matching the screenshot bar */
+    .gp-main-header {
+        background-color: #2c5e8c;
+        color: #ffffff !important;
+        margin: -20px -20px 20px -20px;
+        padding: 15px 25px;
+        font-size: 1.4rem;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Card Styling */
+    .gp-card {
+        background: #ffffff;
+        border: 1px solid #d1d9e6;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    /* Card Header Styling */
+    .gp-card-header {
+        background-color: #f8fafc;
+        border-bottom: 1px solid #d1d9e6;
+        padding: 10px 20px;
+        color: #2c5e8c;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    /* Card Body Styling */
+    .gp-card-body {
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    /* Field Styling within cards */
+    .gp-field {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .gp-field strong {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    .gp-field span {
+        font-size: 1rem;
+        color: #1e293b;
+        font-weight: 500;
+    }
+
+    /* Status Badge */
+    #gp-status {
+        display: inline-block;
+        background-color: #f1f5f9;
+        color: #475569;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.85rem;
+    }
+
+    /* Seals List within its card body */
+    .gp-seals-container {
+        padding: 15px 20px;
+    }
+
+    #seals-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #seals-list li {
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #2c5e8c;
+        background: #f8fafc;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="gp-details-wrapper">
+    <div class="gp-main-header">Gate Pass Details</div>
+
+    <div class="gp-card">
+        <div class="gp-card-header">1. Transfer & Weighing Details</div>
+        <div class="gp-card-body">
+            <div class="gp-field"><strong>ID</strong><span id="gp-id"></span></div>
+            <div class="gp-field"><strong>Status</strong><span id="gp-status"></span></div>
+            <div class="gp-field"><strong>Empty Tare (kg)</strong><span id="gp-empty"></span></div>
+            <div class="gp-field"><strong>Net Volume (L)</strong><span id="gp-volume"></span></div>
+            <div class="gp-field"><strong>Density (kg/L)</strong><span id="gp-density"></span></div>
+            <div class="gp-field"><strong>Issued At</strong><span id="gp-issued"></span></div>
+        </div>
+    </div>
+
+    <div class="gp-card">
+        <div class="gp-card-header">2. Logistics & Route</div>
+        <div class="gp-card-body">
+            <div class="gp-field"><strong>Driver ID</strong><span id="driver-id"></span></div>
+            <div class="gp-field"><strong>Driver Name</strong><span id="driver-name"></span></div>
+            <div class="gp-field"><strong>Route ID</strong><span id="route-id"></span></div>
+            <div class="gp-field"><strong>Route Name</strong><span id="route-name"></span></div>
+        </div>
+    </div>
+
+    <div class="gp-card">
+        <div class="gp-card-header">3. Security Seals</div>
+        <div class="gp-seals-container">
+            <ul id="seals-list"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    const gatePassId = "{{ gate_pass_id }}";
+
+    async function fetchGatePass() {
+        const response = await fetch("/graphql/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                query: `
+                    query GetGatePass($id: Int!) {
+                        gatePassById(id: $id) {
+                            id
+                            gatePassStatus
+                            emptyTareKg
+                            netVolumeL
+                            densityKgPerL
+                            issuedAt
+
+                            driver {
+                                id
+                                name
+                            }
+
+                            route {
+                                id
+                                name
+                            }
+
+                            seals {
+                                sealNo
+                                position
+                            }
+                        }
+                    }
+                `,
+                variables: {
+                    id: parseInt(gatePassId)
+                }
+            })
+        });
+
+        const result = await response.json();
+        const data = result.data.gatePassById;
+
+        // Populate fields
+        document.getElementById("gp-id").innerText = data.id;
+        document.getElementById("gp-status").innerText = data.gatePassStatus;
+        document.getElementById("gp-empty").innerText = data.emptyTareKg;
+        document.getElementById("gp-volume").innerText = data.netVolumeL;
+        document.getElementById("gp-density").innerText = data.densityKgPerL;
+        document.getElementById("gp-issued").innerText = data.issuedAt;
+
+        document.getElementById("driver-id").innerText = data.driver?.id || "";
+        document.getElementById("driver-name").innerText = data.driver?.name || "";
+
+        document.getElementById("route-id").innerText = data.route?.id || "";
+        document.getElementById("route-name").innerText = data.route?.name || "";
+
+        // Seals
+        const sealsList = document.getElementById("seals-list");
+        sealsList.innerHTML = "";
+
+        if (data.seals && data.seals.length > 0) {
+            data.seals.forEach(seal => {
+                const li = document.createElement("li");
+                li.innerText = `Seal No: ${seal.sealNo} — Position: ${seal.position}`;
+                sealsList.appendChild(li);
+            });
+        } else {
+            sealsList.innerHTML = "<li style='border-left-color: #cbd5e1; color: #94a3b8;'>No seals recorded.</li>";
+        }
+    }
+
+    fetchGatePass();
+</script>
+
+{% endblock %}

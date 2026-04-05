@@ -22,3 +22,8 @@ def gate_pass(request, milk_transfer_id):
     return render(request, 'distribution/gate_pass.html', {
         'milk_transfer_id': milk_transfer_id
     })
+
+def gate_pass_view(request,id):
+    return render(request, 'distribution/gate_pass_view.html', {
+        "gate_pass_id": id
+    })

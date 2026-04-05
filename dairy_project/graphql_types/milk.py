@@ -3,6 +3,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Annotated, List, Optional
 
+from dairy_project.graphql_types.distribution import GatePassType
 import strawberry
 import strawberry_django
 from django.db.models import Q
@@ -127,6 +128,10 @@ class MilkTransferType:
         if self.can_collection:
             query |= Q(bulk_cooler__isnull=True, on_farm_tank__isnull=True)
         return CompositeSample.objects.filter(query)
+    
+    @strawberry.field
+    def gate_pass(self, info) -> Optional["GatePassType"]:
+        return self.gate_passes.first()
 
 @strawberry.type
 class MilkLotType:

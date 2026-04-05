@@ -659,6 +659,10 @@ async function fetchAndRenderTransfers(plantId, vehicleNumber, status = null) {
           passed
           sampleType
         }
+
+        gatePass {
+          id
+        }
       }
     }
   `;
@@ -669,7 +673,7 @@ async function fetchAndRenderTransfers(plantId, vehicleNumber, status = null) {
     const transfers = data.getMilkTransfersForPass || [];
 
     renderTickets(transfers);
-  } catch (err) {
+  } catch  (err) {
     console.error("Failed to fetch transfers:", err);
     document.querySelector(".pass-tickets-container").innerHTML = `
       <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:40px; color:#718096;">
@@ -724,8 +728,19 @@ function renderTickets(transfers) {
     }
 
     // === Determine button state ===
+    const gate_pass_id = transfer.gatePass ? transfer.gatePass.id : null;
+    const milk_transfer_id = transfer.id;
     const isApproved = testResult === "Approved";
-    const btnClass = isApproved ? "pass-create-btn" : "pass-create-btn disabled";
+    const btnClass = isApproved ? "pass-create-btn": "pass-create-btn disabled";
+
+    const url = gate_pass_id
+    ? `/distribution/gate_pass_view/${gate_pass_id}/`
+    : `/distribution/gate_pass/${milk_transfer_id}/`;
+
+    const buttonText = gate_pass_id
+        ? "View Gate Pass"
+        : "+ Create Gate Pass";
+
 
     // === Format volume ===
     const volumeText = transfer.totalVolume ? `${Math.round(transfer.totalVolume).toLocaleString()} L` : "N/A";
@@ -754,7 +769,7 @@ function renderTickets(transfers) {
     const fatId = `pass-fat-${transfer.id}`;
     const snfId = `pass-snf-${transfer.id}`;
     const testResultId = `pass-test-result-${transfer.id}`;
-    const btnId = `create-pass-btn-${transfer.id}`;
+    const btnId = gate_pass_id ? "view-pass-btn" : "create-pass-btn";
 
     // === Status badge class ===
     let statusClass = "status-scheduled";
@@ -811,11 +826,12 @@ function renderTickets(transfers) {
           </div>
         </div>
         <div class="pass-actions">
-          <a href="/distribution/gate_pass/${transfer.id}/">
-            <button class="${btnClass}" id="${btnId}">+ Create Gate Pass</button>
-          </a>
+            <a href="${url}">
+                <button class="${btnClass}" id="${btnId}" ${!isApproved ? "disabled" : ""}>
+                ${buttonText}
+                </button>
+            </a>
         </div>
-    </a>
         </div>
       </div>
     `;
