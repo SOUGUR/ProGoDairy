@@ -533,23 +533,10 @@ body {
 
 <script src="{% static 'notifications/js/notify.js' %}"></script>
 <script>
+    // -----------------------------
+    // Variables / Constants
+    // -----------------------------
     const MILK_TRANSFER_ID = {{ milk_transfer_id }};
-    //================================================ Utility function  ==================================================================//
-    async function fetchGraphQL(query, variables = {}) {
-        const response = await fetch("/graphql/", {
-            method: "POST",
-            credentials: "include",  
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query, variables }),
-            
-        });
-        const result = await response.json();
-        if (result.errors) {
-            console.error("GraphQL Error:", result.errors);
-            throw new Error(result.errors[0].message);
-        }
-        return result.data;
-        }
 
     const PASS_STATUS = [
         { value: "draft", label: "Draft" },
@@ -569,8 +556,132 @@ body {
     // Initialize empty arrays for dynamic data
     let mockInitialSeals = [];
     let mockSamples = [];
-
     let nextSealId = 1;
+
+    // -----------------------------
+    // API Calls / GraphQL Calls
+    // -----------------------------
+    async function fetchGraphQL(query, variables = {}) {
+        const response = await fetch("/graphql/", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query, variables }),
+        });
+
+        const result = await response.json();
+        if (result.errors) {
+            console.error("GraphQL Error:", result.errors);
+            throw new Error(result.errors[0].message);
+        }
+        return result.data;
+    }
+
+    async function fetchAndPopulateDrivers(routeId) {
+        try {
+            const driversQuery = `
+                query($routeId: Int) {
+                    allDrivers(routeId: $routeId) {
+                        id
+                        name
+                        mobile
+                        licenceNo
+                    }
+                }
+            `;
+
+            const variables = routeId ? { routeId: parseInt(routeId) } : {};
+            const driversData = await fetchGraphQL(driversQuery, variables);
+            const drivers = driversData.allDrivers || [];
+            const driverSelect = document.getElementById('driver');
+
+            // Clear existing options
+            driverSelect.innerHTML = '';
+
+            // Add default option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Driver';
+            driverSelect.appendChild(defaultOption);
+
+            // Populate with drivers
+            drivers.forEach(driver => {
+                const option = document.createElement('option');
+                option.value = driver.id;
+                option.textContent = `${driver.name} (${driver.licenceNo})`;
+                option.dataset.mobile = driver.mobile;
+                driverSelect.appendChild(option);
+            });
+
+            console.log(`Populated ${drivers.length} drivers for route ${routeId || 'all'}`);
+
+        } catch (err) {
+            console.error("Failed to fetch drivers:", err);
+            // Fallback: leave dropdown empty or with error state
+            const driverSelect = document.getElementById('driver');
+            driverSelect.innerHTML = '<option value="">Error loading drivers</option>';
+        }
+    }
+
+    async function handleConfirmPass() {
+        try {
+            // Build seals payload
+            const seals = mockInitialSeals
+                .filter(s => s.seal_no && s.position)
+                .map(s => ({
+                    sealNo: s.seal_no,
+                    position: s.position
+                }));
+
+            // Build input object
+            const input = {
+                milkTransferId: MILK_TRANSFER_ID,
+                gatePassStatus: document.getElementById('gate_pass_status').value,
+                emptyTareKg: parseFloat(document.getElementById('empty_tare_kg').value),
+                netVolumeL: parseFloat(document.getElementById('net_volume_l').value),
+                densityKgPerL: parseFloat(document.getElementById('density_kg_per_l').value),
+
+                // IMPORTANT: these must come from loaded transfer
+                driverId: parseInt(document.getElementById('driver').value),
+                routeId: window.currentTransfer?.vehicle?.route?.id || null,
+                cipRecordId: parseInt(window.currentCip?.id),
+
+                expectedArrivalPlant: new Date().toISOString(),
+                seals: seals
+            };
+
+            console.log("GatePass Input:", input);
+
+            // GraphQL Mutation
+            const mutation = `
+                mutation CreateGatePass($input: GatePassInput!) {
+                    createGatePass(input: $input) {
+                        id
+                        gatePassStatus
+                        createdAt
+                    }
+                }
+            `;
+
+            const result = await fetchGraphQL(mutation, { input });
+            const gatePass = result.createGatePass;
+
+            // Success UI
+            showNotification(`Gate Pass Created! ID: ${gatePass.id}`, 'transfer', 4000);
+            document.getElementById('confirmationModal').classList.add('hidden');
+
+            // Optional redirect
+            window.location.href = `/distribution/gate_pass_view/${gatePass.id}/`;
+
+        } catch (error) {
+            console.error(" Error:", error);
+            showNotification(`Failed to create Gate Pass: " + ${error.message}`, 'error', 4000);
+        }
+    }
+
+    // -----------------------------
+    // Helper Functions
+    // -----------------------------
 
     /** Renders the Seal input fields based on current data. */
     function renderSeals() {
@@ -581,7 +692,6 @@ body {
             // If no seals, show an empty row to start with
             mockInitialSeals.push({ id: nextSealId++, seal_no: '', position: '' });
         }
-
 
         mockInitialSeals.forEach(seal => {
             const sealRow = document.createElement('div');
@@ -606,7 +716,6 @@ body {
             defaultOption.textContent = '-- Select Position --';
             positionSelect.appendChild(defaultOption);
 
-        
             sealNoInput.addEventListener("input", (e) => {
                 seal.seal_no = e.target.value;
             });
@@ -614,6 +723,7 @@ body {
             positionSelect.addEventListener("change", (e) => {
                 seal.position = e.target.value;
             });
+
             SEAL_POSITIONS.forEach(pos => {
                 const option = document.createElement('option');
                 option.value = pos.value;
@@ -653,54 +763,6 @@ body {
         });
     }
 
-
-    async function fetchAndPopulateDrivers(routeId) {
-        try {
-            const driversQuery = `
-            query($routeId: Int) {
-                allDrivers(routeId: $routeId) {
-                id
-                name
-                mobile
-                licenceNo
-                }
-            }
-            `;
-            
-            const variables = routeId ? { routeId: parseInt(routeId) } : {};
-            const driversData = await fetchGraphQL(driversQuery, variables);
-            const drivers = driversData.allDrivers || [];
-
-            const driverSelect = document.getElementById('driver');
-            
-            // Clear existing options
-            driverSelect.innerHTML = '';
-            
-            // Add default option
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = 'Select Driver';
-            driverSelect.appendChild(defaultOption);
-            
-            // Populate with drivers
-            drivers.forEach(driver => {
-            const option = document.createElement('option');
-            option.value = driver.id;
-            option.textContent = `${driver.name} (${driver.licenceNo})`;
-            option.dataset.mobile = driver.mobile;
-            driverSelect.appendChild(option);
-            });
-
-            console.log(`Populated ${drivers.length} drivers for route ${routeId || 'all'}`);
-
-        } catch (err) {
-            console.error("Failed to fetch drivers:", err);
-            // Fallback: leave dropdown empty or with error state
-            const driverSelect = document.getElementById('driver');
-            driverSelect.innerHTML = '<option value="">Error loading drivers</option>';
-        }
-        }
-
     /** Renders the QC Samples table body. */
     function renderSamples() {
         const tableBody = document.getElementById('samplesTableBody');
@@ -738,8 +800,9 @@ body {
         ).join('');
     }
 
-    // --- Event Handlers ---
-
+    // -----------------------------
+    // Event Listeners
+    // -----------------------------
     function handleFormSubmit(e) {
         e.preventDefault();
         // Show custom modal instead of alert/confirm
@@ -750,76 +813,6 @@ body {
         mockInitialSeals.push({ id: nextSealId++, seal_no: '', position: '' });
         renderSeals();
     }
-
-    async function handleConfirmPass() {
-    try {
-        // -----------------------------
-        // Build seals payload
-        // -----------------------------
-        const seals = mockInitialSeals
-            .filter(s => s.seal_no && s.position)
-            .map(s => ({
-                sealNo: s.seal_no,
-                position: s.position
-            }));
-
-        // -----------------------------
-        // Build input object
-        // -----------------------------
-        const input = {
-            milkTransferId: MILK_TRANSFER_ID,
-
-            gatePassStatus: document.getElementById('gate_pass_status').value,
-
-            emptyTareKg: parseFloat(document.getElementById('empty_tare_kg').value),
-            netVolumeL: parseFloat(document.getElementById('net_volume_l').value),
-            densityKgPerL: parseFloat(document.getElementById('density_kg_per_l').value),
-
-            // IMPORTANT: these must come from loaded transfer
-            driverId: parseInt(document.getElementById('driver').value),
-            routeId: window.currentTransfer?.vehicle?.route?.id || null,
-            cipRecordId: parseInt(window.currentCip?.id),
-
-            expectedArrivalPlant: new Date().toISOString(),
-
-            seals: seals
-        };
-
-        console.log("GatePass Input:", input);
-
-        // -----------------------------
-        // GraphQL Mutation
-        // -----------------------------
-        const mutation = `
-            mutation CreateGatePass($input: GatePassInput!) {
-                createGatePass(input: $input) {
-                    id
-                    gatePassStatus
-                    createdAt
-                }
-            }
-        `;
-
-        const result = await fetchGraphQL(mutation, { input });
-
-        const gatePass = result.createGatePass;
-
-        // -----------------------------
-        // Success UI
-        // -----------------------------
-        showNotification(`Gate Pass Created! ID: ${gatePass.id}`, 'transfer', 4000);
-
-        document.getElementById('confirmationModal')
-            .classList.add('hidden');
-
-        // Optional redirect
-        window.location.href = `/distribution/gate_pass_view/${gatePass.id}/`;
-
-    } catch (error) {
-        console.error(" Error:", error);
-        showNotification(`Failed to create Gate Pass: " + ${error.message}`, 'error', 4000);
-    }
-}
 
 
     async function loadTransferData() {

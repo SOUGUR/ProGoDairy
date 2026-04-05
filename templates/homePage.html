@@ -1000,36 +1000,12 @@
 
     <script src="{% static 'notifications/js/notify.js' %}"></script>
     <script>
-        // Carousel functionality 
+        // -----------------------------
+        // Variables / Constants
+        // -----------------------------
         let currentRotation = 0;
         const items = document.querySelectorAll('.carousel-item');
         const totalItems = items.length;
-
-        function positionCarouselItems() {
-            items.forEach((item, index) => {
-                const angle = (360 / totalItems) * index + currentRotation;
-                const radian = (angle * Math.PI) / 180;
-                const radius = 400;
-                
-                const x = Math.sin(radian) * radius;
-                const z = Math.cos(radian) * radius;
-                const scale = (z + radius) / (radius * 2);
-                const opacity = scale;
-                
-                item.style.transform = `translate(-50%, -50%) translate3d(${x}px, 0, ${z}px) scale(${scale})`;
-                item.style.opacity = opacity;
-                item.style.zIndex = Math.floor(scale * 100);
-            });
-        }
-
-        function rotateCarousel(direction) {
-            currentRotation += direction * (360 / totalItems);
-            positionCarouselItems();
-        }
-
-        positionCarouselItems();
-        setInterval(() => rotateCarousel(1), 4000);
-
 
         let ACCESS_TOKEN = null;
         const loginModal = document.getElementById('login-modal');
@@ -1040,40 +1016,29 @@
         const registerBtn = document.querySelector('.register-trigger');
         const closeRegister = document.querySelector('.close-register');
 
-        loginBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            loginModal.style.display = 'flex';
-        });
+        // -----------------------------
+        // Helper Functions
+        // -----------------------------
+        function positionCarouselItems() {
+            items.forEach((item, index) => {
+                const angle = (360 / totalItems) * index + currentRotation;
+                const radian = (angle * Math.PI) / 180;
+                const radius = 400;
 
-        closeBtn.addEventListener('click', function () {
-            loginModal.style.display = 'none';
-        });
+                const x = Math.sin(radian) * radius;
+                const z = Math.cos(radian) * radius;
+                const scale = (z + radius) / (radius * 2);
+                const opacity = scale;
 
-        registerBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            registerModal.style.display = 'flex';
-        });
-
-        closeRegister.addEventListener('click', () => {
-            registerModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', function (event) {
-            if (event.target === loginModal) loginModal.style.display = 'none';
-            if (event.target === registerModal) registerModal.style.display = 'none';
-        });
-
-        //=============================== GraphQL Helper=================================================
-        async function callGraphQL(query, variables = {}) {
-            const response = await fetch("/graphql/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie('csrftoken'),
-                },
-                body: JSON.stringify({ query, variables }),
+                item.style.transform = `translate(-50%, -50%) translate3d(${x}px, 0, ${z}px) scale(${scale})`;
+                item.style.opacity = opacity;
+                item.style.zIndex = Math.floor(scale * 100);
             });
-            return response.json();
+        }
+
+        function rotateCarousel(direction) {
+            currentRotation += direction * (360 / totalItems);
+            positionCarouselItems();
         }
 
         function getCookie(name) {
@@ -1091,7 +1056,82 @@
             return cookieValue;
         }
 
-        //===================================================== Login Handler============================================================
+        // -----------------------------
+        // API Calls / GraphQL Calls
+        // -----------------------------
+        async function callGraphQL(query, variables = {}) {
+            const response = await fetch("/graphql/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ query, variables }),
+            });
+            return response.json();
+        }
+
+        async function securedGraphQL(query, variables = {}) {
+            const response = await fetch("/graphql/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + ACCESS_TOKEN,
+                },
+                body: JSON.stringify({ query, variables }),
+            });
+
+            const data = await response.json();
+
+            if (data.errors && data.errors[0].message.includes("Signature has expired")) {
+                const refreshQuery = `
+                    mutation {
+                        refreshAccess {
+                            accessToken
+                            message
+                        }
+                    }
+                `;
+
+                const refreshResult = await callGraphQL(refreshQuery);
+                ACCESS_TOKEN = refreshResult.data.refreshAccess.accessToken;
+                return securedGraphQL(query, variables);
+            }
+
+            return data;
+        }
+
+        // -----------------------------
+        // Event Listeners
+        // -----------------------------
+
+        // Login Modal Controls
+        loginBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            loginModal.style.display = 'flex';
+        });
+
+        closeBtn.addEventListener('click', function () {
+            loginModal.style.display = 'none';
+        });
+
+        // Register Modal Controls
+        registerBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            registerModal.style.display = 'flex';
+        });
+
+        closeRegister.addEventListener('click', () => {
+            registerModal.style.display = 'none';
+        });
+
+        // Close Modals on Outside Click
+        window.addEventListener('click', function (event) {
+            if (event.target === loginModal) loginModal.style.display = 'none';
+            if (event.target === registerModal) registerModal.style.display = 'none';
+        });
+
+        // Login Form Submission
         document.querySelector('#login-modal .login-form').addEventListener('submit', async function (e) {
             e.preventDefault();
             const username = document.querySelector('#login-modal #id_username').value;
@@ -1123,7 +1163,7 @@
             }, 2100);
         });
 
-        //========================================================== Register Handler======================================================
+        // Register Form Submission
         document.getElementById('register-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -1172,36 +1212,11 @@
             }, 2100);
         });
 
-        // Secured GraphQL
-        async function securedGraphQL(query, variables = {}) {
-            const response = await fetch("/graphql/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + ACCESS_TOKEN,
-                },
-                body: JSON.stringify({ query, variables }),
-            });
-
-            const data = await response.json();
-
-            if (data.errors && data.errors[0].message.includes("Signature has expired")) {
-                const refreshQuery = `
-                    mutation {
-                        refreshAccess {
-                            accessToken
-                            message
-                        }
-                    }
-                `;
-
-                const refreshResult = await callGraphQL(refreshQuery);
-                ACCESS_TOKEN = refreshResult.data.refreshAccess.accessToken;
-                return securedGraphQL(query, variables);
-            }
-
-            return data;
-        }
+        // -----------------------------
+        // Initialization
+        // -----------------------------
+        positionCarouselItems();
+        setInterval(() => rotateCarousel(1), 4000);
     </script>
 </body>
 </html>

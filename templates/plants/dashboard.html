@@ -147,89 +147,108 @@
 <script src="{% static 'plants/js/payment_status_chart.js' %}"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const dateSpan = document.getElementById('current-date');
-    const now = new Date();
-    const day = now.getDate();
-    const daySuffix = getDaySuffix(day);
-    const monthName = now.toLocaleString('default', { month: 'long' });
-    const year = now.getFullYear();
-    const dayName = now.toLocaleString('default', { weekday: 'long' });
-    // Update the date display to the current date/day
-    dateSpan.textContent = `${day}${daySuffix} ${monthName} ${year}, ${dayName}`; 
+    // -----------------------------
+    // Initialization
+    // -----------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateSpan = document.getElementById('current-date');
+        const now = new Date();
+        const day = now.getDate();
+        const daySuffix = getDaySuffix(day);
+        const monthName = now.toLocaleString('default', { month: 'long' });
+        const year = now.getFullYear();
+        const dayName = now.toLocaleString('default', { weekday: 'long' });
 
-    setupGraphEnlargement();
-});
+        // Update the date display to the current date/day
+        dateSpan.textContent = `${day}${daySuffix} ${monthName} ${year}, ${dayName}`;
 
-function getDaySuffix(day) {
-    if (day > 3 && day < 21) return 'th';
-    switch (day % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-    }
-}
-
-function setupGraphEnlargement() {
-    const graphCards = document.querySelectorAll('.graph-card');
-    const modal = document.getElementById('graph-modal');
-    const modalBody = document.getElementById('modal-graph-body');
-    const modalTitle = document.getElementById('modal-title');
-    const closeBtn = modal.querySelector('.close-btn');
-
-    graphCards.forEach(card => {
-        const placeholder = card.querySelector('.graph-placeholder');
-        placeholder.style.cursor = 'pointer'; 
-
-        placeholder.addEventListener('click', () => {
-            const title = card.querySelector('h3').textContent;
-            const originalElement = placeholder.firstElementChild;
-
-            modalBody.innerHTML = "";       
-            modalTitle.textContent = title; 
-
-            if (originalElement.tagName === "CANVAS") {
-                try {
-                    const img = document.createElement('img');
-                    img.src = originalElement.toDataURL('image/png'); 
-                    img.alt = title + " Enlarged View";
-                    img.classList.add('enlarged-content'); // New class for styling
-                    modalBody.appendChild(img);
-                } catch (e) {
-                    // Fallback for cases where canvas is empty or conversion fails
-                    console.error("Canvas conversion failed. Displaying mock view.", e);
-                    const mockDiv = document.createElement('div');
-                    mockDiv.className = 'graph-mock enlarged-content';
-                    mockDiv.textContent = title + " (Enlarged View Mock)";
-                    modalBody.appendChild(mockDiv);
-                }
-
-            } else {
-                // 2. Handle Mock DIVs (e.g., Map, Gauge)
-                const cloned = originalElement.cloneNode(true);
-                cloned.classList.add('enlarged-content');
-                modalBody.appendChild(cloned);
-            }
-
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Disable background scroll
-        });
+        setupGraphEnlargement();
     });
 
-    // Close Modal Logic
-    const closeModal = () => {
-        modal.classList.remove('active');
-        document.body.style.overflow = ''; 
-        modalBody.innerHTML = "";
-    };
+    // -----------------------------
+    // Helper Functions
+    // -----------------------------
+    function getDaySuffix(day) {
+        if (day > 3 && day < 21) return 'th';
+        switch (day % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
 
-    closeBtn.addEventListener('click', closeModal);
-    // Close when clicking outside the modal content
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); }); 
-    // Close when pressing the Escape key
-    document.addEventListener('keydown', e => { if (e.key === "Escape" && modal.classList.contains('active')) closeModal(); });
-}
+    // -----------------------------
+    // UI Logic / Modal Functions
+    // -----------------------------
+    function setupGraphEnlargement() {
+        const graphCards = document.querySelectorAll('.graph-card');
+        const modal = document.getElementById('graph-modal');
+        const modalBody = document.getElementById('modal-graph-body');
+        const modalTitle = document.getElementById('modal-title');
+        const closeBtn = modal.querySelector('.close-btn');
+
+        graphCards.forEach(card => {
+            const placeholder = card.querySelector('.graph-placeholder');
+            placeholder.style.cursor = 'pointer';
+
+            placeholder.addEventListener('click', () => {
+                const title = card.querySelector('h3').textContent;
+                const originalElement = placeholder.firstElementChild;
+
+                modalBody.innerHTML = "";
+                modalTitle.textContent = title;
+
+                if (originalElement.tagName === "CANVAS") {
+                    try {
+                        const img = document.createElement('img');
+                        img.src = originalElement.toDataURL('image/png');
+                        img.alt = title + " Enlarged View";
+                        img.classList.add('enlarged-content'); // New class for styling
+                        modalBody.appendChild(img);
+                    } catch (e) {
+                        // Fallback for cases where canvas is empty or conversion fails
+                        console.error("Canvas conversion failed. Displaying mock view.", e);
+                        const mockDiv = document.createElement('div');
+                        mockDiv.className = 'graph-mock enlarged-content';
+                        mockDiv.textContent = title + " (Enlarged View Mock)";
+                        modalBody.appendChild(mockDiv);
+                    }
+
+                } else {
+                    // 2. Handle Mock DIVs (e.g., Map, Gauge)
+                    const cloned = originalElement.cloneNode(true);
+                    cloned.classList.add('enlarged-content');
+                    modalBody.appendChild(cloned);
+                }
+
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Disable background scroll
+            });
+        });
+
+        // Close Modal Logic
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+            modalBody.innerHTML = "";
+        };
+
+        // -----------------------------
+        // Event Listeners (Modal)
+        // -----------------------------
+        closeBtn.addEventListener('click', closeModal);
+
+        // Close when clicking outside the modal content
+        modal.addEventListener('click', e => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Close when pressing the Escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === "Escape" && modal.classList.contains('active')) closeModal();
+        });
+    }
 </script>
 
 <style>
