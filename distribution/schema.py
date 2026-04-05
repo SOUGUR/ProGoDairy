@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.utils import timezone
 from strawberry.types import Info
+from django.db import transaction
+from django.utils.dateparse import parse_datetime
 
 from collection_center.models import BulkCooler
 from dairy_project.graphql_types.distribution import (
@@ -20,13 +22,15 @@ from dairy_project.graphql_types.distribution import (
     VehicleDriverType,
     VehicleInput,
     VehicleType,
+    GatePassInput,
+    GatePassType
 )
 from dairy_project.graphql_types.milk import MilkTransferType
 from dairy_project.graphql_types.routes import RouteType
 from plants.models import Plant
 from suppliers.models import CanCollection, OnFarmTank
 
-from .models import CIPRecord, Distributor, MilkTransfer, Route, Vehicle, VehicleDriver
+from .models import CIPRecord, Distributor, MilkTransfer, Route, Vehicle, VehicleDriver, GatePass, Seal
 
 
 
@@ -59,8 +63,11 @@ class Query:
         return Vehicle.objects.select_related('distributor', 'route').all()
     
     @strawberry.field
-    def all_drivers(self) -> List[VehicleDriverType]:
-        return VehicleDriver.objects.all()
+    def all_drivers(self, route_id: Optional[int] = None) -> List[VehicleDriverType]:
+        queryset = VehicleDriver.objects.all()
+        if route_id is not None:
+            queryset = queryset.filter(route_id=route_id)
+        return queryset
     
     @strawberry.field
     def all_routes(self) -> List[RouteType]:
@@ -163,6 +170,13 @@ class Query:
         transfers = transfers.order_by('-transfer_date')
 
         return transfers
+    
+    @strawberry.field
+    def gate_pass_by_id(self, info, id: int) -> "GatePassType":
+        try:
+            return GatePass.objects.get(id=id)
+        except GatePass.DoesNotExist:
+            raise Exception("GatePass not found")
 
 
 
@@ -324,7 +338,72 @@ class Mutation:
         cip.save()
         return cip
     
-    
 
+    @strawberry.mutation
+    def create_gate_pass(self, info, input: GatePassInput) -> "GatePassType":
+
+        try:
+            with transaction.atomic():
+
+                # -----------------------------
+                # Fetch related objects
+                # -----------------------------
+                transfer = MilkTransfer.objects.get(id=input.milk_transfer_id)
+                cip = CIPRecord.objects.get(id=input.cip_record_id)
+                driver = VehicleDriver.objects.get(id=input.driver_id)
+
+                route = None
+                if input.route_id:
+                    route = Route.objects.get(id=input.route_id)
+
+                # -----------------------------
+                # Create GatePass
+                # -----------------------------
+                gate_pass = GatePass.objects.create(
+                    milk_transfer=transfer,
+                    gate_pass_status=input.gate_pass_status,
+                    empty_tare_kg=input.empty_tare_kg,
+                    net_volume_l=input.net_volume_l,
+                    density_kg_per_l=input.density_kg_per_l,
+                    cip_record=cip,
+                    route=route,
+                    driver=driver,
+                    expected_arrival_plant=parse_datetime(input.expected_arrival_plant),
+                    issued_at=timezone.now(), 
+                )
+
+                # -----------------------------
+                # Create Seals
+                # -----------------------------
+                if input.seals:
+                    seals_to_create = [
+                        Seal(
+                            gate_pass=gate_pass,
+                            seal_no=s.seal_no,
+                            position=s.position
+                        )
+                        for s in input.seals
+                        if s.seal_no  # skip empty
+                    ]
+                    Seal.objects.bulk_create(seals_to_create)
+
+                # -----------------------------
+                # Link QC Samples (AUTO)
+                # -----------------------------
+                gate_pass.link_samples()
+
+                return gate_pass
+
+        except MilkTransfer.DoesNotExist:
+            raise Exception("MilkTransfer not found")
+
+        except CIPRecord.DoesNotExist:
+            raise Exception("CIP Record not found")
+
+        except VehicleDriver.DoesNotExist:
+            raise Exception("Driver not found")
+
+        except Exception as e:
+            raise Exception(f"Failed to create GatePass: {str(e)}")
 
 schema = strawberry.Schema(query=Query, mutation= Mutation)

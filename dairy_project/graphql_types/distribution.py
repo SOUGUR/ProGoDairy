@@ -7,6 +7,7 @@ from strawberry import auto
 from distribution.models import Vehicle, Distributor, CIPRecord
 from .auth import UserType
 from .routes import RouteType
+from typing import List
 
 @strawberry.type
 class VehicleDriverType:
@@ -102,3 +103,65 @@ class VehicleInput:
     vehicle_id: str
     capacity_liters: Optional[float] = None
     route_id: int
+
+@strawberry.input
+class SealInput:
+    seal_no: str
+    position: str
+
+@strawberry.type
+class GatePassSealType:
+    id: int
+    seal_no: str
+    position: str
+
+@strawberry.input
+class GatePassInput:
+    milk_transfer_id: int
+    gate_pass_status: str
+
+    empty_tare_kg: float
+    net_volume_l: float
+    density_kg_per_l: float
+
+    cip_record_id: int
+    route_id: Optional[int]
+    driver_id: int
+    expected_arrival_plant: str
+
+    seals: Optional[List[SealInput]] = None  
+
+@strawberry.type
+class GatePassType:
+    id: int
+    gate_pass_status: str
+
+    created_at: datetime
+    issued_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    route : Optional[RouteType]
+    empty_tare_kg: float
+    net_volume_l: float
+    density_kg_per_l: float
+    expected_arrival_plant: datetime
+
+    # ---------------- Related ----------------
+
+    @strawberry.field
+    def driver(self) -> Optional[VehicleDriverType]:
+        return self.driver
+
+    @strawberry.field
+    def vehicle(self) -> Optional[VehicleType]:
+        return self.milk_transfer.vehicle if self.milk_transfer else None
+
+
+    @strawberry.field
+    def cip_record(self) -> Optional[CIPRecordType]:
+        return self.cip_record
+
+    # ---------------- Seals ----------------
+
+    @strawberry.field
+    def seals(self) -> List["GatePassSealType"]:
+        return self.seals.all()
