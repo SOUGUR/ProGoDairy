@@ -1,7 +1,9 @@
 
 import re
-from django.utils.deprecation import MiddlewareMixin
+
 from django.contrib.auth.models import AnonymousUser
+from django.utils.deprecation import MiddlewareMixin
+
 from .models import PageVisit
 
 EXCLUDED_PATHS = [

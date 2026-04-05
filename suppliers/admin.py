@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Supplier, MilkLot, PaymentBill, OnFarmTank, CanCollection
+
+from .models import CanCollection, MilkLot, OnFarmTank, PaymentBill, Supplier
 
 # Register your models here.
 admin.site.register(Supplier)

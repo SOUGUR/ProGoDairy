@@ -1,11 +1,11 @@
-from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db.models import Q
-from milk.models import CompositeSample
 from django.core.validators import RegexValidator
+from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
+from milk.models import CompositeSample
 
 validate_mobile = RegexValidator(
     regex=r'^[0-9]{10,17}$',

@@ -8,6 +8,7 @@ from suppliers.models import Supplier
 from .auth import UserType
 from .routes import RouteType
 
+
 @strawberry.type
 class SupplierVolumeStatType:
     supplier_id: int

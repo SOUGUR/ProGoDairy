@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import vehicle_list, create_milk_transfer, milk_transfer_list, \
-    add_get_vehicle_driver, vehicle_CIP_log, gate_pass_tickets, gate_pass, gate_pass_view
+
+from .views import (add_get_vehicle_driver, create_milk_transfer, gate_pass,
+                    gate_pass_tickets, gate_pass_view, milk_transfer_list,
+                    vehicle_CIP_log, vehicle_list)
 
 app_name = "distribution"
 

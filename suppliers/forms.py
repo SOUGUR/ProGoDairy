@@ -1,5 +1,7 @@
 from django import forms
+
 from .models import Supplier
+
 
 class SupplierProfileForm(forms.ModelForm):
     class Meta:

@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import user_access, user_flow, logout_view, groq_chat_proxy
+
+from .views import groq_chat_proxy, logout_view, user_access, user_flow
+
 app_name = "accounts"
 
 urlpatterns = [

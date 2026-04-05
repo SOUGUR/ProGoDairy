@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Route, Distributor, MilkTransfer, Vehicle, GatePass, GatePassQC, Seal
+
+from .models import (Distributor, GatePass, GatePassQC, MilkTransfer, Route,
+                     Seal, Vehicle)
 
 # Register your models here.
 admin.site.register(Route)

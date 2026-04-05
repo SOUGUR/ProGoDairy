@@ -1,8 +1,10 @@
+from typing import List
+
 import strawberry
 import strawberry_django
-from strawberry_django import type as strawberry_django_type
 from django.contrib.auth.models import User
-from typing import List
+from strawberry_django import type as strawberry_django_type
+
 
 @strawberry.type
 class TokenResponse:

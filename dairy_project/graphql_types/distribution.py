@@ -1,13 +1,16 @@
-import strawberry
-from strawberry_django import type as strawberry_django_type
-import strawberry_django
-from typing import Optional
 from datetime import date, datetime
+from typing import List, Optional
+
+import strawberry
+import strawberry_django
 from strawberry import auto
-from distribution.models import Vehicle, Distributor, CIPRecord
+from strawberry_django import type as strawberry_django_type
+
+from distribution.models import CIPRecord, Distributor, Vehicle
+
 from .auth import UserType
 from .routes import RouteType
-from typing import List
+
 
 @strawberry.type
 class VehicleDriverType:

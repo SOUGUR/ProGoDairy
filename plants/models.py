@@ -1,7 +1,8 @@
-from django.db import models
-from distribution.models import Route
 from django.contrib.auth.models import User
-from distribution.models import MilkTransfer
+from django.db import models
+
+from distribution.models import MilkTransfer, Route
+
 
 class Role(models.Model):
     name = models.CharField(max_length=50, unique=True)

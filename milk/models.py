@@ -1,7 +1,10 @@
-from django.db import models
-from suppliers.models import MilkLot
-from django.db.models import Q
 from decimal import Decimal
+
+from django.db import models
+from django.db.models import Q
+
+from suppliers.models import MilkLot
+
 
 class MilkPricingConfig(models.Model):
     route = models.OneToOneField("distribution.Route", on_delete=models.CASCADE, related_name="pricing_config")

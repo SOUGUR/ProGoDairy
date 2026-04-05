@@ -1,13 +1,14 @@
 
-import os
-import requests
 import json
-from django.http import JsonResponse, HttpResponseRedirect
+import os
+
+import requests
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.shortcuts import render
-from .utils import jwt_login_required
 
+from .utils import jwt_login_required
 
 
 def user_access(request):

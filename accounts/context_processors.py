@@ -1,6 +1,7 @@
 
 from .models import PageVisit
 
+
 def recent_pages(request):
     if not request.user.is_authenticated:
         return {'recent_pages': []}

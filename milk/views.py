@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+
 def take_composite_sample(request):
     return render(request, "milk/take_composite_sample.html")
 

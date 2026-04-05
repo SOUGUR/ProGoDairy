@@ -1,7 +1,8 @@
 import os
-from dotenv import load_dotenv
+
 import requests
 from django.core.cache import cache
+from dotenv import load_dotenv
 
 load_dotenv()
 

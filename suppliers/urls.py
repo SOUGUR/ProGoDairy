@@ -1,6 +1,9 @@
 from django.urls import path
-from .views import create_supplier, supplier_list, create_milk_lot_view,milk_lot_result_list_view,\
-    edit_milk_lot,create_payment_bill, on_farm_bulk_pooling, canCollection, view_payment_bill, tanker_usage, bill_details_view
+
+from .views import (bill_details_view, canCollection, create_milk_lot_view,
+                    create_payment_bill, create_supplier, edit_milk_lot,
+                    milk_lot_result_list_view, on_farm_bulk_pooling,
+                    supplier_list, tanker_usage, view_payment_bill)
 
 urlpatterns = [
     path('suppliers/', supplier_list, name='supplier_list'),

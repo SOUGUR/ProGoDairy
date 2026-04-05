@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 
+
 def parse_prices_from_markdown(markdown_content):
     """
     Extract milk prices by state from scraped markdown content.

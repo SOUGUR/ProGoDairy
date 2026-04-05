@@ -4,34 +4,32 @@ from typing import List, Optional
 
 import strawberry
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
-from strawberry.types import Info
-from django.db import transaction
 from django.utils.dateparse import parse_datetime
+from strawberry.types import Info
 
 from collection_center.models import BulkCooler
-from dairy_project.graphql_types.distribution import (
-    CIPRecordInput,
-    CIPRecordType,
-    CIPRecordUpdateInput,
-    DistributorType,
-    VehicleDriverInput,
-    VehicleDriverType,
-    VehicleInput,
-    VehicleType,
-    GatePassInput,
-    GatePassType
-)
+from dairy_project.graphql_types.distribution import (CIPRecordInput,
+                                                      CIPRecordType,
+                                                      CIPRecordUpdateInput,
+                                                      DistributorType,
+                                                      GatePassInput,
+                                                      GatePassType,
+                                                      VehicleDriverInput,
+                                                      VehicleDriverType,
+                                                      VehicleInput,
+                                                      VehicleType)
 from dairy_project.graphql_types.milk import MilkTransferType
 from dairy_project.graphql_types.routes import RouteType
 from plants.models import Plant
 from suppliers.models import CanCollection, OnFarmTank
 
-from .models import CIPRecord, Distributor, MilkTransfer, Route, Vehicle, VehicleDriver, GatePass, Seal
-
+from .models import (CIPRecord, Distributor, GatePass, MilkTransfer, Route,
+                     Seal, Vehicle, VehicleDriver)
 
 
 @strawberry.input

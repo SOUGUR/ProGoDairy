@@ -1,9 +1,13 @@
-import strawberry
-from typing import List, Optional
 from datetime import date
-from .apis import create_daily_milk_payment_invoice
-from suppliers.models import Supplier
+from typing import List, Optional
+
+import strawberry
+
 from dairy_project.graphql_types.billing import InvoiceType
+from suppliers.models import Supplier
+
+from .apis import create_daily_milk_payment_invoice
+
 
 @strawberry.type
 class Query:

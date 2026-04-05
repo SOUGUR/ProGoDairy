@@ -1,5 +1,7 @@
 from django.urls import path
+
 from .views import accounting_dashboard, billing_and_payment
+
 app_name = "accounting"
 
 urlpatterns = [

@@ -3,13 +3,12 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Annotated, List, Optional
 
-from dairy_project.graphql_types.distribution import GatePassType
 import strawberry
 import strawberry_django
 from django.db.models import Q
 
+from dairy_project.graphql_types.distribution import GatePassType
 from milk.models import CompositeSample
-
 
 from .billing import PaymentBillType
 from .employees import EmployeeType
@@ -17,9 +16,9 @@ from .routes import RouteType
 from .suppliers import SupplierType
 
 if TYPE_CHECKING:
+    from .collection import BulkCoolerType, CanCollectionType, OnFarmTankType
     from .distribution import VehicleType
     from .plants import PlantType
-    from .collection import BulkCoolerType, OnFarmTankType, CanCollectionType
 
 @strawberry.enum
 class SampleTypeEnum(Enum):

@@ -1,7 +1,9 @@
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+
 from suppliers.models import MilkLot
+
 
 class BulkCoolerLog(models.Model):
     bulk_cooler = models.ForeignKey(

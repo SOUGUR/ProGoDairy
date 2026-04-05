@@ -1,6 +1,7 @@
-from django.urls import path, include
 from django.contrib import admin
+from django.urls import include, path
 from strawberry.django.views import GraphQLView
+
 from .schema import schema
 from .views import homepage_view, milk_market_dashboard
 

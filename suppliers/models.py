@@ -1,9 +1,10 @@
-from django.db import models
-from decimal import Decimal, ROUND_HALF_UP
-from django.contrib.auth.models import User
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.core.exceptions import ValidationError
+from decimal import ROUND_HALF_UP, Decimal
+
 from django.apps import apps
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 
 class Supplier(models.Model):

@@ -19,15 +19,15 @@ from accounts.schema import UserType
 from accounts.utils import get_authenticated_user
 from collection_center.schema import AssignLotsPayload
 from dairy_project.graphql_types.billing import PaymentBillType
-from dairy_project.graphql_types.collection import (
-    AssignCanCollectionPayload,
-    CanCollectionType,
-    OnFarmTankType,
-)
+from dairy_project.graphql_types.collection import (AssignCanCollectionPayload,
+                                                    CanCollectionType,
+                                                    OnFarmTankType)
 from dairy_project.graphql_types.milk import MilkLotType
 from dairy_project.graphql_types.suppliers import SupplierType
 from distribution.models import Route
-from suppliers.models import CanCollection, MilkLot, OnFarmTank, PaymentBill, Supplier
+from suppliers.models import (CanCollection, MilkLot, OnFarmTank, PaymentBill,
+                              Supplier)
+
 
 class IsAuthenticated(BasePermission):
     message = "Authentication required"

@@ -1,7 +1,10 @@
-from django.shortcuts import render
-from .utils import fetch_milk_prices, fetch_dairy_news
-from .parsers import parse_prices_from_markdown, parse_news_from_markdown
 from datetime import datetime
+
+from django.shortcuts import render
+
+from .parsers import parse_news_from_markdown, parse_prices_from_markdown
+from .utils import fetch_dairy_news, fetch_milk_prices
+
 
 def milk_market_dashboard(request):
     selected_state = request.GET.get("state", "")

@@ -1,6 +1,8 @@
-import strawberry
 from datetime import date
 from typing import Optional
+
+import strawberry
+
 
 @strawberry.type
 class BillSummaryType:

@@ -7,6 +7,7 @@ from plants.models import Employee, Role
 
 from .auth import UserType
 
+
 @strawberry_django_type(Role)
 class RoleType:
     id: strawberry.auto

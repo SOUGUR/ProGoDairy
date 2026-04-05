@@ -1,9 +1,9 @@
+import arrow
 import jwt
-import arrow  
 from django.conf import settings
 from django.contrib.auth.models import User
-from strawberry.types import Info
 from django.shortcuts import redirect
+from strawberry.types import Info
 
 ACCESS_EXPIRE_MIN = 10
 REFRESH_EXPIRE_DAYS = 30

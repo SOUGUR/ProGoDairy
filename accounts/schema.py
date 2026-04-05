@@ -10,9 +10,6 @@ from dairy_project.graphql_types.auth import TokenResponse, UserType
 from .utils import create_access_token, create_refresh_token, decode_token
 
 
-
-
-
 @strawberry.input
 class UserRightsInput:
     user_id: int

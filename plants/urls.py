@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import pump_into_silos, tanker_logs, calibration_sanitation_records, dashboard
+
+from .views import (calibration_sanitation_records, dashboard, pump_into_silos,
+                    tanker_logs)
 
 app_name = "plants"
 

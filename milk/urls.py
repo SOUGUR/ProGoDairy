@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import take_composite_sample, list_composite_samples, manage_milk_route_pricings, take_gate_sample
+
+from .views import (list_composite_samples, manage_milk_route_pricings,
+                    take_composite_sample, take_gate_sample)
 
 app_name = "milk"
 

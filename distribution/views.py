@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+
 def add_get_vehicle_driver(request):
     return render(request, 'distribution/vehicle_driver.html')
 

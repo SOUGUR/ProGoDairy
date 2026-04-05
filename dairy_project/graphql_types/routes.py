@@ -5,6 +5,7 @@ from strawberry_django import type as strawberry_django_type
 
 from distribution.models import Route
 
+
 @strawberry_django_type(Route)
 class RouteType:
     id: int
