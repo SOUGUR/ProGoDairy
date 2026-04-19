@@ -24,7 +24,7 @@ class UserRightsInput:
 @strawberry.type
 class Query:
     @strawberry.field
-    def get_user(self, info, id: int) ->  Optional[UserType]:
+    def get_user(self, info: Info, id: int) ->  Optional[UserType]:
         try:
             return User.objects.get(pk=id)
         except User.DoesNotExist:
@@ -102,7 +102,7 @@ class Mutation:
             return TokenResponse(access_token="", message="Refresh token expired or invalid.")
     
     @strawberry.mutation
-    def update_user_rights(self, info, input: UserRightsInput) -> UserType:
+    def update_user_rights(self, info: Info, input: UserRightsInput) -> UserType:
         try:
             user = User.objects.get(id=input.user_id)
 
