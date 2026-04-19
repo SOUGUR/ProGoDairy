@@ -18,3 +18,4 @@ openpyxl
 requests
 beautifulsoup4
 strawberry-graphql
+PyJWT
