@@ -19,5 +19,5 @@ class UserType:
     is_superuser: bool
 
     @strawberry.field
-    def groups(self, info) -> List[str]:
+    def groups(self, info: strawberry.Info) -> List[str]:
         return [group.name for group in self.groups.all()]
