@@ -17,5 +17,6 @@ matplotlib
 openpyxl
 requests
 beautifulsoup4
-strawberry-graphql
 PyJWT
+strawberry-graphql
+
