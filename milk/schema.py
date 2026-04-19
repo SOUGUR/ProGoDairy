@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 import strawberry
+from strawberry.types import Info
 from django.core.exceptions import ObjectDoesNotExist
 
 from collection_center.models import BulkCooler
@@ -28,7 +29,7 @@ class Query:
     @strawberry.field
     def composite_samples(
         self,
-        info,
+        info: Info,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
         source_type: Optional[str] = None,  
@@ -194,7 +195,7 @@ class Mutation:
         return UpdateTankerResponse(success=True, message=f"{input.type.replace('_',' ').title()} with ID {input.id} updated successfully.")
     
     @strawberry.mutation
-    def update_milk_pricing_config(self, info, input: MilkPricingConfigInput) -> MilkPricingConfigType:
+    def update_milk_pricing_config(self, info: Info, input: MilkPricingConfigInput) -> MilkPricingConfigType:
         route = Route.objects.get(id=input.routeId)
         config, _ = MilkPricingConfig.objects.get_or_create(route=route)
         for field, value in input.__dict__.items():

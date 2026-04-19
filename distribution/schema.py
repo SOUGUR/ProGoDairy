@@ -152,7 +152,7 @@ class Query:
     @strawberry.field
     def get_milk_transfers_for_pass(
         self,
-        info,
+        info: Info,
         plant_id: int,
         vehicle_number: str,
         status: Optional[str] = None
@@ -172,7 +172,7 @@ class Query:
         return transfers
     
     @strawberry.field
-    def gate_pass_by_id(self, info, id: int) -> "GatePassType":
+    def gate_pass_by_id(self, info: Info, id: int) -> "GatePassType":
         try:
             return GatePass.objects.get(id=id)
         except GatePass.DoesNotExist:
@@ -259,7 +259,7 @@ class Mutation:
     
     @strawberry.mutation
     def update_milktransfer(
-        self, info, input: MilkTransferUpdateInput
+        self, info: Info, input: MilkTransferUpdateInput
     ) -> Optional["MilkTransferType"]:
         try:
             transfer = MilkTransfer.objects.get(id=input.id)
@@ -340,7 +340,7 @@ class Mutation:
     
 
     @strawberry.mutation
-    def create_gate_pass(self, info, input: GatePassInput) -> "GatePassType":
+    def create_gate_pass(self, info: Info, input: GatePassInput) -> "GatePassType":
 
         try:
             with transaction.atomic():

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, List, Optional
 
 import strawberry
+from strawberry.types import Info
 
 from collection_center.models import BulkCooler
 from suppliers.models import MilkLot, OnFarmTank
@@ -46,11 +47,11 @@ class OnFarmTankType:
     def milk_lots(self) -> List[Annotated["MilkLotType", strawberry.lazy(".milk")]]:
         return MilkLot.objects.filter(on_farm_tank_id=self.id)
     @strawberry.field
-    def related_milk_transfers(self, info) -> List[Annotated["MilkTransferType", strawberry.lazy(".milk")]]:
+    def related_milk_transfers(self, info: Info) -> List[Annotated["MilkTransferType", strawberry.lazy(".milk")]]:
         onFarm_Tanker = OnFarmTank.objects.get(id=self.id)
         return onFarm_Tanker.milk_transfers.all()
     @strawberry.field(name="sampleCount")
-    def sample_count(self, info) -> int:
+    def sample_count(self, info: Info) -> int:
         onFarm_Tanker = OnFarmTank.objects.get(id=self.id)
         return onFarm_Tanker.samples.count()
     
@@ -76,11 +77,11 @@ class BulkCoolerType:
     def milk_lots(self) -> List[Annotated["MilkLotType", strawberry.lazy(".milk")]]:
         return MilkLot.objects.filter(bulk_cooler_id=self.id)
     @strawberry.field
-    def related_milk_transfers(self, info) -> List[Annotated["MilkTransferType", strawberry.lazy(".milk")]]:
+    def related_milk_transfers(self, info: Info) -> List[Annotated["MilkTransferType", strawberry.lazy(".milk")]]:
         cooler = BulkCooler.objects.get(id=self.id)
         return cooler.milk_transfers.all()
     @strawberry.field(name="sampleCount")
-    def sample_count(self, info) -> int:
+    def sample_count(self, info: Info) -> int:
         cooler = BulkCooler.objects.get(id=self.id)
         return cooler.samples.count()
 

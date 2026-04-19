@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Annotated, List, Optional
 
 from dairy_project.graphql_types.distribution import GatePassType
 import strawberry
+from strawberry.types import Info
 import strawberry_django
 from django.db.models import Q
 
@@ -103,7 +104,7 @@ class MilkTransferType:
     can_collection: Optional[Annotated["CanCollectionType", strawberry.lazy(".collection")]]
 
     @strawberry.field(name="gateSamplesCount")
-    def gate_sample_count(self, info) -> int:
+    def gate_sample_count(self, info: Info) -> int:
         if not self.vehicle:
             return 0
 
@@ -113,7 +114,7 @@ class MilkTransferType:
         return samples_qs.count()
     
     @strawberry.field
-    def related_composite_samples(self, info) -> List["CompositeSampleType"]:
+    def related_composite_samples(self, info: Info) -> List["CompositeSampleType"]:
         query = Q()
 
         if self.vehicle:
@@ -130,7 +131,7 @@ class MilkTransferType:
         return CompositeSample.objects.filter(query)
     
     @strawberry.field
-    def gate_pass(self, info) -> Optional["GatePassType"]:
+    def gate_pass(self, info: Info) -> Optional["GatePassType"]:
         return self.gate_passes.first()
 
 @strawberry.type

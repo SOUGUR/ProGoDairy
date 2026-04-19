@@ -152,7 +152,7 @@ class Mutation:
 
 
     @strawberry.mutation
-    def create_bulk_cooler(self, info, cooler_id: int, confirm: bool = False) -> Optional[BulkCoolerType]:
+    def create_bulk_cooler(self, info: Info, cooler_id: int, confirm: bool = False) -> Optional[BulkCoolerType]:
         try:
             original_cooler = BulkCooler.objects.get(id=cooler_id)
         except BulkCooler.DoesNotExist:
