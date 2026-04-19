@@ -154,3 +154,30 @@ python manage.py runserver
 
 ---
 *Built with ❤️ for the Dairy Industry.*
+
+---
+
+## ☁️ Deployment on Render
+
+This project is configured for easy deployment on [Render](https://render.com/).
+
+### Deployment Steps
+
+1. **Create a New Web Service**: Connect your GitHub repository and select the `deploy-render` branch.
+2. **Environment**: Select `Python`.
+3. **Build Command**:
+   ```bash
+   pip install -r requirements.txt
+   python manage.py collectstatic --noinput
+   python manage.py migrate
+   ```
+4. **Start Command**:
+   ```bash
+   gunicorn dairy_project.wsgi
+   ```
+5. **Environment Variables**: Add the following in the Render dashboard:
+   - `SECRET_KEY`: Your production secret key.
+   - `DEBUG`: `False`
+   - `ALLOWED_HOSTS`: Your Render domain (e.g., `progodairy.onrender.com`).
+   - `DATABASE_URL`: Your external database URL (e.g., PostgreSQL). If not provided, it will default to SQLite (not recommended for production).
+   - `REDIS_URL`: (Optional) If using channels/notifications.

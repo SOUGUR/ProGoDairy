@@ -1,0 +1,6 @@
+pip @ file:///build/pip-26.0.1-py3-none-any.whl
+gunicorn
+whitenoise
+dj-database-url
+django-environ
+python-dotenv
