@@ -37,7 +37,7 @@ GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 SECRET_KEY = env('SECRET_KEY', default="django-insecure-737g57@!i(lxxbyqo=@2=%z(8=97h79i3elsk-_2k(^b+@_oyl")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', default=False)
+DEBUG = env('DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['192.168.1.66', '127.0.0.1', '.render.com'])
 
