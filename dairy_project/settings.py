@@ -65,21 +65,30 @@ INSTALLED_APPS = [
     "channels",
     "notifications",
     "accounting",
-    "django_browser_reload",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django_browser_reload.middleware.BrowserReloadMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "accounts.middleware.PageVisitMiddleware",
 ]
+
+# Conditional settings for django-browser-reload (development only)
+try:
+    import django_browser_reload
+    INSTALLED_APPS.append("django_browser_reload")
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("django.middleware.common.CommonMiddleware") + 1,
+        "django_browser_reload.middleware.BrowserReloadMiddleware"
+    )
+except ImportError:
+    pass
 
 ROOT_URLCONF = "dairy_project.urls"
 

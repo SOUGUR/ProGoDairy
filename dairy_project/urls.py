@@ -17,8 +17,13 @@ urlpatterns = [
     path("accounting/", include("accounting.urls")),
 ]
 
+# Robust check for django_browser_reload
 if "django_browser_reload" in settings.INSTALLED_APPS:
-    urlpatterns += [path("__reload__/", include("django_browser_reload.urls"))]
+    try:
+        import django_browser_reload.urls
+        urlpatterns += [path("__reload__/", include("django_browser_reload.urls"))]
+    except ImportError:
+        pass
 
 project_urls = [
     path("", homepage_view, name="home"),
