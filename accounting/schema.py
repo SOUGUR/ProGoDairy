@@ -1,4 +1,5 @@
 import strawberry
+from strawberry.types import Info
 from typing import List, Optional
 from datetime import date
 from .apis import create_daily_milk_payment_invoice
@@ -10,7 +11,7 @@ class Query:
     @strawberry.field
     def invoices(
         self,
-        info,
+        info: Info,
         route_id: Optional[int] = None,
         payment_status: Optional[str] = None,
         start_date: Optional[date] = None,

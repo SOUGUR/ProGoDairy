@@ -24,7 +24,7 @@ from suppliers.models import MilkLot, PaymentBill
 @strawberry.type
 class Query:
     @strawberry.field
-    def milk_lot_volume_stats_current_month(self, info) -> list[MilkLotVolumeStatType]:
+    def milk_lot_volume_stats_current_month(self, info: Info) -> list[MilkLotVolumeStatType]:
         today = date.today()
         start_of_month = today.replace(day=1)
         end_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
@@ -46,7 +46,7 @@ class Query:
         ]
     
     @strawberry.field
-    def milk_lot_volume_by_route(self, info) -> List[RouteVolumeStats]:
+    def milk_lot_volume_by_route(self, info: Info) -> List[RouteVolumeStats]:
         today = date.today()
 
         qs = (
@@ -67,7 +67,7 @@ class Query:
         ]
     
     @strawberry.field
-    def supplier_milk_volume_stats_current_month(self, info) -> list[SupplierVolumeStatType]:
+    def supplier_milk_volume_stats_current_month(self, info: Info) -> list[SupplierVolumeStatType]:
         today = date.today()
         start_of_month = today.replace(day=1)
         end_of_month = today.replace(
@@ -92,7 +92,7 @@ class Query:
         ]
 
     @strawberry.field
-    def bill_summary_current_month(self, info) -> List[BillSummaryType]:
+    def bill_summary_current_month(self, info: Info) -> List[BillSummaryType]:
         today = date.today()
         start_of_month = today.replace(day=1)
         end_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
@@ -128,7 +128,7 @@ class Query:
         return Plant.objects.all()
     
     @strawberry.field
-    def silos_by_plant(self, info, plant_id: int) -> list[SiloType]:
+    def silos_by_plant(self, info: Info, plant_id: int) -> list[SiloType]:
         try:
             latest_datetime = (
                 Silo.objects

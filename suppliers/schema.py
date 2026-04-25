@@ -124,7 +124,7 @@ class Query:
     @strawberry.field(permission_classes=[IsAuthenticated])
     def milk_lot_list(
         self,
-        info,
+        info: Info,
         pagination: PaginationInput = PaginationInput()
     ) -> MilkLotPage:
 
@@ -514,7 +514,7 @@ class Mutation:
             raise GraphQLError(f"Error creating can collection: {e}")
         
     @strawberry.mutation
-    def create_onfarm_tank(self, info, tank_id: int, confirm: bool = False) -> Optional[OnFarmTankType]:
+    def create_onfarm_tank(self, info: Info, tank_id: int, confirm: bool = False) -> Optional[OnFarmTankType]:
         today = date.today()
 
         try:
