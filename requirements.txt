@@ -12,12 +12,10 @@ daphne
 django-cors-headers
 django-extensions
 pillow
-pandas
-matplotlib
-openpyxl
 requests
 beautifulsoup4
 PyJWT
 strawberry-graphql
-
 arrow
+qrcode
+asgiref
