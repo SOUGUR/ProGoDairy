@@ -19,3 +19,4 @@ strawberry-graphql
 arrow
 qrcode
 asgiref
+django-browser-reload

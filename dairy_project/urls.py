@@ -1,5 +1,6 @@
 from django.urls import path, include
 from django.contrib import admin
+from django.conf import settings
 from strawberry.django.views import GraphQLView
 from .schema import schema
 from .views import homepage_view, milk_market_dashboard
@@ -14,12 +15,14 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("milk/", include("milk.urls")),
     path("accounting/", include("accounting.urls")),
-    path("__reload__/", include("django_browser_reload.urls")),
 ]
 
-project_urls = [path("", homepage_view, name="home"),
-                path("milk_market_dashboard", milk_market_dashboard, name="milk_market_dashboard"),
-                ]
+if "django_browser_reload" in settings.INSTALLED_APPS:
+    urlpatterns += [path("__reload__/", include("django_browser_reload.urls"))]
 
+project_urls = [
+    path("", homepage_view, name="home"),
+    path("milk_market_dashboard", milk_market_dashboard, name="milk_market_dashboard"),
+]
 
 urlpatterns += project_urls

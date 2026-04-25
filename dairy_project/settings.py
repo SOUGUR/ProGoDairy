@@ -64,12 +64,14 @@ INSTALLED_APPS = [
     "strawberry.django",
     "channels",
     "notifications",
-    "accounting"
+    "accounting",
+    "django_browser_reload",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
