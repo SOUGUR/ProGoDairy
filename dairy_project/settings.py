@@ -39,7 +39,7 @@ SECRET_KEY = env('SECRET_KEY', default="django-insecure-737g57@!i(lxxbyqo=@2=%z(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', default=True)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['192.168.1.66', '127.0.0.1', '.render.com'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
@@ -180,3 +180,24 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # FireCrawl API Key
 FIRECRAWL_API_KEY = env('FIRECRAWL_API_KEY', default=None)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}

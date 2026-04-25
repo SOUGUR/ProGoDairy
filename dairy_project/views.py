@@ -31,6 +31,6 @@ def milk_market_dashboard(request):
     return render(request, "milk_prices_dashboard.html", context)
 
 def homepage_view(request):
-    return render(request, "homepage.html")
+    return render(request, "homePage.html")
 
 
